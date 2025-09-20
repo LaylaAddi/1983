@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Section 1983 Document Generator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .nav a { margin-right: 15px; text-decoration: none; padding: 8px 16px; background: #007bff; color: white; border-radius: 4px; }
+        .nav a:hover { background: #0056b3; }
+        .profile-section { background: white; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #218838; }
+        .messages { margin-bottom: 20px; }
+        .alert { padding: 12px; border-radius: 4px; margin-bottom: 10px; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Profile Settings</h1>
+        <div class="nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Profile Information -->
+    <div class="profile-section">
+        <h2>Profile Information</h2>
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" value="{{ user.username }}" disabled>
+                <small>Username cannot be changed</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" value="{{ user.email }}">
+            </div>
+            
+            <button type="submit" class="btn">Update Profile</button>
+        </form>
+    </div>
+
+    <!-- Account Statistics -->
+    <div class="profile-section">
+        <h2>Account Statistics</h2>
+        <p><strong>Member since:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+        <p><strong>Last login:</strong> {{ user.last_login|date:"F d, Y g:i A"|default:"Never" }}</p>
+    </div>
+
+    <!-- Password Change -->
+    <div class="profile-section">
+        <h2>Change Password</h2>
+        <p>To change your password, contact the administrator or use the password reset feature.</p>
+        <small>Password change functionality will be added in a future update.</small>
+    </div>
+</body>
+</html>
