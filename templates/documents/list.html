@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}My Documents - Section 1983 Document Generator{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-folder-open"></i> My Documents</h1>
+    <a href="{% url 'document_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> New Document
+    </a>
+</div>
+
+<!-- Search and Filter Form -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                {{ search_form.search_query }}
+            </div>
+            <div class="col-md-2">
+                {{ search_form.status_filter }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">From Date</label>
+                {{ search_form.date_from }}
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">To Date</label>
+                {{ search_form.date_to }}
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-search"></i>
+                </button>
+                <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Documents List -->
+{% if documents %}
+    <div class="row">
+        {% for document in documents %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 text-truncate">{{ document.title }}</h6>
+                        <span class="badge {% if document.status == 'draft' %}bg-secondary{% elif document.status == 'in_progress' %}bg-warning{% elif document.status == 'completed' %}bg-success{% else %}bg-primary{% endif %}">
+                            {{ document.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text text-muted small">
+                            {{ document.description|truncatewords:15 }}
+                        </p>
+                        
+                        <div class="small text-muted mb-3">
+                            <div><i class="fas fa-calendar"></i> {{ document.incident_date|date:"M d, Y"|default:"Date not set" }}</div>
+                            {% if document.incident_location %}
+                                <div><i class="fas fa-map-marker-alt"></i> {{ document.incident_location|truncatechars:30 }}</div>
+                            {% endif %}
+                            {% if document.youtube_url %}
+                                <div><i class="fab fa-youtube text-danger"></i> Video evidence attached</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="small text-muted">
+                            <div>Created: {{ document.created_at|date:"M d, Y" }}</div>
+                            <div>Updated: {{ document.updated_at|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <div class="btn-group w-100" role="group">
+                            <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i> View
+                            </a>
+                            <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-outline-danger btn-sm" 
+                                    onclick="confirmDelete('{{ document.title|escapejs }}', '{% url 'document_delete' document.pk %}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <nav aria-label="Documents pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.status_filter %}&status_filter={{ request.GET.status_filter }}{% endif %}">
+                            <i class="fas fa-angle-double-left"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.status_filter %}&status_filter={{ request.GET.status_filter }}{% endif %}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+
+                {% for page_num in page_obj.paginator.page_range %}
+                    {% if page_num == page_obj.number %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ page_num }}</span>
+                        </li>
+                    {% elif page_num > page_obj.number|add:'-3' and page_num < page_obj.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_num }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.status_filter %}&status_filter={{ request.GET.status_filter }}{% endif %}">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.status_filter %}&status_filter={{ request.GET.status_filter }}{% endif %}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search_query %}&search_query={{ request.GET.search_query }}{% endif %}{% if request.GET.status_filter %}&status_filter={{ request.GET.status_filter }}{% endif %}">
+                            <i class="fas fa-angle-double-right"></i>
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <div class="text-center text-muted">
+            <small>
+                Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ page_obj.paginator.count }} documents
+            </small>
+        </div>
+    {% endif %}
+
+{% else %}
+    <!-- Empty State -->
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-file-alt fa-5x text-muted"></i>
+        </div>
+        <h3>No documents found</h3>
+        {% if request.GET.search_query or request.GET.status_filter or request.GET.date_from or request.GET.date_to %}
+            <p class="text-muted">No documents match your search criteria.</p>
+            <a href="{% url 'document_list' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-times"></i> Clear Filters
+            </a>
+        {% else %}
+            <p class="text-muted">You haven't created any Section 1983 documents yet.</p>
+        {% endif %}
+        <a href="{% url 'document_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Create Your First Document
+        </a>
+    </div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong id="documentTitle"></strong>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Document</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(title, deleteUrl) {
+    document.getElementById('documentTitle').textContent = title;
+    document.getElementById('deleteForm').action = deleteUrl;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Auto-submit search form on status change
+document.addEventListener('DOMContentLoaded', function() {
+    const statusFilter = document.querySelector('select[name="status_filter"]');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + N for new document
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        window.location.href = '{% url "document_create" %}';
+    }
+    
+    // Focus search on '/' key
+    if (e.key === '/' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        document.querySelector('input[name="search_query"]').focus();
+    }
+});
+</script>
+{% endblock %}

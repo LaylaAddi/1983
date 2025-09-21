@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ document.title }} - Section 1983 Document Generator{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">{{ document.title }}</h2>
+                <div class="btn-group">
+                    <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Document Status -->
+                <div class="mb-3">
+                    <span class="badge bg-secondary fs-6" id="statusBadge">{{ document.get_status_display }}</span>
+                    <select class="form-select d-inline-block w-auto ms-2" id="statusSelect" onchange="updateStatus()">
+                        {% for status_value, status_label in document.STATUS_CHOICES %}
+                            <option value="{{ status_value }}" {% if document.status == status_value %}selected{% endif %}>
+                                {{ status_label }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <h5><i class="fas fa-file-alt"></i> Description of Violation</h5>
+                    <p class="text-muted">{{ document.description|linebreaks }}</p>
+                </div>
+
+                <!-- Incident Details -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-calendar"></i> Date of Incident</h6>
+                        <p>{{ document.incident_date|date:"F d, Y"|default:"Not specified" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-map-marker-alt"></i> Location</h6>
+                        <p>{{ document.incident_location|default:"Not specified" }}</p>
+                    </div>
+                </div>
+
+                <!-- Defendants -->
+                {% if document.defendants %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-users"></i> Defendants</h5>
+                    <p class="text-muted">{{ document.defendants|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Video Evidence -->
+                {% if document.youtube_url %}
+                <div class="mb-4">
+                    <h5><i class="fab fa-youtube text-danger"></i> Video Evidence</h5>
+                    <div class="ratio ratio-16x9 mb-2">
+                        {% comment %} Convert YouTube URL to embed format {% endcomment %}
+                        {% with youtube_id=document.youtube_url|slice:"32:" %}
+                            {% if "watch?v=" in document.youtube_url %}
+                                <iframe src="https://www.youtube.com/embed/{{ youtube_id }}" 
+                                        title="YouTube video evidence" 
+                                        allowfullscreen></iframe>
+                            {% else %}
+                                <div class="d-flex align-items-center justify-content-center bg-light">
+                                    <a href="{{ document.youtube_url }}" target="_blank" class="btn btn-outline-danger">
+                                        <i class="fab fa-youtube"></i> View Video Evidence
+                                    </a>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                    <p><small class="text-muted">
+                        <a href="{{ document.youtube_url }}" target="_blank">{{ document.youtube_url }}</a>
+                    </small></p>
+                </div>
+                {% endif %}
+
+                <!-- Additional Evidence -->
+                {% if document.additional_evidence %}
+                <div class="mb-4">
+                    <h5><i class="fas fa-folder-open"></i> Additional Evidence</h5>
+                    <p class="text-muted">{{ document.additional_evidence|linebreaks }}</p>
+                </div>
+                {% endif %}
+
+                <!-- PDF Generation -->
+                <div class="mb-4">
+                    <h5><i class="fas fa-file-pdf"></i> Generated Document</h5>
+                    {% if document.pdf_file %}
+                        <a href="{{ document.pdf_file.url }}" class="btn btn-success" target="_blank">
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                    {% else %}
+                        <button onclick="generatePDF()" class="btn btn-outline-success">
+                            <i class="fas fa-cog"></i> Generate PDF Document
+                        </button>
+                        <small class="text-muted d-block mt-1">PDF generation will be available soon</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Sections (for future use) -->
+        {% if sections %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4><i class="fas fa-list-ol"></i> Document Sections</h4>
+            </div>
+            <div class="card-body">
+                {% for section in sections %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <h6>{{ section.get_section_type_display }}</h6>
+                        <p class="text-muted">{{ section.content|truncatewords:50 }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Document Metadata -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Document Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Created:</strong><br>{{ document.created_at|date:"F d, Y g:i A" }}</p>
+                <p><strong>Last Updated:</strong><br>{{ document.updated_at|date:"F d, Y g:i A" }}</p>
+                <p><strong>Status:</strong><br>
+                    <span class="badge bg-secondary">{{ document.get_status_display }}</span>
+                </p>
+                <p><strong>Owner:</strong><br>{{ document.user.get_full_name|default:document.user.username }}</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit Document
+                    </a>
+                    <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> All Documents
+                    </a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-info">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legal Disclaimer -->
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                <small class="text-muted">
+                    <i class="fas fa-exclamation-triangle"></i><br>
+                    <strong>Legal Disclaimer:</strong><br>
+                    This is a draft document. Always consult with a qualified attorney before filing legal documents.
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong>{{ document.title }}</strong>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'document_delete' document.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Document</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateStatus() {
+    const select = document.getElementById('statusSelect');
+    const badge = document.getElementById('statusBadge');
+    const newStatus = select.value;
+    const statusText = select.options[select.selectedIndex].text;
+    
+    // Update badge immediately for better UX
+    badge.textContent = statusText;
+    
+    // Send AJAX request to update status
+    fetch(`{% url 'document_status_update' document.pk %}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            'status': newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show';
+            alert.innerHTML = `
+                <i class="fas fa-check-circle"></i> ${data.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            document.querySelector('.container').prepend(alert);
+            
+            // Auto-dismiss after 3 seconds
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        } else {
+            alert('Error updating status: ' + data.error);
+            // Revert select to original value if error
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating status');
+        location.reload();
+    });
+}
+
+function generatePDF() {
+    alert('PDF generation feature will be implemented next! This will create a formatted legal document based on your case information.');
+}
+</script>
+{% endblock %}
