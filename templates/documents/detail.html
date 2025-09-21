@@ -58,29 +58,23 @@
 
                 <!-- Video Evidence -->
                 {% if document.youtube_url %}
-                <div class="mb-4">
-                    <h5><i class="fab fa-youtube text-danger"></i> Video Evidence</h5>
-                    <div class="ratio ratio-16x9 mb-2">
-                        {% comment %} Convert YouTube URL to embed format {% endcomment %}
-                        {% with youtube_id=document.youtube_url|slice:"32:" %}
-                            {% if "watch?v=" in document.youtube_url %}
-                                <iframe src="https://www.youtube.com/embed/{{ youtube_id }}" 
-                                        title="YouTube video evidence" 
-                                        allowfullscreen></iframe>
-                            {% else %}
-                                <div class="d-flex align-items-center justify-content-center bg-light">
-                                    <a href="{{ document.youtube_url }}" target="_blank" class="btn btn-outline-danger">
-                                        <i class="fab fa-youtube"></i> View Video Evidence
-                                    </a>
-                                </div>
-                            {% endif %}
-                        {% endwith %}
+                    <div class="mb-4">
+                        <h5><i class="fab fa-youtube text-danger"></i> Video Evidence</h5>
+                        <div class="mb-3">
+                            <a href="{{ document.youtube_url }}" target="_blank" class="btn btn-danger">
+                                <i class="fab fa-youtube"></i> Watch Video Evidence on YouTube
+                            </a>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-external-link-alt"></i> Opens in a new tab: {{ document.youtube_url }}
+                            </small>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Video Evidence:</strong> Click the button above to view the video evidence on YouTube. 
+                            This video supports your civil rights case.
+                        </div>
                     </div>
-                    <p><small class="text-muted">
-                        <a href="{{ document.youtube_url }}" target="_blank">{{ document.youtube_url }}</a>
-                    </small></p>
-                </div>
-                {% endif %}
+                    {% endif %}
 
                 <!-- Additional Evidence -->
                 {% if document.additional_evidence %}
@@ -124,7 +118,20 @@
         </div>
         {% endif %}
     </div>
-
+<!-- Plaintiff Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user"></i> Plaintiff</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ document.user.profile.full_legal_name }}</strong></p>
+                <p class="mb-1">{{ document.user.profile.full_address }}</p>
+                <p class="mb-0">{{ document.user.profile.phone_number }}</p>
+                {% if document.user.email %}
+                    <p class="mb-0"><small class="text-muted">{{ document.user.email }}</small></p>
+                {% endif %}
+            </div>
+        </div>
     <div class="col-lg-4">
         <!-- Document Metadata -->
         <div class="card">

@@ -15,9 +15,11 @@
     <div class="card-body">
         <form method="get" class="row g-3">
             <div class="col-md-4">
+                <label class="form-label">Search Documents</label>
                 {{ search_form.search_query }}
             </div>
             <div class="col-md-2">
+                <label class="form-label">Status</label>
                 {{ search_form.status_filter }}
             </div>
             <div class="col-md-2">
@@ -30,10 +32,10 @@
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-outline-primary me-2">
-                    <i class="fas fa-search"></i>
+                    <i class="fas fa-search"></i> Search
                 </button>
                 <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
-                    <i class="fas fa-times"></i>
+                    <i class="fas fa-times"></i> Clear
                 </a>
             </div>
         </form>
@@ -82,7 +84,7 @@
                             </a>
                             <button type="button" class="btn btn-outline-danger btn-sm" 
                                     onclick="confirmDelete('{{ document.title|escapejs }}', '{% url 'document_delete' document.pk %}')">
-                                <i class="fas fa-trash"></i>
+                                <i class="fas fa-trash"></i> Delete
                             </button>
                         </div>
                     </div>

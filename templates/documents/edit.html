@@ -1,31 +1,23 @@
 {% extends 'base.html' %}
 
-{% block title %}Create New Document - Section 1983 Document Generator{% endblock %}
+{% block title %}Edit Document - {{ document.title }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-lg-10">
         <div class="card">
             <div class="card-header">
-                <h2 class="mb-0"><i class="fas fa-plus-circle"></i> Create New Section 1983 Document</h2>
-                <p class="mb-0 text-muted">Fill out the details of your civil rights case below</p>
+                <h2 class="mb-0"><i class="fas fa-edit"></i> Edit Document</h2>
+                <p class="mb-0 text-muted">Update your Section 1983 case information</p>
             </div>
             <div class="card-body">
-                <!-- Important Legal Disclaimer -->
+                <!-- Legal Disclaimer -->
                 <div class="alert alert-warning" role="alert">
                     <strong><i class="fas fa-exclamation-triangle"></i> Legal Disclaimer:</strong>
                     This tool generates draft legal documents only. Always consult with a qualified attorney 
-                    before filing any legal documents in court. This is not legal advice.
+                    before filing any legal documents in court.
                 </div>
-<!-- Plaintiff Information -->
-                <div class="alert alert-info" role="alert">
-                    <h6><i class="fas fa-user"></i> Plaintiff Information</h6>
-                    <p class="mb-1"><strong>Name:</strong> {{ profile.full_legal_name }}</p>
-                    <p class="mb-1"><strong>Address:</strong> {{ profile.full_address }}</p>
-                    <p class="mb-0"><strong>Phone:</strong> {{ profile.phone_number }}</p>
-                    <small class="text-muted">This information will be included in your legal document. 
-                    <a href="{% url 'profile' %}">Update profile</a> if needed.</small>
-                </div>
+
                 <form method="post" novalidate>
                     {% csrf_token %}
                     
@@ -36,9 +28,6 @@
                             <span class="text-danger">*</span>
                         </label>
                         {{ form.title }}
-                        {% if form.title.help_text %}
-                            <div class="form-text">{{ form.title.help_text }}</div>
-                        {% endif %}
                         {% if form.title.errors %}
                             <div class="text-danger">
                                 {% for error in form.title.errors %}
@@ -55,9 +44,6 @@
                             <span class="text-danger">*</span>
                         </label>
                         {{ form.description }}
-                        {% if form.description.help_text %}
-                            <div class="form-text">{{ form.description.help_text }}</div>
-                        {% endif %}
                         {% if form.description.errors %}
                             <div class="text-danger">
                                 {% for error in form.description.errors %}
@@ -74,9 +60,6 @@
                                 {{ form.incident_date.label }}
                             </label>
                             {{ form.incident_date }}
-                            {% if form.incident_date.help_text %}
-                                <div class="form-text">{{ form.incident_date.help_text }}</div>
-                            {% endif %}
                             {% if form.incident_date.errors %}
                                 <div class="text-danger">
                                     {% for error in form.incident_date.errors %}
@@ -90,9 +73,6 @@
                                 {{ form.incident_location.label }}
                             </label>
                             {{ form.incident_location }}
-                            {% if form.incident_location.help_text %}
-                                <div class="form-text">{{ form.incident_location.help_text }}</div>
-                            {% endif %}
                             {% if form.incident_location.errors %}
                                 <div class="text-danger">
                                     {% for error in form.incident_location.errors %}
@@ -109,9 +89,6 @@
                             {{ form.defendants.label }}
                         </label>
                         {{ form.defendants }}
-                        {% if form.defendants.help_text %}
-                            <div class="form-text">{{ form.defendants.help_text }}</div>
-                        {% endif %}
                         {% if form.defendants.errors %}
                             <div class="text-danger">
                                 {% for error in form.defendants.errors %}
@@ -126,13 +103,7 @@
                         <label for="{{ form.youtube_url.id_for_label }}" class="form-label fw-bold">
                             {{ form.youtube_url.label }}
                         </label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="fab fa-youtube text-danger"></i></span>
-                            {{ form.youtube_url }}
-                        </div>
-                        {% if form.youtube_url.help_text %}
-                            <div class="form-text">{{ form.youtube_url.help_text }}</div>
-                        {% endif %}
+                        {{ form.youtube_url }}
                         {% if form.youtube_url.errors %}
                             <div class="text-danger">
                                 {% for error in form.youtube_url.errors %}
@@ -140,9 +111,6 @@
                                 {% endfor %}
                             </div>
                         {% endif %}
-                        <div class="form-text">
-                            <i class="fas fa-info-circle"></i> Video evidence can strengthen your case significantly
-                        </div>
                     </div>
 
                     <!-- Additional Evidence -->
@@ -151,9 +119,6 @@
                             {{ form.additional_evidence.label }}
                         </label>
                         {{ form.additional_evidence }}
-                        {% if form.additional_evidence.help_text %}
-                            <div class="form-text">{{ form.additional_evidence.help_text }}</div>
-                        {% endif %}
                         {% if form.additional_evidence.errors %}
                             <div class="text-danger">
                                 {% for error in form.additional_evidence.errors %}
@@ -165,77 +130,16 @@
 
                     <!-- Form Actions -->
                     <div class="d-flex justify-content-between">
-                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                        <a href="{% url 'document_detail' document.pk %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i> Cancel
                         </a>
                         <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-save"></i> Create Document
+                            <i class="fas fa-save"></i> Save Changes
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-
-        <!-- Tips Card -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Tips for Creating Your Document</h5>
-            </div>
-            <div class="card-body">
-                <ul class="mb-0">
-                    <li><strong>Be specific:</strong> Include exact dates, times, and locations when possible</li>
-                    <li><strong>Name all parties:</strong> List full names, badge numbers, departments, and supervisors</li>
-                    <li><strong>Document evidence:</strong> Mention all photos, videos, witnesses, and medical records</li>
-                    <li><strong>Describe violations:</strong> Clearly explain how your constitutional rights were violated</li>
-                    <li><strong>Save drafts:</strong> You can edit and update your document at any time</li>
-                </ul>
-            </div>
-        </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Auto-save draft functionality (future feature)
-    let formData = {};
-    
-    // Character counters for text areas
-    document.addEventListener('DOMContentLoaded', function() {
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(function(textarea) {
-            const maxLength = textarea.getAttribute('maxlength');
-            if (maxLength) {
-                const counter = document.createElement('div');
-                counter.className = 'form-text text-muted text-end';
-                counter.innerHTML = `<small>${textarea.value.length}/${maxLength} characters</small>`;
-                textarea.parentNode.appendChild(counter);
-                
-                textarea.addEventListener('input', function() {
-                    counter.innerHTML = `<small>${this.value.length}/${maxLength} characters</small>`;
-                });
-            }
-        });
-    });
-    
-    // Form validation feedback
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const requiredFields = document.querySelectorAll('input[required], textarea[required]');
-        let hasErrors = false;
-        
-        requiredFields.forEach(function(field) {
-            if (!field.value.trim()) {
-                field.classList.add('is-invalid');
-                hasErrors = true;
-            } else {
-                field.classList.remove('is-invalid');
-            }
-        });
-        
-        if (hasErrors) {
-            e.preventDefault();
-            alert('Please fill in all required fields.');
-        }
-    });
-</script>
 {% endblock %}

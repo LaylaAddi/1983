@@ -5,67 +5,179 @@
 {% block content %}
 <h1 class="mb-4">Profile Settings</h1>
 
+<!-- Profile Completeness Alert -->
+{% if not profile.is_complete %}
+<div class="alert alert-warning" role="alert">
+    <i class="fas fa-exclamation-triangle"></i>
+    <strong>Complete Your Profile:</strong> 
+    To file legal documents, please complete all required contact information below.
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-lg-8">
-        <!-- Profile Information -->
+        <!-- Basic Information -->
         <div class="card mb-4">
             <div class="card-header">
-                <h4 class="mb-0">Profile Information</h4>
+                <h4 class="mb-0">Basic Information</h4>
             </div>
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
                     
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" class="form-control" id="username" value="{{ user.username }}" disabled>
-                        <div class="form-text">Username cannot be changed</div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_first_name" class="form-label">First Name</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_last_name" class="form-label">Last Name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label for="first_name" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="first_name" name="first_name" value="{{ user.first_name }}">
+                        <label for="id_email" class="form-label">Email</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger">{{ form.email.errors.0 }}</div>
+                        {% endif %}
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label for="last_name" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="last_name" name="last_name" value="{{ user.last_name }}">
+                        <label for="id_full_legal_name" class="form-label">
+                            Full Legal Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.full_legal_name }}
+                        <div class="form-text">Name as it appears on your ID and should appear in legal documents</div>
+                        {% if form.full_legal_name.errors %}
+                            <div class="text-danger">{{ form.full_legal_name.errors.0 }}</div>
+                        {% endif %}
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+                        <label for="id_phone_number" class="form-label">
+                            Phone Number <span class="text-danger">*</span>
+                        </label>
+                        {{ form.phone_number }}
+                        {% if form.phone_number.errors %}
+                            <div class="text-danger">{{ form.phone_number.errors.0 }}</div>
+                        {% endif %}
                     </div>
-                    
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="id_date_of_birth" class="form-label">Date of Birth</label>
+                            {{ form.date_of_birth }}
+                            <div class="form-text">Optional</div>
+                            {% if form.date_of_birth.errors %}
+                                <div class="text-danger">{{ form.date_of_birth.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="id_occupation" class="form-label">Occupation</label>
+                            {{ form.occupation }}
+                            <div class="form-text">Optional</div>
+                            {% if form.occupation.errors %}
+                                <div class="text-danger">{{ form.occupation.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <h5 class="mt-4 mb-3">Legal Address <span class="text-danger">*</span></h5>
+                    <p class="text-muted small">This address will be used in legal documents and court filings</p>
+
+                    <div class="mb-3">
+                        <label for="id_street_address" class="form-label">Street Address</label>
+                        {{ form.street_address }}
+                        {% if form.street_address.errors %}
+                            <div class="text-danger">{{ form.street_address.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="id_city" class="form-label">City</label>
+                            {{ form.city }}
+                            {% if form.city.errors %}
+                                <div class="text-danger">{{ form.city.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="id_state" class="form-label">State</label>
+                            {{ form.state }}
+                            {% if form.state.errors %}
+                                <div class="text-danger">{{ form.state.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="id_zip_code" class="form-label">ZIP Code</label>
+                            {{ form.zip_code }}
+                            {% if form.zip_code.errors %}
+                                <div class="text-danger">{{ form.zip_code.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save"></i> Update Profile
                     </button>
                 </form>
             </div>
         </div>
-
-        <!-- Password Change -->
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">Change Password</h4>
-            </div>
-            <div class="card-body">
-                <p>To change your password, contact the administrator or use the password reset feature.</p>
-                <small class="text-muted">Password change functionality will be added in a future update.</small>
-            </div>
-        </div>
     </div>
     
     <div class="col-lg-4">
-        <!-- Account Statistics -->
-        <div class="card">
+        <!-- Profile Status -->
+        <div class="card mb-3">
             <div class="card-header">
-                <h4 class="mb-0">Account Statistics</h4>
+                <h5 class="mb-0">Profile Status</h5>
             </div>
             <div class="card-body">
+                {% if profile.is_complete %}
+                    <div class="text-success mb-2">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h6 class="text-success">Profile Complete</h6>
+                    <p class="small">Your profile has all required information for legal document creation.</p>
+                {% else %}
+                    <div class="text-warning mb-2">
+                        <i class="fas fa-exclamation-circle fa-2x"></i>
+                    </div>
+                    <h6 class="text-warning">Profile Incomplete</h6>
+                    <p class="small">Please complete all required fields marked with * to create legal documents.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Account Statistics -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0">Account Information</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Username:</strong><br>{{ user.username }}</p>
                 <p><strong>Member since:</strong><br>{{ user.date_joined|date:"F d, Y" }}</p>
                 <p><strong>Last login:</strong><br>{{ user.last_login|date:"F d, Y g:i A"|default:"Never" }}</p>
-                <p><strong>Documents created:</strong><br>{{ total_documents|default:0 }}</p>
+                <p><strong>Profile updated:</strong><br>{{ profile.updated_at|date:"F d, Y g:i A" }}</p>
+            </div>
+        </div>
+
+        <!-- Legal Disclaimer -->
+        <div class="card">
+            <div class="card-body text-center">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt"></i><br>
+                    <strong>Privacy Notice:</strong><br>
+                    Your personal information is securely stored and only used for generating legal documents. 
+                    We never share your information with third parties.
+                </small>
             </div>
         </div>
     </div>

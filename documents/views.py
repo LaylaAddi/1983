@@ -10,6 +10,39 @@ from django.http import JsonResponse
 import json
 
 @login_required
+
+
+@login_required
+def document_create(request):
+    """Create a new lawsuit document"""
+    from accounts.models import UserProfile
+    
+    # Check if user has complete profile
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    if not profile.is_complete:
+        messages.warning(request, 'Please complete your profile with legal contact information before creating documents.')
+        return redirect('profile')
+    
+    if request.method == 'POST':
+        form = LawsuitDocumentForm(request.POST)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.user = request.user
+            document.save()
+            messages.success(request, f'Document "{document.title}" created successfully!')
+            return redirect('document_detail', pk=document.pk)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = LawsuitDocumentForm()
+    
+    context = {
+        'form': form,
+        'profile': profile,
+    }
+    
+    return render(request, 'documents/create.html', context)
+
 def document_create(request):
     """Create a new lawsuit document"""
     if request.method == 'POST':

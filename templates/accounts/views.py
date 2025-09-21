@@ -11,31 +11,6 @@ from .models import UserProfile
 from .forms import UserProfileForm
 import json
 
-
-@login_required
-def profile_view(request):
-    """User profile management with legal information"""
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-    
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=profile, user=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Profile updated successfully!')
-            return redirect('profile')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = UserProfileForm(instance=profile, user=request.user)
-    
-    context = {
-        'form': form,
-        'profile': profile,
-    }
-    
-    return render(request, 'accounts/profile.html', context)
-
-
 def register_view(request):
     """User registration view"""
     if request.user.is_authenticated:
@@ -120,7 +95,28 @@ def dashboard_view(request):
     
     return render(request, 'accounts/dashboard.html', context)
 
-
+@login_required
+def profile_view(request):
+    """User profile management with legal information"""
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=profile, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserProfileForm(instance=profile, user=request.user)
+    
+    context = {
+        'form': form,
+        'profile': profile,
+    }
+    
+    return render(request, 'accounts/profile.html', context)
 
 @require_http_methods(["POST"])
 @login_required
