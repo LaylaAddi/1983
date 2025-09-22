@@ -33,9 +33,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         if options['clear']:
             self.stdout.write('Clearing existing data...')
+            # Clear in proper order to avoid foreign key issues
             DocumentSection.objects.all().delete()
             LawsuitDocument.objects.all().delete()
-            User.objects.all().delete()  # Clear ALL users including superusers
+            # Import UserProfile and clear it too
+            from accounts.models import UserProfile
+            UserProfile.objects.all().delete()
+            User.objects.all().delete()
 
         # Create users
         users_count = options['users']
@@ -96,38 +100,50 @@ class Command(BaseCommand):
             }
         ]
         
+        # Import UserProfile
+        from accounts.models import UserProfile
+        
         # Create specific users
         for user_data in specific_users:
-            if not User.objects.filter(email=user_data['email']).exists():
-                user = User.objects.create_user(
-                    username=user_data['email'],  # Use email as username for email-based login
-                    email=user_data['email'],
-                    first_name=user_data['first_name'],
-                    last_name=user_data['last_name'],
-                    password=user_data['password']
-                )
-                
-                # Set admin privileges
-                if user_data['is_admin']:
-                    user.is_staff = True
-                    user.is_superuser = True
-                    user.save()
-                
-                # Create user profile with complete legal information
-                from accounts.models import UserProfile
-                UserProfile.objects.create(
-                    user=user,
-                    full_legal_name=user_data['profile_data']['full_legal_name'],
-                    street_address=user_data['profile_data']['street_address'],
-                    city=user_data['profile_data']['city'],
-                    state=user_data['profile_data']['state'],
-                    zip_code=user_data['profile_data']['zip_code'],
-                    phone_number=user_data['profile_data']['phone_number']
-                )
-                
-                users.append(user)
-                admin_status = " (ADMIN)" if user_data['is_admin'] else ""
+            # Use get_or_create for user
+            user, user_created = User.objects.get_or_create(
+                email=user_data['email'],
+                defaults={
+                    'username': user_data['email'],  # Use email as username for email-based login
+                    'first_name': user_data['first_name'],
+                    'last_name': user_data['last_name'],
+                }
+            )
+            
+            # Set password (in case user existed but password wasn't set properly)
+            user.set_password(user_data['password'])
+            
+            # Set admin privileges
+            if user_data['is_admin']:
+                user.is_staff = True
+                user.is_superuser = True
+            
+            user.save()
+            
+            # Create user profile with get_or_create to avoid duplicates
+            profile, profile_created = UserProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    'full_legal_name': user_data['profile_data']['full_legal_name'],
+                    'street_address': user_data['profile_data']['street_address'],
+                    'city': user_data['profile_data']['city'],
+                    'state': user_data['profile_data']['state'],
+                    'zip_code': user_data['profile_data']['zip_code'],
+                    'phone_number': user_data['profile_data']['phone_number']
+                }
+            )
+            
+            users.append(user)
+            admin_status = " (ADMIN)" if user_data['is_admin'] else ""
+            if user_created:
                 self.stdout.write(f'Created specific user: {user.email}{admin_status}')
+            else:
+                self.stdout.write(f'User already exists: {user.email}{admin_status}')
         
         # Create additional fake users (count - 2 since we created 2 specific ones)
         remaining_count = max(0, count - len(specific_users))
@@ -145,16 +161,17 @@ class Command(BaseCommand):
                 password='testpassword123'
             )
             
-            # Create fake user profile
-            from accounts.models import UserProfile
-            UserProfile.objects.create(
+            # Create fake user profile with get_or_create
+            profile, created = UserProfile.objects.get_or_create(
                 user=user,
-                full_legal_name=f"{user.first_name} {user.last_name}",
-                street_address=fake.street_address(),
-                city=fake.city(),
-                state=fake.state_abbr(),
-                zip_code=fake.zipcode(),
-                phone_number=fake.phone_number()
+                defaults={
+                    'full_legal_name': f"{user.first_name} {user.last_name}",
+                    'street_address': fake.street_address(),
+                    'city': fake.city(),
+                    'state': fake.state_abbr(),
+                    'zip_code': fake.zipcode(),
+                    'phone_number': fake.phone_number()
+                }
             )
             
             users.append(user)

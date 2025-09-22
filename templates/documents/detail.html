@@ -23,9 +23,9 @@
                 <div class="mb-3">
                     <span class="badge bg-secondary fs-6" id="statusBadge">{{ document.get_status_display }}</span>
                     <select class="form-select d-inline-block w-auto ms-2" id="statusSelect" onchange="updateStatus()">
-                        {% for status_value, status_label in document.STATUS_CHOICES %}
-                        <option value="{{ status_value }}" {% if document.status==status_value %}selected{% endif %}>
-                            {{ status_label }}
+                        {% for value, label in document.STATUS_CHOICES %}
+                        <option value="{{ value }}" {% if document.status == value %}selected{% endif %}>
+                            {{ label }}
                         </option>
                         {% endfor %}
                     </select>
@@ -58,9 +58,7 @@
                 {% endif %}
 
                 <!-- Video Evidence -->
-                <!-- Video Evidence -->
-                {% if document.youtube_url_1 or document.youtube_url_2 or document.youtube_url_3 or
-                document.youtube_url_4 %}
+                {% if document.youtube_url_1 or document.youtube_url_2 or document.youtube_url_3 or document.youtube_url_4 %}
                 <div class="mb-4">
                     <h5><i class="bi bi-camera-video text-danger"></i> Video Evidence</h5>
 
@@ -131,7 +129,7 @@
             </div>
         </div>
 
-        <!-- Document Sections (for future use) -->
+        <!-- Document Sections -->
         {% if sections %}
         <div class="card mt-4">
             <div class="card-header">
@@ -148,21 +146,23 @@
         </div>
         {% endif %}
     </div>
-    <!-- Plaintiff Information -->
-    <div class="card mb-3">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-user"></i> Plaintiff</h5>
-        </div>
-        <div class="card-body">
-            <p><strong>{{ document.user.profile.full_legal_name }}</strong></p>
-            <p class="mb-1">{{ document.user.profile.full_address }}</p>
-            <p class="mb-0">{{ document.user.profile.phone_number }}</p>
-            {% if document.user.email %}
-            <p class="mb-0"><small class="text-muted">{{ document.user.email }}</small></p>
-            {% endif %}
-        </div>
-    </div>
+
     <div class="col-lg-4">
+        <!-- Plaintiff Information -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user"></i> Plaintiff</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>{{ document.user.profile.full_legal_name }}</strong></p>
+                <p class="mb-1">{{ document.user.profile.full_address }}</p>
+                <p class="mb-0">{{ document.user.profile.phone_number }}</p>
+                {% if document.user.email %}
+                <p class="mb-0"><small class="text-muted">{{ document.user.email }}</small></p>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Document Metadata -->
         <div class="card">
             <div class="card-header">
