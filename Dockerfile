@@ -8,9 +8,12 @@ ENV PYTHONUNBUFFERED=1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including Node.js
 RUN apt-get update && apt-get install -y \
     postgresql-client \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -18,8 +21,21 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy package.json first for better caching
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# Create static directories before building
+RUN mkdir -p static/css static/js static/fonts
+
+# Copy project files
 COPY . .
+
+# Build static assets (copy Bootstrap files to static directories)
+RUN npm run build
+
+# Collect Django static files
+RUN python manage.py collectstatic --noinput --clear
 
 # Expose port
 EXPOSE 8000

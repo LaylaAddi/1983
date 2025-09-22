@@ -1,0 +1,16 @@
+{
+  "name": "lawsuit-generator",
+  "version": "1.0.0",
+  "description": "Section 1983 Document Generator",
+  "scripts": {
+    "build": "npm run build-css && npm run build-js && npm run build-icons",
+    "build-css": "cp node_modules/bootstrap/dist/css/bootstrap.min.css static/css/",
+    "build-js": "cp node_modules/bootstrap/dist/js/bootstrap.bundle.min.js static/js/",
+    "build-icons": "cp node_modules/bootstrap-icons/font/bootstrap-icons.css static/css/ && cp -r node_modules/bootstrap-icons/font/fonts static/"
+  },
+  "dependencies": {
+    "bootstrap": "^5.3.2",
+    "@popperjs/core": "^2.11.8",
+    "bootstrap-icons": "^1.11.0"
+  }
+}

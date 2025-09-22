@@ -22,7 +22,11 @@ class LawsuitDocument(models.Model):
     defendants = models.TextField(blank=True, help_text="Names and positions of defendants")
     
     # Evidence
-    youtube_url = models.URLField(blank=True, help_text="YouTube video showing the violation")
+    youtube_url_1 = models.URLField(blank=True, help_text="Primary video evidence")
+    youtube_url_2 = models.URLField(blank=True, help_text="Additional video evidence")
+    youtube_url_3 = models.URLField(blank=True, help_text="Additional video evidence")
+    youtube_url_4 = models.URLField(blank=True, help_text="Additional video evidence")
+    
     additional_evidence = models.TextField(blank=True, help_text="Description of other evidence")
     
     # Document Status

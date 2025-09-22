@@ -10,7 +10,7 @@ class LawsuitDocumentForm(forms.ModelForm):
         model = LawsuitDocument
         fields = [
             'title', 'description', 'incident_date', 'incident_location',
-            'defendants', 'youtube_url', 'additional_evidence'
+            'defendants', 'youtube_url_1', 'youtube_url_2', 'youtube_url_3','youtube_url_4', 'additional_evidence'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -35,9 +35,21 @@ class LawsuitDocumentForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'List the names, positions, and departments of all defendants (officers, supervisors, agencies, etc.)'
             }),
-            'youtube_url': forms.URLInput(attrs={
+            'youtube_url_1': forms.URLInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'https://youtube.com/watch?v=... (optional)'
+                'placeholder': 'https://youtube.com/watch?v=... (primary video)'
+            }),
+            'youtube_url_2': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://youtube.com/watch?v=... (additional video)'
+            }),
+            'youtube_url_3': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://youtube.com/watch?v=... (additional video)'
+            }),
+            'youtube_url_4': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://youtube.com/watch?v=... (additional video)'
             }),
             'additional_evidence': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -51,7 +63,10 @@ class LawsuitDocumentForm(forms.ModelForm):
             'incident_date': 'Date of Incident',
             'incident_location': 'Location of Incident',
             'defendants': 'Defendants (Officers, Agencies, etc.)',
-            'youtube_url': 'YouTube Video Evidence (Optional)',
+            'youtube_url_1': 'Primary Video Evidence',
+            'youtube_url_2': 'Additional Video Evidence',
+            'youtube_url_3': 'Additional Video Evidence',
+            'youtube_url_4': 'Additional Video Evidence',
             'additional_evidence': 'Additional Evidence'
         }
         help_texts = {

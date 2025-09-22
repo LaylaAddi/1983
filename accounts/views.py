@@ -2,51 +2,25 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import UserProfile
-from .forms import UserProfileForm
+from .forms import UserProfileForm, EmailUserCreationForm
 import json
 
 
-@login_required
-def profile_view(request):
-    """User profile management with legal information"""
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
-    
-    if request.method == 'POST':
-        form = UserProfileForm(request.POST, instance=profile, user=request.user)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Profile updated successfully!')
-            return redirect('profile')
-        else:
-            messages.error(request, 'Please correct the errors below.')
-    else:
-        form = UserProfileForm(instance=profile, user=request.user)
-    
-    context = {
-        'form': form,
-        'profile': profile,
-    }
-    
-    return render(request, 'accounts/profile.html', context)
-
-
 def register_view(request):
-    """User registration view"""
+    """User registration view with email"""
     if request.user.is_authenticated:
         return redirect('dashboard')
     
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = EmailUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            username = form.cleaned_data.get('username')
-            messages.success(request, f'Account created for {username}!')
+            messages.success(request, f'Account created successfully! Welcome, {user.first_name or user.email}!')
             
             # Log the user in after registration
             login(request, user)
@@ -54,41 +28,45 @@ def register_view(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = UserCreationForm()
+        form = EmailUserCreationForm()
     
     return render(request, 'accounts/register.html', {'form': form})
 
+
 def login_view(request):
-    """User login view"""
+    """User login view with email"""
     if request.user.is_authenticated:
         return redirect('dashboard')
     
     if request.method == 'POST':
-        username = request.POST.get('username')
+        email = request.POST.get('email')
         password = request.POST.get('password')
         
-        if username and password:
-            user = authenticate(request, username=username, password=password)
+        if email and password:
+            # Django uses username for authentication, but we store email as username
+            user = authenticate(request, username=email, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, f'Welcome back, {user.username}!')
+                messages.success(request, f'Welcome back!')
                 
                 # Redirect to next page or dashboard
                 next_url = request.GET.get('next', 'dashboard')
                 return redirect(next_url)
             else:
-                messages.error(request, 'Invalid username or password.')
+                messages.error(request, 'Invalid email or password.')
         else:
-            messages.error(request, 'Please provide both username and password.')
+            messages.error(request, 'Please provide both email and password.')
     
     return render(request, 'accounts/login.html')
+
 
 def logout_view(request):
     """User logout view"""
     if request.user.is_authenticated:
-        messages.success(request, f'Goodbye, {request.user.username}!')
+        messages.success(request, f'Goodbye!')
     logout(request)
     return redirect('home')
+
 
 @login_required
 def dashboard_view(request):
@@ -121,6 +99,29 @@ def dashboard_view(request):
     return render(request, 'accounts/dashboard.html', context)
 
 
+@login_required
+def profile_view(request):
+    """User profile management with legal information"""
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=profile, user=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = UserProfileForm(instance=profile, user=request.user)
+    
+    context = {
+        'form': form,
+        'profile': profile,
+    }
+    
+    return render(request, 'accounts/profile.html', context)
+
 
 @require_http_methods(["POST"])
 @login_required
@@ -151,3 +152,5 @@ def change_password_ajax(request):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': 'An error occurred. Please try again.'})
+
+
