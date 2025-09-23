@@ -7,6 +7,7 @@ from django.db.models import Q
 from .models import LawsuitDocument, DocumentSection
 from .forms import LawsuitDocumentForm, DocumentSearchForm
 from django.http import JsonResponse
+from documents.services import LegalDocumentPopulator
 import json
 
 @login_required
@@ -194,3 +195,34 @@ def document_status_update(request, pk):
             })
     
     return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+@login_required
+def auto_populate_legal_sections(request, pk):
+    """View to automatically populate document with legal templates"""
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    
+    # Check if document has required information
+    if not document.description:
+        messages.error(request, 'Please add a description of the incident before generating legal sections.')
+        return redirect('document_edit', pk=pk)
+    
+    if not document.incident_location:
+        messages.error(request, 'Please specify the incident location before generating legal sections.')
+        return redirect('document_edit', pk=pk)
+    
+    # Populate the document
+    populator = LegalDocumentPopulator(document)
+    result = populator.auto_populate_document()
+    
+    # Update document status
+    if document.status == 'draft':
+        document.status = 'in_progress'
+        document.save()
+    
+    messages.success(
+        request, 
+        f'Generated {result["sections_created"]} legal sections based on {result["violation_type"].replace("_", " ")} in a {result["location_type"].replace("_", " ")}.'
+    )
+    
+    return redirect('document_detail', pk=pk)

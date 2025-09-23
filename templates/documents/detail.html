@@ -112,19 +112,36 @@
                 </div>
                 {% endif %}
 
-                <!-- PDF Generation -->
+                <!-- Legal Document Generation -->
                 <div class="mb-4">
-                    <h5><i class="fas fa-file-pdf"></i> Generated Document</h5>
-                    {% if document.pdf_file %}
-                    <a href="{{ document.pdf_file.url }}" class="btn btn-success" target="_blank">
-                        <i class="fas fa-download"></i> Download PDF
-                    </a>
-                    {% else %}
-                    <button onclick="generatePDF()" class="btn btn-outline-success">
-                        <i class="fas fa-cog"></i> Generate PDF Document
-                    </button>
-                    <small class="text-muted d-block mt-1">PDF generation will be available soon</small>
+                    <h5><i class="fas fa-gavel"></i> Legal Document Generation</h5>
+                    
+                    {% if sections %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> This document has {{ sections|length }} legal sections.
+                        </div>
                     {% endif %}
+                    
+                    <div class="btn-group mb-3" role="group">
+                        <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-primary">
+                            <i class="fas fa-magic"></i> Generate Legal Sections
+                        </a>
+                        
+                        {% if document.pdf_file %}
+                        <a href="{{ document.pdf_file.url }}" class="btn btn-success" target="_blank">
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                        {% else %}
+                        <button onclick="generatePDF()" class="btn btn-outline-success">
+                            <i class="fas fa-file-pdf"></i> Generate PDF
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <small class="text-muted d-block">
+                        Legal sections are generated based on your incident description and location.
+                        You can edit any section after generation.
+                    </small>
                 </div>
             </div>
         </div>
@@ -155,7 +172,7 @@
             </div>
             <div class="card-body">
                 <p><strong>{{ document.user.profile.full_legal_name }}</strong></p>
-                <p class="mb-1">{{ document.user.profile.full_address }}</p>
+                <p class="mb-1">{{ document.user.profile.street_address }}, {{ document.user.profile.city }}, {{ document.user.profile.state }} {{ document.user.profile.zip_code }}</p>
                 <p class="mb-0">{{ document.user.profile.phone_number }}</p>
                 {% if document.user.email %}
                 <p class="mb-0"><small class="text-muted">{{ document.user.email }}</small></p>
@@ -243,10 +260,8 @@
         const newStatus = select.value;
         const statusText = select.options[select.selectedIndex].text;
 
-        // Update badge immediately for better UX
         badge.textContent = statusText;
 
-        // Send AJAX request to update status
         fetch(`{% url 'document_status_update' document.pk %}`, {
             method: 'POST',
             headers: {
@@ -260,7 +275,6 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Show success message
                     const alert = document.createElement('div');
                     alert.className = 'alert alert-success alert-dismissible fade show';
                     alert.innerHTML = `
@@ -269,13 +283,11 @@
             `;
                     document.querySelector('.container').prepend(alert);
 
-                    // Auto-dismiss after 3 seconds
                     setTimeout(() => {
                         alert.remove();
                     }, 3000);
                 } else {
                     alert('Error updating status: ' + data.error);
-                    // Revert select to original value if error
                     location.reload();
                 }
             })
