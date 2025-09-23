@@ -40,6 +40,8 @@ class Command(BaseCommand):
             from accounts.models import UserProfile
             UserProfile.objects.all().delete()
             User.objects.all().delete()
+            from documents.models import LegalTemplate
+            LegalTemplate.objects.all().delete()
 
         # Create users
         users_count = options['users']
@@ -54,12 +56,18 @@ class Command(BaseCommand):
         self.stdout.write(f'Creating document sections...')
         self.create_document_sections(documents)
         
+        self.stdout.write('Creating legal templates...')
+        self.create_legal_templates()
+        
         self.stdout.write(
             self.style.SUCCESS(
                 f'Successfully seeded database with {users_count} users, '
                 f'{documents_count} documents, and their sections!'
             )
         )
+
+        self.stdout.write('Creating legal templates...')
+        self.create_legal_templates()
 
     def create_users(self, count):
         users = []
@@ -177,6 +185,70 @@ class Command(BaseCommand):
             users.append(user)
             
         return users
+    
+
+    def create_legal_templates(self):
+        """Create legal boilerplate templates"""
+        templates = [
+            {
+                'violation_type': 'threatened_arrest_public',
+                'location_type': 'traditional_public_forum',
+                'section_type': 'jurisdiction',
+                'template_text': 'This Court has jurisdiction over this action pursuant to 28 U.S.C. §§ 1331 and 1343(a)(3), as this action arises under the Constitution and laws of the United States, specifically 42 U.S.C. § 1983. Venue is proper in this district under 28 U.S.C. § 1391(b)(2).'
+            },
+            {
+                'violation_type': 'threatened_arrest_public', 
+                'location_type': 'traditional_public_forum',
+                'section_type': 'claims',
+                'template_text': 'Defendants violated Plaintiff\'s First Amendment rights by imposing a prior restraint on protected speech and newsgathering activities. The threat of arrest constitutes a prior restraint, which is presumptively unconstitutional.'
+            }
+        ]
+        
+        from documents.models import LegalTemplate
+        for template_data in templates:
+            template, created = LegalTemplate.objects.get_or_create(
+                violation_type=template_data['violation_type'],
+                location_type=template_data['location_type'], 
+                section_type=template_data['section_type'],
+                defaults={'template_text': template_data['template_text']}
+            )
+            if created:
+                self.stdout.write(f'Created legal template: {template_data["section_type"]}')
+
+    def create_legal_templates(self):
+        """Create legal boilerplate templates"""
+        from documents.models import LegalTemplate
+        
+        templates = [
+            {
+                'violation_type': 'threatened_arrest_public',
+                'location_type': 'traditional_public_forum',
+                'section_type': 'jurisdiction',
+                'template_text': 'This Court has jurisdiction over this action pursuant to 28 U.S.C. §§ 1331 and 1343(a)(3), as this action arises under the Constitution and laws of the United States, specifically 42 U.S.C. § 1983. Venue is proper in this district under 28 U.S.C. § 1391(b)(2) because a substantial part of the events occurred in this judicial district.'
+            },
+            {
+                'violation_type': 'threatened_arrest_public',
+                'location_type': 'traditional_public_forum',
+                'section_type': 'claims',
+                'template_text': 'COUNT I - VIOLATION OF FIRST AMENDMENT RIGHTS (42 U.S.C. § 1983)\n\nDefendants violated Plaintiff\'s First Amendment rights by imposing a prior restraint on protected speech and newsgathering activities. The threat of arrest constitutes a prior restraint, which is presumptively unconstitutional. The location constitutes a traditional public forum where Plaintiff has clearly established rights to engage in protected speech and press activities.'
+            },
+            {
+                'violation_type': 'threatened_arrest_public',
+                'location_type': 'traditional_public_forum',
+                'section_type': 'prayer',
+                'template_text': 'WHEREFORE, Plaintiff respectfully requests that this Court:\n\na) Enter declaratory judgment that Defendants\' actions violated Plaintiff\'s First and Fourteenth Amendment rights;\nb) Award compensatory damages for violation of constitutional rights;\nc) Award punitive damages against individual Defendants;\nd) Award attorney\'s fees and costs pursuant to 42 U.S.C. § 1988;\ne) Grant such other relief as this Court deems just and proper.'
+            }
+        ]
+        
+        for template_data in templates:
+            template, created = LegalTemplate.objects.get_or_create(
+                violation_type=template_data['violation_type'],
+                location_type=template_data['location_type'],
+                section_type=template_data['section_type'],
+                defaults={'template_text': template_data['template_text']}
+            )
+            if created:
+                self.stdout.write(f'Created legal template: {template_data["section_type"]}')
 
     def create_lawsuit_documents(self, users, count):
         # Civil rights violation scenarios
@@ -325,3 +397,6 @@ class Command(BaseCommand):
                     content=content,
                     order=list(dict(DocumentSection.SECTION_TYPES).keys()).index(section_type)
                 )
+
+
+                

@@ -10,7 +10,10 @@ class LawsuitDocument(models.Model):
         ('completed', 'Completed'),
         ('filed', 'Filed'),
     ]
+
     
+    def __str__(self):
+        return f"{self.violation_type} - {self.section_type}"
     # Basic Info
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lawsuit_documents')
     title = models.CharField(max_length=200)
@@ -70,3 +73,31 @@ class DocumentSection(models.Model):
         
     def __str__(self):
         return f"{self.document.title} - {self.get_section_type_display()}"
+    
+
+class LegalTemplate(models.Model):
+    """Store legal boilerplate templates for different violation types"""
+    VIOLATION_TYPES = [
+        ('threatened_arrest_public', 'Threatened Arrest in Public Area'),
+        ('interference_recording', 'Interference with Recording'),
+        ('forced_to_leave_public', 'Forced to Leave Public Area'),
+    ]
+    
+    LOCATION_TYPES = [
+        ('traditional_public_forum', 'Traditional Public Forum'),
+        ('designated_public_forum', 'Designated Public Forum'),
+        ('limited_public_forum', 'Limited Public Forum'),
+    ]
+    
+    violation_type = models.CharField(max_length=50, choices=VIOLATION_TYPES)
+    location_type = models.CharField(max_length=50, choices=LOCATION_TYPES)
+    section_type = models.CharField(max_length=20)  # matches DocumentSection.SECTION_TYPES
+    template_text = models.TextField()
+    is_required = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['violation_type', 'location_type', 'section_type']
+    
+    def __str__(self):
+        return f"{self.get_violation_type_display()} - {self.section_type}"    
