@@ -348,7 +348,7 @@ class Command(BaseCommand):
                 'violation_type': 'interference_recording',
                 'location_type': 'traditional_public_forum',
                 'section_type': 'facts',
-                'template_text': 'On {incident_date}, Plaintiff was lawfully present at {incident_location}, a traditional public forum, exercising the clearly established constitutional right to record public officials in the performance of their duties.\n\nDefendants interfered with Plaintiff\'s recording activities without legal justification, violating Plaintiff\'s clearly established First Amendment rights.\n\nThe right to record police and public officials in public spaces was clearly established at the time of Defendants\' conduct.'
+                'template_text': 'On {{incident_date}}, Plaintiff was lawfully present at {{incident_location}}, a traditional public forum, exercising the clearly established constitutional right to record public officials in the performance of their duties.\n\nDefendants interfered with Plaintiff\'s recording activities without legal justification, violating Plaintiff\'s clearly established First Amendment rights.\n\nThe right to record police and public officials in public spaces was clearly established at the time of Defendants\' conduct.'
             },
             {
                 'violation_type': 'interference_recording',
