@@ -374,7 +374,7 @@ class Command(BaseCommand):
                 'violation_type': 'forced_to_leave_public',
                 'location_type': 'traditional_public_forum',
                 'section_type': 'facts',
-                'template_text': 'On {incident_date}, Plaintiff was lawfully present at {incident_location}, a traditional public forum, engaging in constitutionally protected activities including speech, assembly, and newsgathering.\n\nWithout lawful justification, Defendants forced Plaintiff to leave the public area, thereby excluding Plaintiff from a traditional public forum based on the content and viewpoint of Plaintiff\'s protected activities.\n\nPlaintiff\'s activities were peaceful, lawful, and posed no threat to public safety or substantial interference with other lawful uses of the forum.'
+                'template_text': 'On {{incident_date}}, Plaintiff was lawfully present at {{incident_location}}, a traditional public forum, engaging in constitutionally protected activities including speech, assembly, and newsgathering.\n\nWithout lawful justification, Defendants forced Plaintiff to leave the public area, thereby excluding Plaintiff from a traditional public forum based on the content and viewpoint of Plaintiff\'s protected activities.\n\nPlaintiff\'s activities were peaceful, lawful, and posed no threat to public safety or substantial interference with other lawful uses of the forum.'
             },
             {
                 'violation_type': 'forced_to_leave_public',

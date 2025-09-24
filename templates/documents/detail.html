@@ -112,35 +112,102 @@
                 </div>
                 {% endif %}
 
-                <!-- Legal Document Generation -->
+                <!-- NEW: Legal Document Management Section -->
                 <div class="mb-4">
-                    <h5><i class="fas fa-gavel"></i> Legal Document Generation</h5>
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-file-alt"></i> Legal Document Management</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Section Management</h6>
+                                    <p class="text-muted small">Create and edit legal sections for your complaint</p>
+                                    <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-primary">
+                                        <i class="fas fa-edit"></i> Manage Legal Sections
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Document Preview</h6>
+                                    <p class="text-muted small">View your document as it will appear in court</p>
+                                    <a href="{% url 'document_preview' document.pk %}" class="btn btn-outline-primary">
+                                        <i class="fas fa-eye"></i> Preview Document
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Section Status Summary -->
+                            <div class="mt-3">
+                                <h6>Section Status</h6>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <p class="mb-2">
+                                            <strong>{{ document.sections.count }}</strong> of 7 standard sections completed
+                                        </p>
+                                        {% if document.sections.count == 0 %}
+                                            <div class="alert alert-info">
+                                                <i class="fas fa-info-circle"></i> 
+                                                No sections created yet. Click "Manage Legal Sections" to get started.
+                                            </div>
+                                        {% elif document.sections.count < 7 %}
+                                            <div class="alert alert-warning">
+                                                <i class="fas fa-exclamation-triangle"></i> 
+                                                Document is incomplete. Add remaining sections for a complete legal complaint.
+                                            </div>
+                                        {% else %}
+                                            <div class="alert alert-success">
+                                                <i class="fas fa-check-circle"></i> 
+                                                All standard sections completed! Your document is ready for review.
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPDATED: Auto-Generation Tools -->
+                <div class="mb-4">
+                    <h5><i class="fas fa-magic"></i> Quick Start: Auto-Generate Basic Sections</h5>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-lightbulb"></i> How Auto-Generation Works:</h6>
+                        <p class="mb-2">This tool analyzes your incident description and location to automatically create basic legal sections using pre-written templates.</p>
+                        
+                        <p class="mb-2"><strong>What it creates:</strong></p>
+                        <ul class="mb-2">
+                            <li>Introduction and jurisdiction sections</li>
+                            <li>Basic facts section based on your incident description</li>
+                            <li>Standard claims for civil rights violations</li>
+                            <li>Prayer for relief and jury demand</li>
+                        </ul>
+                        
+                        <p class="mb-2"><strong>Example workflow:</strong></p>
+                        <ol class="mb-0">
+                            <li>Click "Auto-Generate Sections" below to create a basic legal framework</li>
+                            <li>Use "Manage Legal Sections" above to edit, customize, and add specific details</li>
+                            <li>Preview your completed document when ready for review</li>
+                        </ol>
+                    </div>
                     
                     {% if sections %}
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle"></i> This document has {{ sections|length }} legal sections.
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> This document has {{ sections|length }} legal sections. 
+                            <strong>Auto-generation will update existing sections</strong> with new template content.
                         </div>
                     {% endif %}
                     
-                    <div class="btn-group mb-3" role="group">
-                        <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-primary">
-                            <i class="fas fa-magic"></i> Generate Legal Sections
+                    <div class="mb-3">
+                        <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-success">
+                            <i class="fas fa-magic"></i> Auto-Generate Basic Sections
                         </a>
-                        
-                        {% if document.pdf_file %}
-                        <a href="{{ document.pdf_file.url }}" class="btn btn-success" target="_blank">
-                            <i class="fas fa-download"></i> Download PDF
-                        </a>
-                        {% else %}
-                        <button onclick="generatePDF()" class="btn btn-outline-success">
-                            <i class="fas fa-file-pdf"></i> Generate PDF
-                        </button>
-                        {% endif %}
                     </div>
                     
-                    <small class="text-muted d-block">
-                        Legal sections are generated based on your incident description and location.
-                        You can edit any section after generation.
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Auto-generation provides a starting point based on common civil rights cases. 
+                        You can fully customize all content using the section management tools above.
                     </small>
                 </div>
             </div>
@@ -149,8 +216,11 @@
         <!-- Document Sections -->
         {% if sections %}
         <div class="card mt-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h4><i class="fas fa-list-ol"></i> Document Sections</h4>
+                <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-edit"></i> Edit Sections
+                </a>
             </div>
             <div class="card-body">
                 {% for section in sections %}
@@ -195,15 +265,21 @@
             </div>
         </div>
 
-        <!-- Quick Actions -->
+        <!-- UPDATED: Quick Actions -->
         <div class="card mt-3">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
             </div>
             <div class="card-body">
                 <div class="d-grid gap-2">
-                    <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-primary">
-                        <i class="fas fa-edit"></i> Edit Document
+                    <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Legal Sections
+                    </a>
+                    <a href="{% url 'document_preview' document.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye"></i> Preview Document
+                    </a>
+                    <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-pencil-alt"></i> Edit Document Info
                     </a>
                     <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
                         <i class="fas fa-list"></i> All Documents

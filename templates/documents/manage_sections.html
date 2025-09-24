@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Legal Sections - {{ document.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Keep this - important for legal documents */
+    .section-content {
+        font-family: "Times New Roman", serif;
+        line-height: 1.6;
+        min-height: 200px;
+    }
+    
+    /* Keep this - custom button color for legal theme */
+    .btn-legal {
+        background: #1a472a;
+        color: white;
+        border: none;
+    }
+    
+    .btn-legal:hover {
+        background: #0f2818;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>Manage Legal Sections</h2>
+                    <p class="text-muted">{{ document.title }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'document_preview' document.pk %}" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-eye"></i> Preview Document
+                    </a>
+                    <a href="{% url 'document_detail' document.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Document
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Card -->
+    <div class="card mb-4 border-info">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> How to Add Legal Sections</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary">Violation Types:</h6>
+                    <ul class="small">
+                        <li><strong>Threatened Arrest in Public:</strong> Officer threatened to arrest you for lawful activities</li>
+                        <li><strong>Interference with Recording:</strong> Officials blocked, stopped, or interfered with your recording</li>
+                        <li><strong>Forced to Leave Public Area:</strong> You were unlawfully removed from public property</li>
+                    </ul>
+                    
+                    <h6 class="text-primary mt-3">Location Types:</h6>
+                    <ul class="small">
+                        <li><strong>Traditional Public Forum:</strong> Sidewalks, streets, parks, courthouse steps</li>
+                        <li><strong>Designated Public Forum:</strong> Government buildings opened for public access</li>
+                        <li><strong>Limited Public Forum:</strong> Restricted areas like building lobbies, waiting rooms</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="text-primary">Section Types:</h6>
+                    <ul class="small">
+                        <li><strong>Introduction:</strong> Overview of your civil rights claim</li>
+                        <li><strong>Jurisdiction:</strong> Why this court has authority to hear your case</li>
+                        <li><strong>Parties:</strong> Information about you and the defendants</li>
+                        <li><strong>Facts:</strong> Detailed description of what happened</li>
+                        <li><strong>Claims:</strong> Legal theories and constitutional violations</li>
+                        <li><strong>Prayer:</strong> What you're asking the court to award you</li>
+                        <li><strong>Jury Demand:</strong> Request for jury trial</li>
+                    </ul>
+                    
+                    <div class="alert alert-warning alert-sm mt-3">
+                        <small><strong>Note:</strong> Each document can only have one section of each type. Inserting a template will update existing sections of that type.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Section Tools -->
+    <div class="template-section">
+        <h4><i class="fas fa-plus-circle"></i> Add New Section</h4>
+        
+        <div class="row">
+            <!-- Insert Template Section -->
+            <div class="col-md-6">
+                <h6>Insert Legal Template</h6>
+                <form method="post" action="{% url 'insert_template_section' document.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ template_form.violation_type.label_tag }}
+                        {{ template_form.violation_type }}
+                    </div>
+                    <div class="mb-3">
+                        {{ template_form.location_type.label_tag }}
+                        {{ template_form.location_type }}
+                    </div>
+                    <div class="mb-3">
+                        {{ template_form.section_type.label_tag }}
+                        {{ template_form.section_type }}
+                    </div>
+                    <button type="submit" class="btn btn-legal">
+                        <i class="fas fa-file-alt"></i> Insert Template
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Add Blank Section -->
+            <div class="col-md-6">
+                <h6>Add Blank Section</h6>
+                <form method="post" action="{% url 'add_blank_section' document.pk %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ blank_form.section_type.label_tag }}
+                        {{ blank_form.section_type }}
+                    </div>
+                    <div class="mb-3">
+                        {{ blank_form.title.label_tag }}
+                        {{ blank_form.title }}
+                    </div>
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="fas fa-plus"></i> Add Blank Section
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Management Form -->
+    <form method="post">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        
+        <div class="row">
+            <div class="col-12">
+                <h4><i class="fas fa-edit"></i> Edit Existing Sections</h4>
+                
+                {% if formset.forms %}
+                    {% for form in formset.forms %}
+                        <div class="section-card">
+                            <div class="section-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h5 class="mb-0">
+                                            {% if form.instance.section_type %}
+                                                {{ form.instance.get_section_type_display }}
+                                            {% else %}
+                                                Section {{ forloop.counter }}
+                                            {% endif %}
+                                        </h5>
+                                        <small class="text-muted">Automatically ordered according to legal document standards</small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        {% if form.DELETE %}
+                                            <label class="form-label text-danger">
+                                                {{ form.DELETE }} Delete Section
+                                            </label>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="section-body">
+                                <!-- Hidden fields -->
+                                {% for hidden in form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+                                
+                                <div class="mb-3">
+                                    {{ form.title.label_tag }}
+                                    {{ form.title }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger">{{ form.title.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    {{ form.content.label_tag }}
+                                    {{ form.content }}
+                                    {% if form.content.errors %}
+                                        <div class="text-danger">{{ form.content.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-legal btn-lg">
+                            <i class="fas fa-save"></i> Save All Changes
+                        </button>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <h5>No sections yet</h5>
+                        <p>This document doesn't have any sections yet. Use the tools above to add legal templates or create blank sections.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+// Auto-resize textareas and enforce standard legal ordering
+document.addEventListener('DOMContentLoaded', function() {
+    // Standard legal document order
+    const standardOrder = {
+        'introduction': 1,
+        'jurisdiction': 2,
+        'parties': 3,
+        'facts': 4,
+        'claims': 5,
+        'prayer': 6,
+        'jury_demand': 7
+    };
+    
+    const textareas = document.querySelectorAll('.section-content');
+    textareas.forEach(function(textarea) {
+        // Initial resize
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+        
+        // Resize on input
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+    
+    // Function to enforce standard legal ordering
+    function enforceStandardOrdering() {
+        const orderInputs = document.querySelectorAll('input[name$="-order"]:not([name*="__prefix__"])');
+        const deleteCheckboxes = document.querySelectorAll('input[name$="-DELETE"]');
+        
+        orderInputs.forEach(function(input, index) {
+            const deleteCheckbox = deleteCheckboxes[index];
+            
+            // Skip if marked for deletion
+            if (deleteCheckbox && deleteCheckbox.checked) {
+                return;
+            }
+            
+            // Find the section type for this input
+            const formContainer = input.closest('.section-card');
+            if (formContainer) {
+                const sectionTypeInput = formContainer.querySelector('input[name$="-section_type"]');
+                if (sectionTypeInput) {
+                    const sectionType = sectionTypeInput.value;
+                    const standardPosition = standardOrder[sectionType];
+                    
+                    if (standardPosition) {
+                        input.value = standardPosition;
+                        input.readOnly = true;
+                        input.style.backgroundColor = '#e9ecef';
+                        input.title = 'Position automatically set based on legal document standards';
+                    }
+                }
+            }
+        });
+        
+        // Sort the section cards by their standard order
+        const sectionContainer = document.querySelector('form[method="post"]');
+        if (sectionContainer) {
+            const sectionCards = Array.from(sectionContainer.querySelectorAll('.section-card'));
+            
+            sectionCards.sort(function(a, b) {
+                const aTypeInput = a.querySelector('input[name$="-section_type"]');
+                const bTypeInput = b.querySelector('input[name$="-section_type"]');
+                const aDeleteCheckbox = a.querySelector('input[name$="-DELETE"]');
+                const bDeleteCheckbox = b.querySelector('input[name$="-DELETE"]');
+                
+                // Put deleted sections at the end
+                if (aDeleteCheckbox && aDeleteCheckbox.checked) return 1;
+                if (bDeleteCheckbox && bDeleteCheckbox.checked) return -1;
+                
+                if (aTypeInput && bTypeInput) {
+                    const aOrder = standardOrder[aTypeInput.value] || 999;
+                    const bOrder = standardOrder[bTypeInput.value] || 999;
+                    return aOrder - bOrder;
+                }
+                return 0;
+            });
+            
+            // Reorder the DOM elements
+            const saveButton = sectionContainer.querySelector('button[type="submit"]');
+            sectionCards.forEach(function(card) {
+                sectionContainer.insertBefore(card, saveButton);
+            });
+        }
+    }
+    
+    // Confirmation for deletes and reorder after deletion
+    const deleteCheckboxes = document.querySelectorAll('input[name$="-DELETE"]');
+    deleteCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) {
+                    this.checked = false;
+                } else {
+                    // Hide the section visually
+                    const sectionCard = this.closest('.section-card');
+                    if (sectionCard) {
+                        sectionCard.style.opacity = '0.5';
+                        sectionCard.style.pointerEvents = 'none';
+                    }
+                    enforceStandardOrdering();
+                }
+            } else {
+                // Restore the section
+                const sectionCard = this.closest('.section-card');
+                if (sectionCard) {
+                    sectionCard.style.opacity = '1';
+                    sectionCard.style.pointerEvents = 'auto';
+                }
+                enforceStandardOrdering();
+            }
+        });
+    });
+    
+    // Remove order input change handlers since we're enforcing standard order
+    const orderInputs = document.querySelectorAll('input[name$="-order"]');
+    orderInputs.forEach(function(input) {
+        input.addEventListener('focus', function() {
+            alert('Section order is automatically set based on legal document standards.\n\nStandard Order:\n1. Introduction\n2. Jurisdiction & Venue\n3. Parties\n4. Statement of Facts\n5. Claims for Relief\n6. Prayer for Relief\n7. Jury Trial Demand');
+            this.blur();
+        });
+    });
+    
+    // Initial enforcement of standard ordering
+    enforceStandardOrdering();
+});
+</script>
+{% endblock %}

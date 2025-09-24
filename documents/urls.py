@@ -10,5 +10,9 @@ urlpatterns = [
     path('<int:pk>/delete/', views.document_delete, name='document_delete'),
     path('<int:pk>/status/', views.document_status_update, name='document_status_update'),
     path('documents/<int:pk>/auto-populate/', views.auto_populate_legal_sections, name='auto_populate_legal'),
+    path('<int:pk>/sections/', views.manage_document_sections, name='manage_document_sections'),
+    path('<int:pk>/sections/template/', views.insert_template_section, name='insert_template_section'),
+    path('<int:pk>/sections/blank/', views.add_blank_section, name='add_blank_section'),
+    path('<int:pk>/preview/', views.document_preview, name='document_preview'),
 
 ]

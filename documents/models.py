@@ -10,6 +10,10 @@ class LawsuitDocument(models.Model):
         ('completed', 'Completed'),
         ('filed', 'Filed'),
     ]
+    include_videos_in_document = models.BooleanField(
+        default=False,
+        help_text="Include video URLs as formal exhibits in the legal document"
+    )
 
     
     def __str__(self):
@@ -66,6 +70,7 @@ class DocumentSection(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField()
     order = models.PositiveIntegerField(default=0)
+    
     
     class Meta:
         ordering = ['order']

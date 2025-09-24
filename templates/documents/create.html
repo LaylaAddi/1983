@@ -3,296 +3,307 @@
 {% block title %}Create New Document - Section 1983 Document Generator{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-10">
-        <div class="card">
-            <div class="card-header">
-                <h2 class="mb-0"><i class="fas fa-plus-circle"></i> Create New Section 1983 Document</h2>
-                <p class="mb-0 text-muted">Fill out the details of your civil rights case below</p>
-            </div>
-            <div class="card-body">
-                <!-- Important Legal Disclaimer -->
-                <div class="alert alert-warning" role="alert">
-                    <strong><i class="fas fa-exclamation-triangle"></i> Legal Disclaimer:</strong>
-                    This tool generates draft legal documents only. Always consult with a qualified attorney
-                    before filing any legal documents in court. This is not legal advice.
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h2 class="mb-0"><i class="fas fa-plus-circle"></i> Create New Document</h2>
+                    <p class="mb-0 opacity-75">Generate a Section 1983 civil rights complaint</p>
                 </div>
-                <!-- Plaintiff Information -->
-                <div class="alert alert-info" role="alert">
-                    <h6><i class="fas fa-user"></i> Plaintiff Information</h6>
-                    <p class="mb-1"><strong>Name:</strong> {{ profile.full_legal_name }}</p>
-                    <p class="mb-1"><strong>Address:</strong> {{ profile.full_address }}</p>
-                    <p class="mb-0"><strong>Phone:</strong> {{ profile.phone_number }}</p>
-                    <small class="text-muted">This information will be included in your legal document.
-                        <a href="{% url 'profile' %}">Update profile</a> if needed.</small>
-                </div>
-                <form method="post" novalidate>
-                    {% csrf_token %}
-
-                    <!-- Case Title -->
-                    <div class="mb-4">
-                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
-                            {{ form.title.label }}
-                            <span class="text-danger">*</span>
-                        </label>
-                        {{ form.title }}
-                        {% if form.title.help_text %}
-                        <div class="form-text">{{ form.title.help_text }}</div>
-                        {% endif %}
-                        {% if form.title.errors %}
-                        <div class="text-danger">
-                            {% for error in form.title.errors %}
-                            <small>{{ error }}</small>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
+                <div class="card-body">
+                    <!-- Legal Disclaimer -->
+                    <div class="alert alert-warning" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Legal Disclaimer</h6>
+                        This tool generates draft legal documents only. Always consult with a qualified attorney
+                        before filing any legal documents in court.
                     </div>
 
-                    <!-- Description -->
-                    <div class="mb-4">
-                        <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
-                            {{ form.description.label }}
-                            <span class="text-danger">*</span>
-                        </label>
-                        {{ form.description }}
-                        {% if form.description.help_text %}
-                        <div class="form-text">{{ form.description.help_text }}</div>
-                        {% endif %}
-                        {% if form.description.errors %}
-                        <div class="text-danger">
-                            {% for error in form.description.errors %}
-                            <small>{{ error }}</small>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
+                    <!-- Getting Started Info -->
+                    <div class="alert alert-info" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-info-circle"></i> Getting Started</h6>
+                        <p class="mb-2">Provide details about your civil rights incident below. After creating your
+                            document, you can:</p>
+                        <ul class="mb-2">
+                            <li>Use auto-generation to create basic legal sections</li>
+                            <li>Manually edit and customize legal sections</li>
+                            <li>Preview your court-ready document</li>
+                            <li>Print or save your completed complaint</li>
+                        </ul>
+                        <small><strong>Required fields are marked with a red asterisk (*)</strong></small>
                     </div>
 
-                    <!-- Incident Details Row -->
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label for="{{ form.incident_date.id_for_label }}" class="form-label fw-bold">
-                                {{ form.incident_date.label }}
-                            </label>
-                            {{ form.incident_date }}
-                            {% if form.incident_date.help_text %}
-                            <div class="form-text">{{ form.incident_date.help_text }}</div>
-                            {% endif %}
-                            {% if form.incident_date.errors %}
-                            <div class="text-danger">
-                                {% for error in form.incident_date.errors %}
-                                <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6">
-                            <label for="{{ form.incident_location.id_for_label }}" class="form-label fw-bold">
-                                {{ form.incident_location.label }}
-                            </label>
-                            {{ form.incident_location }}
-                            {% if form.incident_location.help_text %}
-                            <div class="form-text">{{ form.incident_location.help_text }}</div>
-                            {% endif %}
-                            {% if form.incident_location.errors %}
-                            <div class="text-danger">
-                                {% for error in form.incident_location.errors %}
-                                <small>{{ error }}</small>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
 
-                    <!-- Defendants -->
-                    <div class="mb-4">
-                        <label for="{{ form.defendants.id_for_label }}" class="form-label fw-bold">
-                            {{ form.defendants.label }}
-                        </label>
-                        {{ form.defendants }}
-                        {% if form.defendants.help_text %}
-                        <div class="form-text">{{ form.defendants.help_text }}</div>
-                        {% endif %}
-                        {% if form.defendants.errors %}
-                        <div class="text-danger">
-                            {% for error in form.defendants.errors %}
-                            <small>{{ error }}</small>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- YouTube Video Evidence -->
-                    <!-- YouTube Video Evidence -->
-                    <div class="mb-4">
+                        <!-- Case Title -->
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Video Evidence</label>
-
-                            <div class="alert alert-info mb-3">
-                                <h6><i class="bi bi-info-circle"></i> How to Share Video Evidence</h6>
-                                <ol class="mb-2">
-                                    <li><strong>Navigate to the video:</strong> Go to YouTube and find the video showing
-                                        the incident</li>
-                                    <li><strong>Copy the URL:</strong> Copy the full web address from your browser's
-                                        address bar</li>
-                                    <li><strong>Set the timestamp:</strong> If the incident occurs at a specific time in
-                                        the video, right-click on the video at that moment and select "Copy video URL at
-                                        current time"</li>
-                                    <li><strong>Paste below:</strong> Enter the complete YouTube URL in the appropriate
-                                        field</li>
-                                </ol>
-                                <p class="mb-0"><strong>Important:</strong> Ensure you have permission to reference the
-                                    video and that it clearly shows the incident described in your case. Body camera
-                                    footage, security cameras, and witness recordings can all serve as valuable
-                                    evidence.</p>
+                            <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-file-alt text-primary"></i> {{ form.title.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.help_text %}
+                            <div class="form-text">{{ form.title.help_text }}</div>
+                            {% endif %}
+                            {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                {{ error }}
+                                {% endfor %}
                             </div>
+                            {% endif %}
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="{{ form.youtube_url_1.id_for_label }}" class="form-label">Primary Video
-                                    Evidence</label>
-                                {{ form.youtube_url_1 }}
-                                {% if form.youtube_url_1.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.youtube_url_1.errors %}
-                                    <small>{{ error }}</small>
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-comment-alt text-primary"></i> {{ form.description.label }}
+                                <span class="text-danger">*</span>
+                            </label>
+                            {{ form.description }}
+                            {% if form.description.help_text %}
+                            <div class="form-text">{{ form.description.help_text }}</div>
+                            {% endif %}
+                            {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.description.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Incident Details Row -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.incident_date.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-calendar text-primary"></i> {{ form.incident_date.label }}
+                                </label>
+                                {{ form.incident_date }}
+                                {% if form.incident_date.help_text %}
+                                <div class="form-text">{{ form.incident_date.help_text }}</div>
+                                {% endif %}
+                                {% if form.incident_date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.incident_date.errors %}
+                                    {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
                             </div>
-
-                            <div class="mb-3">
-                                <label for="{{ form.youtube_url_2.id_for_label }}" class="form-label">Additional Video
-                                    Evidence</label>
-                                {{ form.youtube_url_2 }}
-                                {% if form.youtube_url_2.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.youtube_url_2.errors %}
-                                    <small>{{ error }}</small>
+                            <div class="col-md-6">
+                                <label for="{{ form.incident_location.id_for_label }}" class="form-label fw-bold">
+                                    <i class="fas fa-map-marker-alt text-primary"></i> {{ form.incident_location.label}}
+                                </label>
+                                {{ form.incident_location }}
+                                {% if form.incident_location.help_text %}
+                                <div class="form-text">{{ form.incident_location.help_text }}</div>
+                                {% endif %}
+                                {% if form.incident_location.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.incident_location.errors %}
+                                    {{ error }}
                                     {% endfor %}
                                 </div>
                                 {% endif %}
                             </div>
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="{{ form.youtube_url_3.id_for_label }}" class="form-label">Additional Video
-                                    Evidence</label>
-                                {{ form.youtube_url_3 }}
-                                {% if form.youtube_url_3.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.youtube_url_3.errors %}
-                                    <small>{{ error }}</small>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
+                        <!-- Defendants -->
+                        <div class="mb-4">
+                            <label for="{{ form.defendants.id_for_label }}" class="form-label fw-bold">
+                                <i class="fas fa-users text-primary"></i> {{ form.defendants.label }}
+                            </label>
+                            {{ form.defendants }}
+                            {% if form.defendants.help_text %}
+                            <div class="form-text">{{ form.defendants.help_text }}</div>
+                            {% endif %}
+                            {% if form.defendants.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.defendants.errors %}
+                                {{ error }}
+                                {% endfor %}
                             </div>
+                            {% endif %}
+                        </div>
 
-                            <div class="mb-3">
-                                <label for="{{ form.youtube_url_4.id_for_label }}" class="form-label">Additional Video
-                                    Evidence</label>
-                                {{ form.youtube_url_4 }}
-                                {% if form.youtube_url_4.errors %}
-                                <div class="text-danger">
-                                    {% for error in form.youtube_url_4.errors %}
-                                    <small>{{ error }}</small>
-                                    {% endfor %}
+                        <!-- YouTube Video Evidence Section -->
+                        <div class="card border-secondary mb-4">
+                            <div class="card-header bg-body-secondary">
+                                <h5 class="mb-0"><i class="fas fa-video text-danger"></i> Video Evidence</h5>
+                                <small class="text-muted">Provide YouTube links to video evidence supporting your case
+                                    (optional)</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.youtube_url_1.id_for_label }}" class="form-label">
+                                            <i class="fas fa-play-circle text-danger"></i> Primary Video Evidence
+                                        </label>
+                                        {{ form.youtube_url_1 }}
+                                        {% if form.youtube_url_1.help_text %}
+                                        <div class="form-text">{{ form.youtube_url_1.help_text }}</div>
+                                        {% endif %}
+                                        {% if form.youtube_url_1.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.youtube_url_1.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.youtube_url_2.id_for_label }}" class="form-label">
+                                            <i class="fas fa-plus-circle text-secondary"></i> Additional Video Evidence
+                                        </label>
+                                        {{ form.youtube_url_2 }}
+                                        {% if form.youtube_url_2.help_text %}
+                                        <div class="form-text">{{ form.youtube_url_2.help_text }}</div>
+                                        {% endif %}
+                                        {% if form.youtube_url_2.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.youtube_url_2.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.youtube_url_3.id_for_label }}" class="form-label">
+                                            <i class="fas fa-plus-circle text-secondary"></i> Additional Video Evidence
+                                        </label>
+                                        {{ form.youtube_url_3 }}
+                                        {% if form.youtube_url_3.help_text %}
+                                        <div class="form-text">{{ form.youtube_url_3.help_text }}</div>
+                                        {% endif %}
+                                        {% if form.youtube_url_3.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.youtube_url_3.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label for="{{ form.youtube_url_4.id_for_label }}" class="form-label">
+                                            <i class="fas fa-plus-circle text-secondary"></i> Additional Video Evidence
+                                        </label>
+                                        {{ form.youtube_url_4 }}
+                                        {% if form.youtube_url_4.help_text %}
+                                        <div class="form-text">{{ form.youtube_url_4.help_text }}</div>
+                                        {% endif %}
+                                        {% if form.youtube_url_4.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.youtube_url_4.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                {% endif %}
+
+                                <!-- Video Evidence Options -->
+                                <div class="card border-info mt-3">
+                                    <div class="card-header bg-info bg-opacity-10">
+                                        <h6 class="mb-0"><i class="fas fa-cog"></i> Video Evidence Options</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            {{ form.include_videos_in_document }}
+                                            <label class="form-check-label"
+                                                for="{{ form.include_videos_in_document.id_for_label }}">
+                                                <strong>{{ form.include_videos_in_document.label }}</strong>
+                                            </label>
+                                        </div>
+                                        {% if form.include_videos_in_document.help_text %}
+                                        <small class="text-muted d-block mt-1">
+                                            {{ form.include_videos_in_document.help_text }}
+                                        </small>
+                                        {% endif %}
+                                        {% if form.include_videos_in_document.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.include_videos_in_document.errors %}
+                                            {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="mt-3 alert alert-info">
+                                            <h6><i class="fas fa-lightbulb"></i> When to include videos as exhibits:
+                                            </h6>
+                                            <ul class="mb-2">
+                                                <li><strong>Include:</strong> If videos are central evidence and you
+                                                    want them formally referenced in court documents</li>
+                                                <li><strong>Don't include:</strong> If videos are for personal
+                                                    reference, contain sensitive content, or you prefer to submit them
+                                                    separately</li>
+                                            </ul>
+                                            <small><strong>Note:</strong> You can change this setting later when editing
+                                                your document.</small>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Additional Evidence -->
                         <div class="mb-4">
                             <label for="{{ form.additional_evidence.id_for_label }}" class="form-label fw-bold">
-                                {{ form.additional_evidence.label }}
+                                <i class="fas fa-folder-open text-primary"></i> {{ form.additional_evidence.label }}
                             </label>
                             {{ form.additional_evidence }}
                             {% if form.additional_evidence.help_text %}
                             <div class="form-text">{{ form.additional_evidence.help_text }}</div>
                             {% endif %}
                             {% if form.additional_evidence.errors %}
-                            <div class="text-danger">
+                            <div class="invalid-feedback d-block">
                                 {% for error in form.additional_evidence.errors %}
-                                <small>{{ error }}</small>
+                                {{ error }}
                                 {% endfor %}
                             </div>
                             {% endif %}
                         </div>
 
-                        <!-- Form Actions -->
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Cancel
-                            </a>
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-save"></i> Create Document
-                            </button>
+                        <!-- Next Steps Info -->
+                        <div class="alert alert-success" role="alert">
+                            <h6 class="alert-heading"><i class="fas fa-check-circle"></i> After Creating Your Document
+                            </h6>
+                            <p class="mb-2">Once you create this document, you'll be able to:</p>
+                            <ul class="mb-0">
+                                <li>Auto-generate legal sections based on your incident details</li>
+                                <li>Manually edit and customize each section of your complaint</li>
+                                <li>Preview your document in court-ready format</li>
+                                <li>Print or download your completed legal document</li>
+                            </ul>
                         </div>
-                </form>
-            </div>
-        </div>
 
-        <!-- Tips Card -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Tips for Creating Your Document</h5>
-            </div>
-            <div class="card-body">
-                <ul class="mb-0">
-                    <li><strong>Be specific:</strong> Include exact dates, times, and locations when possible</li>
-                    <li><strong>Name all parties:</strong> List full names, badge numbers, departments, and supervisors
-                    </li>
-                    <li><strong>Document evidence:</strong> Mention all photos, videos, witnesses, and medical records
-                    </li>
-                    <li><strong>Describe violations:</strong> Clearly explain how your constitutional rights were
-                        violated</li>
-                    <li><strong>Save drafts:</strong> You can edit and update your document at any time</li>
-                </ul>
+                        <!-- Form Actions -->
+                        <div class="card bg-body-secondary mt-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left"></i> Back to Documents
+                                    </a>
+                                    <div>
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                            <i class="fas fa-plus-circle"></i> Create Document
+                                        </button>
+                                    </div>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="fas fa-info-circle"></i> Your document will be saved as a draft. You can
+                                    edit and add legal sections after creation.
+                                </small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    // Auto-save draft functionality (future feature)
-    let formData = {};
-
-    // Character counters for text areas
-    document.addEventListener('DOMContentLoaded', function () {
-        const textareas = document.querySelectorAll('textarea');
-        textareas.forEach(function (textarea) {
-            const maxLength = textarea.getAttribute('maxlength');
-            if (maxLength) {
-                const counter = document.createElement('div');
-                counter.className = 'form-text text-muted text-end';
-                counter.innerHTML = `<small>${textarea.value.length}/${maxLength} characters</small>`;
-                textarea.parentNode.appendChild(counter);
-
-                textarea.addEventListener('input', function () {
-                    counter.innerHTML = `<small>${this.value.length}/${maxLength} characters</small>`;
-                });
-            }
-        });
-    });
-
-    // Form validation feedback
-    document.querySelector('form').addEventListener('submit', function (e) {
-        const requiredFields = document.querySelectorAll('input[required], textarea[required]');
-        let hasErrors = false;
-
-        requiredFields.forEach(function (field) {
-            if (!field.value.trim()) {
-                field.classList.add('is-invalid');
-                hasErrors = true;
-            } else {
-                field.classList.remove('is-invalid');
-            }
-        });
-
-        if (hasErrors) {
-            e.preventDefault();
-            alert('Please fill in all required fields.');
-        }
-    });
-</script>
 {% endblock %}
