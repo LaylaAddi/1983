@@ -14,5 +14,6 @@ urlpatterns = [
     path('<int:pk>/sections/template/', views.insert_template_section, name='insert_template_section'),
     path('<int:pk>/sections/blank/', views.add_blank_section, name='add_blank_section'),
     path('<int:pk>/preview/', views.document_preview, name='document_preview'),
+    path('<int:pk>/generate-defaults/', views.generate_default_sections, name='generate_default_sections'),
 
 ]

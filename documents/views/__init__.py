@@ -18,3 +18,16 @@ from .section_views import (
     insert_template_section,
     add_blank_section,
 )
+
+
+from documents.views_main import (
+    document_create,
+    document_list, 
+    document_detail,
+    document_edit,
+    document_delete,
+    document_status_update,
+    auto_populate_legal_sections,
+    document_preview,
+    generate_default_sections, 
+)

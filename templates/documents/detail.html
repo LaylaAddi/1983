@@ -202,6 +202,9 @@
                         <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-success">
                             <i class="fas fa-magic"></i> Auto-Generate Basic Sections
                         </a>
+                        <a href="{% url 'generate_default_sections' document.pk %}" class="btn btn-outline-success">
+                            <i class="fas fa-list-ol"></i> Generate All 7 Standard Sections
+                        </a>
                     </div>
                     
                     <small class="text-muted">
