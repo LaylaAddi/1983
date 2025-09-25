@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = 'django-insecure-development-key-change-in-production'
 DEBUG = True
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'web-production-3156.up.railway.app/']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'web-production-3156.up.railway.app']
 CSRF_TRUSTED_ORIGINS = ['https://web-production-3156.up.railway.app/']
 
 # Application definition
@@ -110,4 +110,4 @@ else:
 
 
 
-    SECURE_SSL_REDIRECT = False
+    # SECURE_SSL_REDIRECT = False
