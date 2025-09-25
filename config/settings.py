@@ -8,6 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-development-key-change-in-production'
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+CSRF_TRUSTED_ORIGINS = ['https://web-production-3156.up.railway.app/']
 
 # Application definition
 INSTALLED_APPS = [
@@ -106,3 +107,7 @@ else:
     # DEBUG=False
     # EMAIL_HOST_USER=your-email@gmail.com
     # EMAIL_HOST_PASSWORD=your-app-password
+
+
+
+    SECURE_SSL_REDIRECT = False
