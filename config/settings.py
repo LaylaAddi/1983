@@ -15,7 +15,11 @@ if os.environ.get('DATABASE_URL'):
     # Production (Render) database settings
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+        'default': dj_database_url.parse(
+            os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
     DEBUG = False
     ALLOWED_HOSTS.extend(['.onrender.com'])
@@ -37,7 +41,7 @@ else:
         }
     }
 
-# Application definition
+# Rest of your settings remain the same...
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -114,3 +118,6 @@ else:
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
     EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = f'Section 1983 Generator <{EMAIL_HOST_USER}>'
