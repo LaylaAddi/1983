@@ -13,27 +13,34 @@
             <div class="card-body">
                 <form method="post">
                     {% csrf_token %}
-                    
+
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
                         <input type="email" class="form-control" id="email" name="email" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
-                    
+
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-box-arrow-in-right"></i> Login
                         </button>
                     </div>
                 </form>
-                
+
                 <hr>
-                
+
                 <div class="text-center">
+                    <!-- Forgot Password Link -->
+                    <div class="mb-3">
+                        <a href="{% url 'password_reset' %}" class="text-decoration-none">
+                            <i class="bi bi-key"></i> Forgot your password?
+                        </a>
+                    </div>
+                    <!-- Register Link -->
                     <p class="mb-0">Don't have an account?</p>
                     <a href="{% url 'register' %}" class="btn btn-outline-secondary">
                         <i class="bi bi-person-plus"></i> Create Account
@@ -41,7 +48,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Legal Notice -->
         <div class="card mt-3">
             <div class="card-body text-center">
