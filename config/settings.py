@@ -6,7 +6,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = 'django-insecure-development-key-change-in-production'
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0',]
 # CSRF_TRUSTED_ORIGINS = ['https://web-production-3156.up.railway.app']
 
@@ -122,5 +123,7 @@ else:
     # EMAIL_HOST_PASSWORD=your-app-password
 
 
+# Static file compression
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
     # SECURE_SSL_REDIRECT = False
