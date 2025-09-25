@@ -41,7 +41,6 @@ else:
         }
     }
 
-# Rest of your settings remain the same...
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -67,6 +66,22 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# CORS settings (add these)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React dev server
+    "http://127.0.0.1:3000",
+]
+
+# For development, you might want to allow all origins
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    # In production, add your frontend domain
+    CORS_ALLOWED_ORIGINS.extend([
+        # Add your frontend URLs here, e.g.:
+        # "https://your-frontend-domain.com",
+    ])
 
 ROOT_URLCONF = 'config.urls'
 
@@ -118,6 +133,18 @@ else:
     EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
     EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
     EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-    DEFAULT_FROM_EMAIL = f'Section 1983 Generator <{EMAIL_HOST_USER}>'
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    
+    # Only set DEFAULT_FROM_EMAIL if EMAIL_HOST_USER is provided
+    if EMAIL_HOST_USER:
+        DEFAULT_FROM_EMAIL = f'Section 1983 Generator <{EMAIL_HOST_USER}>'
+    else:
+        DEFAULT_FROM_EMAIL = 'Section 1983 Generator <noreply@section1983generator.com>'
+
+# Additional production settings
+if not DEBUG:
+    # Security settings for production
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
