@@ -7,8 +7,22 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = 'django-insecure-development-key-change-in-production'
 DEBUG = False
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'web-production-3156.up.railway.app']
-CSRF_TRUSTED_ORIGINS = ['https://web-production-3156.up.railway.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0',]
+# CSRF_TRUSTED_ORIGINS = ['https://web-production-3156.up.railway.app']
+
+# Render deployment settings
+if os.environ.get('DATABASE_URL'):
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    }
+    DEBUG = False
+    ALLOWED_HOSTS.extend(['.onrender.com'])
+    
+    # CSRF settings for Render
+    CSRF_TRUSTED_ORIGINS = [
+        'https://*.onrender.com',
+    ]
 
 # Application definition
 INSTALLED_APPS = [
