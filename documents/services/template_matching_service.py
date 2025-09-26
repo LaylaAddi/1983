@@ -51,7 +51,7 @@ class TemplateMatchingService:
     @staticmethod
     def prepare_document_context(document):
         """Prepare context data for template rendering from a document"""
-        user_profile = getattr(document.user, 'userprofile', None)
+        user_profile = getattr(document.user, 'profile', None)
         
         return {
             'plaintiff_name': (

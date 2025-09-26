@@ -145,8 +145,11 @@ class SectionGenerationService:
         """Create all 7 standard legal sections with default content"""
         
         # Get user's full state name from profile
-        user_profile = getattr(document.user, 'userprofile', None)
+        user_profile = getattr(document.user, 'profile', None)
         user_state = '[STATE]'  # default fallback
+
+        print(f"DEBUG: user_profile = {user_profile}")
+        print(f"DEBUG: user_profile.state = {user_profile.state if user_profile else 'None'}")
         
         if user_profile and user_profile.state:
             # State abbreviation to full name mapping
