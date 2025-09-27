@@ -13,10 +13,33 @@
         {% if user.is_authenticated %}
             <div class="card">
                 <div class="card-body text-center">
-                    <h2>Welcome back, {{ user.username }}!</h2>
+                    <h2>Welcome back, 
+                        {% if user.first_name %}
+                            {{ user.first_name }}{% if user.last_name %} {{ user.last_name }}{% endif %}
+                        {% elif user.profile.full_legal_name %}
+                            {{ user.profile.full_legal_name }}
+                        {% else %}
+                            {{ user.email|truncatechars:30 }}
+                        {% endif %}!
+                    </h2>
                     <p>You can start creating legal documents or manage your existing ones from your dashboard.</p>
-                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg me-3">Go to Dashboard</a>
-                    <button onclick="alert('Document creation coming soon!')" class="btn btn-success btn-lg">Create New Document</button>
+                    
+                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                        </a>
+                        <a href="{% url 'document_create' %}" class="btn btn-success btn-lg">
+                            <i class="fas fa-plus-circle"></i> Create New Document
+                        </a>
+                    </div>
+
+                    {% if user.profile and not user.profile.is_complete %}
+                    <div class="alert alert-warning mt-4" role="alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Complete your profile</strong> to enable document generation with your legal information.
+                        <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-warning ms-2">Update Profile</a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         {% else %}
