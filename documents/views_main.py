@@ -12,8 +12,6 @@ import json
 from django.views.decorators.http import require_POST
 
 
-
-
 @login_required
 def document_create(request):
     """Create a new lawsuit document"""
@@ -30,6 +28,11 @@ def document_create(request):
         if form.is_valid():
             document = form.save(commit=False)
             document.user = request.user
+            
+            # TODO: Add court lookup functionality here
+            # This is where we'll integrate the court lookup service
+            # to automatically populate suggested_federal_district
+            
             document.save()
             messages.success(request, f'Document "{document.title}" created successfully!')
             return redirect('document_detail', pk=document.pk)
@@ -40,7 +43,7 @@ def document_create(request):
     
     context = {
         'form': form,
-        'profile': profile,  # This line ensures profile data is passed to template
+        'profile': profile,
     }
     
     return render(request, 'documents/create.html', context)  
@@ -62,7 +65,10 @@ def document_list(request):
             documents = documents.filter(
                 Q(title__icontains=search_query) |
                 Q(description__icontains=search_query) |
-                Q(defendants__icontains=search_query)
+                Q(defendants__icontains=search_query) |
+                Q(incident_location__icontains=search_query) |
+                Q(incident_city__icontains=search_query) |
+                Q(incident_state__icontains=search_query)
             )
         
         if status_filter:
@@ -109,7 +115,25 @@ def document_edit(request, pk):
     if request.method == 'POST':
         form = LawsuitDocumentForm(request.POST, instance=document)
         if form.is_valid():
-            form.save()
+            # Check if address fields changed to trigger court lookup
+            address_changed = False
+            if form.has_changed():
+                address_fields = ['incident_city', 'incident_state', 'incident_zip_code', 'incident_street_address']
+                if any(field in form.changed_data for field in address_fields):
+                    address_changed = True
+            
+            document = form.save(commit=False)
+            
+            # TODO: Add court lookup functionality here if address changed
+            # if address_changed:
+            #     # Run court lookup service and update suggested_federal_district
+            #     pass
+            
+            document.save()
+            
+            if address_changed:
+                messages.info(request, 'Address information updated. The federal court district will be re-evaluated when you generate legal sections.')
+            
             messages.success(request, f'Document "{document.title}" updated successfully!')
             return redirect('document_detail', pk=document.pk)
         else:
@@ -168,8 +192,6 @@ def document_status_update(request, pk):
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 
-# Replace the existing auto_populate_legal_sections function in views_main.py with this:
-
 @login_required
 def auto_populate_legal_sections(request, pk):
     """View to automatically populate document with legal templates using new orchestrator service"""
@@ -180,7 +202,8 @@ def auto_populate_legal_sections(request, pk):
         messages.error(request, 'Please add a description of the incident before generating legal sections.')
         return redirect('document_edit', pk=pk)
     
-    if not document.incident_location:
+    # Check for location - either structured address or general location
+    if not (document.has_structured_address or document.incident_location):
         messages.error(request, 'Please specify the incident location before generating legal sections.')
         return redirect('document_edit', pk=pk)
     

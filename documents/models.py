@@ -10,14 +10,12 @@ class LawsuitDocument(models.Model):
         ('completed', 'Completed'),
         ('filed', 'Filed'),
     ]
+    
     include_videos_in_document = models.BooleanField(
         default=False,
         help_text="Include video URLs as formal exhibits in the legal document"
     )
-
     
-    def __str__(self):
-        return f"{self.violation_type} - {self.section_type}"
     # Basic Info
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lawsuit_documents')
     title = models.CharField(max_length=200)
@@ -25,7 +23,24 @@ class LawsuitDocument(models.Model):
     
     # Case Details
     incident_date = models.DateField(null=True, blank=True)
-    incident_location = models.CharField(max_length=300, blank=True)
+    incident_location = models.CharField(max_length=300, blank=True, help_text="Full address or description of where incident occurred")
+    
+    # NEW: Structured incident address fields for court lookup
+    incident_street_address = models.CharField(max_length=200, blank=True, help_text="Street address where incident occurred")
+    incident_city = models.CharField(max_length=100, blank=True, help_text="City where incident occurred")
+    incident_state = models.CharField(max_length=50, blank=True, help_text="State where incident occurred")
+    incident_zip_code = models.CharField(max_length=20, blank=True, help_text="ZIP code where incident occurred")
+    
+    # Federal court information (auto-populated based on incident location)
+    suggested_federal_district = models.TextField(blank=True, help_text="Auto-suggested federal district court")
+    user_confirmed_district = models.TextField(blank=True, help_text="User-confirmed federal district court")
+    district_lookup_confidence = models.CharField(max_length=20, blank=True, choices=[
+        ('high', 'High Confidence'),
+        ('medium', 'Medium Confidence'),
+        ('low', 'Low Confidence'),
+        ('manual', 'Manually Selected')
+    ])
+    
     defendants = models.TextField(blank=True, help_text="Names and positions of defendants")
     
     # Evidence
@@ -52,6 +67,22 @@ class LawsuitDocument(models.Model):
     
     def get_absolute_url(self):
         return reverse('document_detail', kwargs={'pk': self.pk})
+    
+    @property
+    def full_incident_address(self):
+        """Return the complete incident address formatted"""
+        parts = [
+            self.incident_street_address,
+            self.incident_city,
+            self.incident_state,
+            self.incident_zip_code
+        ]
+        return ", ".join(part for part in parts if part.strip())
+    
+    @property
+    def has_structured_address(self):
+        """Check if structured address fields are filled"""
+        return bool(self.incident_city and self.incident_state)
 
 class DocumentSection(models.Model):
     """Sections within a lawsuit document"""
@@ -71,7 +102,6 @@ class DocumentSection(models.Model):
     content = models.TextField()
     order = models.PositiveIntegerField(default=0)
     
-    
     class Meta:
         ordering = ['order']
         unique_together = ['document', 'section_type']
@@ -86,6 +116,7 @@ class LegalTemplate(models.Model):
         ('threatened_arrest_public', 'Threatened Arrest in Public Area'),
         ('interference_recording', 'Interference with Recording'),
         ('forced_to_leave_public', 'Forced to Leave Public Area'),
+        ('retaliation_protected_speech', 'Retaliation for Protected Speech'),
     ]
     
     LOCATION_TYPES = [
@@ -105,4 +136,4 @@ class LegalTemplate(models.Model):
         unique_together = ['violation_type', 'location_type', 'section_type']
     
     def __str__(self):
-        return f"{self.get_violation_type_display()} - {self.section_type}"    
+        return f"{self.get_violation_type_display()} - {self.section_type}"
