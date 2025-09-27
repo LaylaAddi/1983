@@ -6,6 +6,62 @@ import re
 from urllib.parse import urlparse
 from django.forms import modelformset_factory
 
+# US States choices for dropdown
+US_STATES = [
+    ('', 'Select State'),  # Empty option
+    ('AL', 'Alabama'),
+    ('AK', 'Alaska'),
+    ('AZ', 'Arizona'),
+    ('AR', 'Arkansas'),
+    ('CA', 'California'),
+    ('CO', 'Colorado'),
+    ('CT', 'Connecticut'),
+    ('DE', 'Delaware'),
+    ('DC', 'District of Columbia'),
+    ('FL', 'Florida'),
+    ('GA', 'Georgia'),
+    ('HI', 'Hawaii'),
+    ('ID', 'Idaho'),
+    ('IL', 'Illinois'),
+    ('IN', 'Indiana'),
+    ('IA', 'Iowa'),
+    ('KS', 'Kansas'),
+    ('KY', 'Kentucky'),
+    ('LA', 'Louisiana'),
+    ('ME', 'Maine'),
+    ('MD', 'Maryland'),
+    ('MA', 'Massachusetts'),
+    ('MI', 'Michigan'),
+    ('MN', 'Minnesota'),
+    ('MS', 'Mississippi'),
+    ('MO', 'Missouri'),
+    ('MT', 'Montana'),
+    ('NE', 'Nebraska'),
+    ('NV', 'Nevada'),
+    ('NH', 'New Hampshire'),
+    ('NJ', 'New Jersey'),
+    ('NM', 'New Mexico'),
+    ('NY', 'New York'),
+    ('NC', 'North Carolina'),
+    ('ND', 'North Dakota'),
+    ('OH', 'Ohio'),
+    ('OK', 'Oklahoma'),
+    ('OR', 'Oregon'),
+    ('PA', 'Pennsylvania'),
+    ('RI', 'Rhode Island'),
+    ('SC', 'South Carolina'),
+    ('SD', 'South Dakota'),
+    ('TN', 'Tennessee'),
+    ('TX', 'Texas'),
+    ('UT', 'Utah'),
+    ('VT', 'Vermont'),
+    ('VA', 'Virginia'),
+    ('WA', 'Washington'),
+    ('WV', 'West Virginia'),
+    ('WI', 'Wisconsin'),
+    ('WY', 'Wyoming'),
+]
+
 class LawsuitDocumentForm(forms.ModelForm):
     class Meta:
         model = LawsuitDocument
@@ -44,10 +100,9 @@ class LawsuitDocumentForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Clarion'
             }),
-            'incident_state': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'PA',
-                'maxlength': '2',
+            # UPDATED: State dropdown instead of text input
+            'incident_state': forms.Select(choices=US_STATES, attrs={
+                'class': 'form-select',
                 'style': 'text-transform: uppercase;'
             }),
             'incident_zip_code': forms.TextInput(attrs={
@@ -109,7 +164,7 @@ class LawsuitDocumentForm(forms.ModelForm):
             'incident_location': 'Any additional details about the location (business name, landmarks, etc.)',
             'incident_street_address': 'Street address or general area where the incident occurred',
             'incident_city': 'City where the incident occurred',
-            'incident_state': 'State where the incident occurred (2-letter code, e.g. PA)',
+            'incident_state': 'State where the incident occurred',
             'incident_zip_code': 'ZIP code of the incident location',
             'defendants': 'Who are you filing suit against? Include full names, positions, and departments',
             'youtube_url_1': 'If you have video evidence on YouTube, provide the link',
@@ -172,13 +227,13 @@ class LawsuitDocumentForm(forms.ModelForm):
         return defendants.strip() if defendants else defendants
 
     def clean_incident_state(self):
-        """Validate and format state code"""
+        """Validate state selection"""
         state = self.cleaned_data.get('incident_state')
         if state:
-            state = state.strip().upper()
-            # Basic validation for 2-letter state codes
-            if len(state) != 2 or not state.isalpha():
-                raise ValidationError("Please enter a valid 2-letter state code (e.g., PA, NY, CA)")
+            # Verify the state code is in our list of valid states
+            valid_states = [choice[0] for choice in US_STATES if choice[0]]  # Exclude empty option
+            if state not in valid_states:
+                raise ValidationError("Please select a valid state from the dropdown")
         return state
 
     def clean_incident_zip_code(self):

@@ -5,14 +5,14 @@
 
 {% block extra_css %}
 <style>
-    /* Keep this - important for legal documents */
+    /* Legal document styling */
     .section-content {
         font-family: "Times New Roman", serif;
         line-height: 1.6;
         min-height: 200px;
     }
     
-    /* Keep this - custom button color for legal theme */
+    /* Custom button color for legal theme */
     .btn-legal {
         background: #1a472a;
         color: white;
@@ -22,6 +22,75 @@
     .btn-legal:hover {
         background: #0f2818;
         color: white;
+    }
+    
+    /* Dark mode fixes for cards */
+    [data-bs-theme="dark"] .card {
+        background-color: var(--bs-dark) !important;
+        border-color: var(--bs-gray-700) !important;
+    }
+    
+    [data-bs-theme="dark"] .card-header {
+        background-color: var(--bs-gray-800) !important;
+        border-color: var(--bs-gray-700) !important;
+        color: var(--bs-light) !important;
+    }
+    
+    [data-bs-theme="dark"] .card-body {
+        background-color: var(--bs-dark) !important;
+        color: var(--bs-light) !important;
+    }
+    
+    /* Fix info card in dark mode */
+    [data-bs-theme="dark"] .border-info {
+        border-color: #0dcaf0 !important;
+    }
+    
+    [data-bs-theme="dark"] .bg-info {
+        background-color: #0dcaf0 !important;
+        color: #000 !important;
+    }
+    
+    /* Section cards styling */
+    .section-card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .section-header {
+        padding: 1rem;
+    }
+    
+    .section-body {
+        padding: 1rem;
+    }
+    
+    /* Deleted section styling */
+    .deleted-section {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    .deleted-section .card-header {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+    
+    /* Form styling improvements */
+    .form-select, .form-control {
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Light mode card styling */
+    [data-bs-theme="light"] .card {
+        background-color: white;
+        border-color: #dee2e6;
+    }
+    
+    [data-bs-theme="light"] .card-header.bg-light {
+        background-color: #f8f9fa !important;
+        border-color: #dee2e6;
+        color: #212529;
     }
 </style>
 {% endblock %}
@@ -91,50 +160,53 @@
     </div>
 
     <!-- Add New Section Tools -->
-    <div class="template-section">
-        <h4><i class="fas fa-plus-circle"></i> Add New Section</h4>
-        
-        <div class="row">
-            <!-- Insert Template Section -->
-            <div class="col-md-6">
-                <h6>Insert Legal Template</h6>
-                <form method="post" action="{% url 'insert_template_section' document.pk %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        {{ template_form.violation_type.label_tag }}
-                        {{ template_form.violation_type }}
-                    </div>
-                    <div class="mb-3">
-                        {{ template_form.location_type.label_tag }}
-                        {{ template_form.location_type }}
-                    </div>
-                    <div class="mb-3">
-                        {{ template_form.section_type.label_tag }}
-                        {{ template_form.section_type }}
-                    </div>
-                    <button type="submit" class="btn btn-legal">
-                        <i class="fas fa-file-alt"></i> Insert Template
-                    </button>
-                </form>
-            </div>
-            
-            <!-- Add Blank Section -->
-            <div class="col-md-6">
-                <h6>Add Blank Section</h6>
-                <form method="post" action="{% url 'add_blank_section' document.pk %}">
-                    {% csrf_token %}
-                    <div class="mb-3">
-                        {{ blank_form.section_type.label_tag }}
-                        {{ blank_form.section_type }}
-                    </div>
-                    <div class="mb-3">
-                        {{ blank_form.title.label_tag }}
-                        {{ blank_form.title }}
-                    </div>
-                    <button type="submit" class="btn btn-outline-secondary">
-                        <i class="fas fa-plus"></i> Add Blank Section
-                    </button>
-                </form>
+    <div class="card mb-4 border-secondary">
+        <div class="card-header bg-secondary text-white">
+            <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Add New Section</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Insert Template Section -->
+                <div class="col-md-6">
+                    <h6>Insert Legal Template</h6>
+                    <form method="post" action="{% url 'insert_template_section' document.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ template_form.violation_type.label_tag }}
+                            {{ template_form.violation_type }}
+                        </div>
+                        <div class="mb-3">
+                            {{ template_form.location_type.label_tag }}
+                            {{ template_form.location_type }}
+                        </div>
+                        <div class="mb-3">
+                            {{ template_form.section_type.label_tag }}
+                            {{ template_form.section_type }}
+                        </div>
+                        <button type="submit" class="btn btn-legal">
+                            <i class="fas fa-file-alt"></i> Insert Template
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Add Blank Section -->
+                <div class="col-md-6">
+                    <h6>Add Blank Section</h6>
+                    <form method="post" action="{% url 'add_blank_section' document.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {{ blank_form.section_type.label_tag }}
+                            {{ blank_form.section_type }}
+                        </div>
+                        <div class="mb-3">
+                            {{ blank_form.title.label_tag }}
+                            {{ blank_form.title }}
+                        </div>
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="fas fa-plus"></i> Add Blank Section
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -144,14 +216,29 @@
         {% csrf_token %}
         {{ formset.management_form }}
         
+        <!-- Add formset errors if any -->
+        {% if formset.non_form_errors %}
+            <div class="alert alert-danger">
+                <h5>Form Errors:</h5>
+                {{ formset.non_form_errors }}
+            </div>
+        {% endif %}
+        
         <div class="row">
             <div class="col-12">
                 <h4><i class="fas fa-edit"></i> Edit Existing Sections</h4>
                 
                 {% if formset.forms %}
                     {% for form in formset.forms %}
-                        <div class="section-card">
-                            <div class="section-header">
+                        <div class="card section-card" id="section-{{ forloop.counter0 }}">
+                            <!-- Add form errors if any -->
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {{ form.non_field_errors }}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="card-header section-header bg-light">
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <h5 class="mb-0">
@@ -165,16 +252,19 @@
                                     </div>
                                     <div class="col-md-4 text-end">
                                         {% if form.DELETE %}
-                                            <label class="form-label text-danger">
-                                                {{ form.DELETE }} Delete Section
-                                            </label>
+                                            <div class="form-check form-check-inline">
+                                                {{ form.DELETE }}
+                                                <label class="form-check-label text-danger fw-bold" for="{{ form.DELETE.id_for_label }}">
+                                                    <i class="fas fa-trash"></i> Delete Section
+                                                </label>
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="section-body">
-                                <!-- Hidden fields -->
+                            <div class="card-body section-body">
+                                <!-- All hidden fields including id -->
                                 {% for hidden in form.hidden_fields %}
                                     {{ hidden }}
                                 {% endfor %}
@@ -183,7 +273,11 @@
                                     {{ form.title.label_tag }}
                                     {{ form.title }}
                                     {% if form.title.errors %}
-                                        <div class="text-danger">{{ form.title.errors }}</div>
+                                        <div class="text-danger">
+                                            {% for error in form.title.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
                                     {% endif %}
                                 </div>
                                 
@@ -191,9 +285,23 @@
                                     {{ form.content.label_tag }}
                                     {{ form.content }}
                                     {% if form.content.errors %}
-                                        <div class="text-danger">{{ form.content.errors }}</div>
+                                        <div class="text-danger">
+                                            {% for error in form.content.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
                                     {% endif %}
                                 </div>
+                                
+                                <!-- Order field (hidden since it's auto-managed) -->
+                                {% if form.order %}
+                                    {{ form.order.as_hidden }}
+                                {% endif %}
+                                
+                                <!-- Section type (hidden) -->
+                                {% if form.section_type %}
+                                    {{ form.section_type.as_hidden }}
+                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}
@@ -202,6 +310,9 @@
                         <button type="submit" class="btn btn-legal btn-lg">
                             <i class="fas fa-save"></i> Save All Changes
                         </button>
+                        <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-secondary btn-lg ms-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
                     </div>
                 {% else %}
                     <div class="alert alert-info">
@@ -297,41 +408,61 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Reorder the DOM elements
             const saveButton = sectionContainer.querySelector('button[type="submit"]');
+            const cancelButton = sectionContainer.querySelector('a.btn-outline-secondary');
             sectionCards.forEach(function(card) {
-                sectionContainer.insertBefore(card, saveButton);
+                sectionContainer.insertBefore(card, saveButton.parentElement);
             });
         }
     }
     
-    // Confirmation for deletes and reorder after deletion
+    // Confirmation for deletes and visual feedback
     const deleteCheckboxes = document.querySelectorAll('input[name$="-DELETE"]');
     deleteCheckboxes.forEach(function(checkbox) {
         checkbox.addEventListener('change', function() {
+            const sectionCard = this.closest('.section-card');
+            
             if (this.checked) {
-                if (!confirm('Are you sure you want to delete this section? This action cannot be undone.')) {
+                if (!confirm('Are you sure you want to delete this section? This action cannot be undone after saving.')) {
                     this.checked = false;
-                } else {
-                    // Hide the section visually
-                    const sectionCard = this.closest('.section-card');
-                    if (sectionCard) {
-                        sectionCard.style.opacity = '0.5';
-                        sectionCard.style.pointerEvents = 'none';
-                    }
-                    enforceStandardOrdering();
+                    return;
                 }
+                
+                // Visual feedback for deletion
+                if (sectionCard) {
+                    sectionCard.classList.add('deleted-section');
+                    sectionCard.style.background = '#f8d7da';
+                    sectionCard.style.opacity = '0.6';
+                    
+                    // Disable inputs
+                    const inputs = sectionCard.querySelectorAll('input, textarea');
+                    inputs.forEach(input => {
+                        if (input.type !== 'checkbox' && input.type !== 'hidden') {
+                            input.disabled = true;
+                        }
+                    });
+                }
+                enforceStandardOrdering();
             } else {
                 // Restore the section
-                const sectionCard = this.closest('.section-card');
                 if (sectionCard) {
+                    sectionCard.classList.remove('deleted-section');
+                    sectionCard.style.background = '';
                     sectionCard.style.opacity = '1';
-                    sectionCard.style.pointerEvents = 'auto';
+                    
+                    // Re-enable inputs
+                    const inputs = sectionCard.querySelectorAll('input, textarea');
+                    inputs.forEach(input => {
+                        if (input.type !== 'checkbox' && input.type !== 'hidden') {
+                            input.disabled = false;
+                        }
+                    });
                 }
                 enforceStandardOrdering();
             }
         });
     });
     
-    // Remove order input change handlers since we're enforcing standard order
+    // Prevent order field editing
     const orderInputs = document.querySelectorAll('input[name$="-order"]');
     orderInputs.forEach(function(input) {
         input.addEventListener('focus', function() {
@@ -339,6 +470,21 @@ document.addEventListener('DOMContentLoaded', function() {
             this.blur();
         });
     });
+    
+    // Form submission confirmation
+    const form = document.querySelector('form[method="post"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const deleteCheckboxes = document.querySelectorAll('input[name$="-DELETE"]:checked');
+            if (deleteCheckboxes.length > 0) {
+                const confirmMessage = `You are about to delete ${deleteCheckboxes.length} section(s). This action cannot be undone. Continue?`;
+                if (!confirm(confirmMessage)) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        });
+    }
     
     // Initial enforcement of standard ordering
     enforceStandardOrdering();

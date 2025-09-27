@@ -10,8 +10,14 @@
             <div class="card shadow">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="mb-0"><i class="fas fa-file-alt text-primary"></i> {{ document.title }}</h2>
-                        <span class="badge badge-{{ document.status|default:'secondary' }} mt-1">
+                        <h3 class="mb-0"><i class="fas fa-file-alt text-primary"></i> 
+                            {% if document.title and document.title|length < 100 %}
+                                {{ document.title }}
+                            {% else %}
+                                Document #{{ document.pk }}
+                            {% endif %}
+                        </h3>
+                        <span class="badge bg-{{ document.status|default:'secondary' }} mt-1">
                             {{ document.get_status_display }}
                         </span>
                     </div>
@@ -57,8 +63,8 @@
                                 </div>
                             </div>
 
-                            <!-- Structured Address Display -->
-                            {% if document.has_structured_address %}
+                            <!-- Location Display - Improved Logic -->
+                            {% if document.incident_city and document.incident_state %}
                             <div class="mb-3">
                                 <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
                                 <div class="bg-body-tertiary p-2 rounded mt-1">
@@ -74,10 +80,15 @@
                                 <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
                                 <div class="bg-body-tertiary p-2 rounded mt-1">{{ document.incident_location }}</div>
                             </div>
+                            {% else %}
+                            <div class="mb-3">
+                                <strong><i class="fas fa-map-marker-alt"></i> Location:</strong>
+                                <div class="bg-body-tertiary p-2 rounded mt-1 text-muted">Location not specified</div>
+                            </div>
                             {% endif %}
 
                             <!-- Additional Location Details -->
-                            {% if document.incident_location and document.has_structured_address %}
+                            {% if document.incident_location and document.incident_city and document.incident_state %}
                             <div class="mb-3">
                                 <strong><i class="fas fa-info-circle"></i> Additional Details:</strong>
                                 <div class="bg-body-tertiary p-2 rounded mt-1">{{ document.incident_location }}</div>
@@ -88,7 +99,7 @@
                             {% if document.suggested_federal_district %}
                             <div class="alert alert-info">
                                 <h6><i class="fas fa-gavel"></i> Federal Court District</h6>
-                                <div class="bg-body-secondary p-2 rounded">
+                                <div class="bg-light p-2 rounded">
                                     <strong>{{ document.suggested_federal_district }}</strong>
                                 </div>
                                 <small class="text-muted mt-1 d-block">
@@ -193,11 +204,14 @@
                         <a href="{% url 'generate_default_sections' document.pk %}" class="btn btn-primary">
                             <i class="fas fa-plus-circle"></i> Generate All Standard Sections
                         </a>
+                        <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Manage Legal Sections
+                        </a>
                         <a href="{% url 'document_preview' document.pk %}" class="btn btn-info">
                             <i class="fas fa-eye"></i> Preview Document
                         </a>
                         <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-primary">
-                            <i class="fas fa-edit"></i> Edit Document
+                            <i class="fas fa-edit"></i> Edit Document Info
                         </a>
                     </div>
                 </div>
