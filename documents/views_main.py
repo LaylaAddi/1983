@@ -289,3 +289,4 @@ def generate_default_sections(request, pk):
         )
     
     return redirect('document_detail', pk=pk)
+

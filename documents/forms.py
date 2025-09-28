@@ -68,7 +68,7 @@ class LawsuitDocumentForm(forms.ModelForm):
         fields = [
             'title', 'description', 'incident_date', 
             # Use both location fields
-            'incident_location',  # Keep for backward compatibility and additional details
+            'incident_location', 'use_manual_court',
             'incident_street_address', 'incident_city', 'incident_state', 'incident_zip_code',
             'defendants', 'youtube_url_1', 'youtube_url_2', 'youtube_url_3', 'youtube_url_4', 
             'additional_evidence', 'include_videos_in_document'
@@ -78,6 +78,8 @@ class LawsuitDocumentForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Brief title for your case (e.g., "Police Excessive Force - January 2024")'
             }),
+            'use_manual_court': forms.HiddenInput(attrs={'value': 'False'}),
+
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 4,
@@ -261,8 +263,11 @@ class LawsuitDocumentForm(forms.ModelForm):
                 "Please provide either a city and state, or use the additional location details field."
             )
         
+        # Set default values for court fields to prevent database constraint errors
+        if 'use_manual_court' not in cleaned_data:
+            cleaned_data['use_manual_court'] = False
+        
         return cleaned_data
-
 
 class DocumentSectionForm(forms.ModelForm):
     """Form for editing individual sections of a document"""
