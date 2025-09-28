@@ -1,0 +1,265 @@
+// static/js/court_lookup_widget.js
+/**
+ * Court Lookup Widget JavaScript
+ * Handles automatic court lookup and manual override functionality
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCourtLookup();
+});
+
+function initializeCourtLookup() {
+    // Find all elements that trigger court lookup
+    const cityInput = document.querySelector('input[data-trigger="court-lookup"][name*="city"]');
+    const stateSelect = document.querySelector('select[data-trigger="court-lookup"][name*="state"]');
+    
+    if (!cityInput || !stateSelect) {
+        console.log('Court lookup elements not found');
+        return;
+    }
+
+    // Add event listeners for automatic lookup
+    cityInput.addEventListener('blur', performCourtLookup);
+    stateSelect.addEventListener('change', performCourtLookup);
+
+    // Initialize manual override functionality
+    initializeManualOverride();
+    
+    // Initialize action buttons
+    initializeActionButtons();
+}
+
+function performCourtLookup() {
+    const cityInput = document.querySelector('input[data-trigger="court-lookup"][name*="city"]');
+    const stateSelect = document.querySelector('select[data-trigger="court-lookup"][name*="state"]');
+    
+    const city = cityInput?.value?.trim();
+    const state = stateSelect?.value?.trim();
+    
+    if (!city || !state) {
+        hideCourtSuggestion();
+        return;
+    }
+
+    // Show loading state
+    showCourtLoading();
+    
+    // Make AJAX request to lookup court
+    fetch('/documents/api/lookup-court/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            city: city,
+            state: state
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayCourtSuggestion(data);
+        } else {
+            displayCourtError(data.error || 'Unable to lookup court');
+        }
+    })
+    .catch(error => {
+        console.error('Court lookup error:', error);
+        displayCourtError('Network error occurred while looking up court');
+    });
+}
+
+function displayCourtSuggestion(courtData) {
+    const infoBox = document.getElementById('court-info-box');
+    const warningBox = document.getElementById('court-warning-box');
+    const suggestedText = document.getElementById('suggested-court-text');
+    const confidenceText = document.getElementById('confidence-text');
+    const confidenceDesc = document.getElementById('confidence-description');
+    const confirmBtn = document.getElementById('confirm-court-btn-suggested_federal_district');
+    
+    if (!infoBox || !suggestedText) return;
+    
+    // Hide warning box and show info box
+    warningBox.style.display = 'none';
+    infoBox.style.display = 'block';
+    
+    // Update court text
+    suggestedText.innerHTML = `<pre>${courtData.formatted_court}</pre>`;
+    
+    // Update confidence info
+    if (confidenceText) {
+        confidenceText.textContent = `Confidence: ${courtData.confidence.toUpperCase()}`;
+    }
+    if (confidenceDesc) {
+        confidenceDesc.textContent = ` - ${getConfidenceDescription(courtData.confidence)}`;
+    }
+    
+    // Show confirm button
+    if (confirmBtn) {
+        confirmBtn.style.display = 'inline-block';
+        confirmBtn.onclick = () => confirmCourtSelection(courtData);
+    }
+    
+    // Store the suggestion in hidden field
+    const hiddenField = document.querySelector('input[name="suggested_federal_district"]');
+    if (hiddenField) {
+        hiddenField.value = courtData.formatted_court;
+    }
+}
+
+function displayCourtError(errorMessage) {
+    const infoBox = document.getElementById('court-info-box');
+    const warningBox = document.getElementById('court-warning-box');
+    const warningText = document.getElementById('court-warning-text');
+    
+    if (!warningBox || !warningText) return;
+    
+    // Hide info box and show warning box
+    infoBox.style.display = 'none';
+    warningBox.style.display = 'block';
+    
+    warningText.textContent = errorMessage;
+}
+
+function hideCourtSuggestion() {
+    const infoBox = document.getElementById('court-info-box');
+    const warningBox = document.getElementById('court-warning-box');
+    
+    if (infoBox) infoBox.style.display = 'none';
+    if (warningBox) warningBox.style.display = 'none';
+}
+
+function showCourtLoading() {
+    const infoBox = document.getElementById('court-info-box');
+    const suggestedText = document.getElementById('suggested-court-text');
+    
+    if (infoBox && suggestedText) {
+        infoBox.style.display = 'block';
+        suggestedText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up federal court...';
+    }
+}
+
+function initializeManualOverride() {
+    const manualCheckbox = document.querySelector('input[id*="use-manual-court"]');
+    const manualSection = document.querySelector('div[id*="manual-court-section"]');
+    
+    if (!manualCheckbox || !manualSection) return;
+    
+    manualCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            manualSection.style.display = 'block';
+            // Hide the automatic suggestion
+            hideCourtSuggestion();
+        } else {
+            manualSection.style.display = 'none';
+            // Re-trigger lookup if we have city and state
+            performCourtLookup();
+        }
+        
+        // Update the hidden use_manual_court field
+        const useManualField = document.querySelector('input[name="use_manual_court"]');
+        if (useManualField) {
+            useManualField.value = this.checked ? 'true' : 'false';
+        }
+    });
+    
+    // Handle manual court text input
+    const manualTextarea = document.querySelector('textarea[id*="manual-court"]');
+    if (manualTextarea) {
+        manualTextarea.addEventListener('input', function() {
+            const userManualField = document.querySelector('input[name="user_manual_court"], textarea[name="user_manual_court"]');
+            if (userManualField) {
+                userManualField.value = this.value;
+            }
+        });
+    }
+}
+
+function initializeActionButtons() {
+    const lookupBtn = document.querySelector('button[id*="lookup-court-btn"]');
+    
+    if (lookupBtn) {
+        lookupBtn.addEventListener('click', function() {
+            performCourtLookup();
+        });
+    }
+}
+
+function confirmCourtSelection(courtData) {
+    // Store the confirmed court
+    const confirmedField = document.querySelector('input[name="user_confirmed_district"], textarea[name="user_confirmed_district"]');
+    if (confirmedField) {
+        confirmedField.value = courtData.formatted_court;
+    }
+    
+    // Store confidence level
+    const confidenceField = document.querySelector('input[name="district_lookup_confidence"]');
+    if (confidenceField) {
+        confidenceField.value = courtData.confidence;
+    }
+    
+    // Show confirmation message
+    const confirmBtn = document.getElementById('confirm-court-btn-suggested_federal_district');
+    if (confirmBtn) {
+        const originalText = confirmBtn.innerHTML;
+        confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirmed!';
+        confirmBtn.classList.remove('btn-outline-success');
+        confirmBtn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            confirmBtn.innerHTML = originalText;
+            confirmBtn.classList.remove('btn-success');
+            confirmBtn.classList.add('btn-outline-success');
+        }, 2000);
+    }
+}
+
+function getConfidenceDescription(confidence) {
+    const descriptions = {
+        'high': 'City matches a known federal court division',
+        'medium': 'Location matches known county or similar city name',
+        'low': 'Using default district for state, please verify',
+        'manual': 'Manually selected by user',
+        'none': 'Unable to determine court location'
+    };
+    return descriptions[confidence] || 'Unknown confidence level';
+}
+
+function getCSRFToken() {
+    const cookieValue = document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)');
+    return cookieValue ? cookieValue.pop() : '';
+}
+
+// Utility function to validate manual court entries
+function validateManualCourtEntry(courtText) {
+    if (!courtText || courtText.trim().length < 10) {
+        return {
+            valid: false,
+            error: 'Court information must be at least 10 characters'
+        };
+    }
+    
+    const textUpper = courtText.toUpperCase();
+    const hasDistrictCourt = textUpper.includes('DISTRICT COURT');
+    const hasUnitedStates = textUpper.includes('UNITED STATES');
+    
+    if (!hasDistrictCourt) {
+        return {
+            valid: false,
+            error: 'Must include "District Court" in the court name'
+        };
+    }
+    
+    if (!hasUnitedStates) {
+        return {
+            valid: false,
+            error: 'Must include "United States" in the court name'
+        };
+    }
+    
+    return {
+        valid: true,
+        formatted: courtText.trim()
+    };
+}
