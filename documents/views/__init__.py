@@ -1,6 +1,10 @@
 # documents/views/__init__.py
 
 # all existing views from the main views.py file
+from .voice_views import voice_recorder_view
+from .voice_views import voice_recorder_view, voice_create_document
+
+
 from ..views_main import (
     document_create,
     document_list, 

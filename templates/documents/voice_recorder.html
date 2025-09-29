@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Incident Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .container {
+            background: #2d2d2d;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .recording {
+            background: #dc3545;
+        }
+
+        .recording:hover {
+            background: #c82333;
+        }
+
+        #transcript {
+            background: #1a1a1a;
+            border: 1px solid #444;
+            padding: 15px;
+            min-height: 200px;
+            border-radius: 5px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .status.listening {
+            background: #28a745;
+        }
+
+        .status.stopped {
+            background: #6c757d;
+        }
+
+        .parsed-data {
+            background: #1a472a;
+            border: 1px solid #28a745;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .parsed-data h3 {
+            margin-top: 0;
+        }
+
+        .field {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+        }
+
+        .field strong {
+            color: #28a745;
+        }
+
+        .warning {
+            background: #856404;
+            color: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    {% csrf_token %}
+    <div class="container">
+        <h1>🎤 Voice Incident Recorder</h1>
+        <p>Record details about your incident using your voice. The app will transcribe and parse the information
+            automatically.</p>
+
+        <div id="browserCheck"></div>
+
+        <button id="startBtn" onclick="startRecording()">Start Recording</button>
+        <button id="stopBtn" onclick="stopRecording()" disabled>Stop Recording</button>
+
+        <div id="status" class="status stopped">Ready to record</div>
+
+        <h3>Live Transcript:</h3>
+        <div id="transcript">Your speech will appear here in real-time...</div>
+
+        <button onclick="parseTranscript()" id="parseBtn" disabled>Parse Into Document Fields</button>
+
+        <div id="parsedData" style="display: none;" class="parsed-data">
+            <h3>📋 Extracted Information</h3>
+            <div id="parsedFields"></div>
+            <button onclick="submitToDocument()">Submit to Document</button>
+        </div>
+    </div>
+
+    <script>
+        let recognition;
+        let fullTranscript = '';
+        let isRecording = false;
+
+        // Check browser support
+        window.onload = function () {
+            const checkDiv = document.getElementById('browserCheck');
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                checkDiv.innerHTML = '<div class="warning">⚠️ Speech recognition not supported in this browser. Please use Chrome, Edge, or Safari on mobile.</div>';
+                document.getElementById('startBtn').disabled = true;
+            } else {
+                checkDiv.innerHTML = '<div style="color: #28a745;">✓ Speech recognition available</div>';
+                initRecognition();
+            }
+        };
+
+        function initRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function (event) {
+                let interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        fullTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                document.getElementById('transcript').textContent = fullTranscript + interimTranscript;
+            };
+
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                document.getElementById('status').textContent = 'Error: ' + event.error;
+                stopRecording();
+            };
+
+            recognition.onend = function () {
+                if (isRecording) {
+                    recognition.start(); // Restart if still recording
+                }
+            };
+        }
+
+        function startRecording() {
+            fullTranscript = '';
+            isRecording = true;
+            recognition.start();
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('status').className = 'status listening';
+            document.getElementById('status').textContent = '🔴 Recording... Speak now';
+            document.getElementById('transcript').textContent = '';
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            recognition.stop();
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('status').className = 'status stopped';
+            document.getElementById('status').textContent = 'Recording stopped';
+            document.getElementById('parseBtn').disabled = false;
+        }
+
+        function parseTranscript() {
+            // Simple client-side parsing (basic pattern matching)
+            const text = fullTranscript.toLowerCase();
+
+            // Extract date patterns
+            const datePatterns = [
+                /(?:on |date[:\s]+)?(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})/i,
+                /(?:on |date[:\s]+)?(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/
+            ];
+
+            let incidentDate = 'Not found';
+            for (const pattern of datePatterns) {
+                const match = fullTranscript.match(pattern);
+                if (match) {
+                    incidentDate = match[0];
+                    break;
+                }
+            }
+
+            // Extract location
+            let location = 'Not found';
+            const locationMatch = fullTranscript.match(/(?:at|location[:\s]+)([^.,]+(?:library|building|park|station|office|street|avenue|center)[^.,]*)/i);
+            if (locationMatch) {
+                location = locationMatch[1].trim();
+            }
+
+            // Extract officer/defendant info
+            const defendants = [];
+            const officerMatches = fullTranscript.matchAll(/officer\s+([a-z]+)(?:\s+badge\s+(?:number\s+)?(\d+))?/gi);
+            for (const match of officerMatches) {
+                let officer = `Officer ${match[1]}`;
+                if (match[2]) officer += `, Badge #${match[2]}`;
+                defendants.push(officer);
+            }
+
+            // Extract city/state
+            const cityStateMatch = fullTranscript.match(/in\s+([a-z\s]+),\s+(alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new\s+hampshire|new\s+jersey|new\s+mexico|new\s+york|north\s+carolina|north\s+dakota|ohio|oklahoma|oregon|pennsylvania|rhode\s+island|south\s+carolina|south\s+dakota|tennessee|texas|utah|vermont|virginia|washington|west\s+virginia|wisconsin|wyoming)/i);
+            let city = 'Not found', state = 'Not found';
+            if (cityStateMatch) {
+                city = cityStateMatch[1].trim();
+                state = cityStateMatch[2].trim();
+            }
+
+            // Display parsed data
+            const parsedDiv = document.getElementById('parsedData');
+            const fieldsDiv = document.getElementById('parsedFields');
+
+            fieldsDiv.innerHTML = `
+                <div class="field"><strong>Incident Date:</strong> ${incidentDate}</div>
+                <div class="field"><strong>Location:</strong> ${location}</div>
+                <div class="field"><strong>City:</strong> ${city}</div>
+                <div class="field"><strong>State:</strong> ${state}</div>
+                <div class="field"><strong>Defendants:</strong> ${defendants.length > 0 ? defendants.join('; ') : 'Not found'}</div>
+                <div class="field"><strong>Full Description:</strong> ${fullTranscript.substring(0, 200)}...</div>
+            `;
+
+            parsedDiv.style.display = 'block';
+        }
+
+        function submitToDocument() {
+            // Get CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Collect parsed data
+            const parsedData = {
+                incident_date: document.querySelector('.field:nth-child(1)').textContent.replace('Incident Date: ', ''),
+                location: document.querySelector('.field:nth-child(2)').textContent.replace('Location: ', ''),
+                city: document.querySelector('.field:nth-child(3)').textContent.replace('City: ', ''),
+                state: document.querySelector('.field:nth-child(4)').textContent.replace('State: ', ''),
+                defendants: document.querySelector('.field:nth-child(5)').textContent.replace('Defendants: ', '')
+            };
+
+            fetch('/documents/api/voice-create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    transcript: fullTranscript,
+                    parsed_data: parsedData
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Document created successfully!');
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error creating document: ' + error);
+                });
+        }
+    </script>
+</body>
+
+</html>

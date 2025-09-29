@@ -1,6 +1,7 @@
 # documents/urls.py
 from django.urls import path
 from . import views
+from . import views_main
 
 urlpatterns = [
     path('create/', views.document_create, name='document_create'),
@@ -15,5 +16,7 @@ urlpatterns = [
     path('<int:pk>/sections/blank/', views.add_blank_section, name='add_blank_section'),
     path('<int:pk>/preview/', views.document_preview, name='document_preview'),
     path('<int:pk>/generate-defaults/', views.generate_default_sections, name='generate_default_sections'),
+    path('voice-recorder/', views.voice_recorder_view, name='voice_recorder'),
+    path('api/voice-create/', views.voice_create_document, name='voice_create_document'),
 
 ]
