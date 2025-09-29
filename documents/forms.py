@@ -35,16 +35,25 @@ class LawsuitDocumentForm(forms.ModelForm):
         })
     )
 
+    user_confirmed_district = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'e.g., United States District Court for the Eastern District of Michigan'
+        }),
+        help_text='Manually enter or override the federal district court'
+    )
+
     class Meta:
         model = LawsuitDocument
         fields = [
             'title', 'description', 'incident_date', 
             # Use both location fields
-            'incident_location',  # Keep for backward compatibility and additional details
+            'incident_location', 'user_confirmed_district',
             'incident_street_address', 'incident_city', 'incident_state', 'incident_zip_code',
             'defendants', 'youtube_url_1', 'youtube_url_2', 'youtube_url_3', 'youtube_url_4', 
             'additional_evidence', 'include_videos_in_document',
-            # ADD: Court fields to prevent constraint errors
+            
             'suggested_federal_district', 'user_confirmed_district', 'district_lookup_confidence'
         ]
         widgets = {
@@ -222,90 +231,73 @@ class LawsuitDocumentForm(forms.ModelForm):
     
 
     def clean(self):
-            """Cross-field validation and court lookup"""
-            cleaned_data = super().clean()
-            
-            # Check if either structured address or general location is provided
-            city = cleaned_data.get('incident_city')
-            state = cleaned_data.get('incident_state')
-            general_location = cleaned_data.get('incident_location')
-            
-            if not (city and state) and not general_location:
-                raise ValidationError(
-                    "Please provide either a city and state, or use the additional location details field."
-                )
-            
-            # DEBUGGING: Add print statements to see what's happening
-            print(f"DEBUG: Court lookup starting - City: '{city}', State: '{state}'")
-            
-            # Add automatic court lookup here
-            if city and state:
-                try:
-                    print("DEBUG: Attempting to import CourtLookupService")
-                    from .services.court_lookup_service import CourtLookupService
-                    print("DEBUG: Import successful, calling lookup")
-                    court_result = CourtLookupService.lookup_court_by_location(city, state)
-                    print(f"DEBUG: Court result: {court_result}")
-                    
-                    if court_result and court_result.get('court_name'):
-                        cleaned_data['suggested_federal_district'] = court_result['court_name']
-                        cleaned_data['district_lookup_confidence'] = court_result.get('confidence', 'medium')
-                        print(f"DEBUG: Set court fields - District: {court_result['court_name']}")
-                        
-                        # Auto-confirm high confidence results
-                        if court_result.get('confidence') == 'high':
-                            cleaned_data['user_confirmed_district'] = court_result['court_name']
-                            print("DEBUG: Auto-confirmed high confidence result")
-                    else:
-                        print("DEBUG: No court result returned")
-                            
-                except Exception as e:
-                    # Don't break form submission if court lookup fails
-                    print(f"DEBUG: Court lookup error: {e}")
-                    import traceback
-                    traceback.print_exc()
-            else:
-                print(f"DEBUG: Skipping court lookup - City: '{city}', State: '{state}'")
-            
-            return cleaned_data
-
-    # def clean(self):
-    #     """Cross-field validation and court lookup"""
-    #     cleaned_data = super().clean()
+        """Cross-field validation and court lookup"""
+        cleaned_data = super().clean()
         
-    #     # Check if either structured address or general location is provided
-    #     city = cleaned_data.get('incident_city')
-    #     state = cleaned_data.get('incident_state')
-    #     general_location = cleaned_data.get('incident_location')
+        # Check if either structured address or general location is provided
+        city = cleaned_data.get('incident_city')
+        state = cleaned_data.get('incident_state')
+        general_location = cleaned_data.get('incident_location')
+        user_confirmed = cleaned_data.get('user_confirmed_district')
         
-    #     if not (city and state) and not general_location:
-    #         raise ValidationError(
-    #             "Please provide either a city and state, or use the additional location details field."
-    #         )
+        if not (city and state) and not general_location:
+            raise ValidationError(
+                "Please provide either a city and state, or use the additional location details field."
+            )
         
-#         # OPTIONAL: Add automatic court lookup here
-#         if city and state:
-#             try:
-#                 from .services.court_lookup_service import CourtLookupService
-#                 court_result = CourtLookupService.lookup_court_by_location(city, state)
+        # DEBUGGING: Add print statements to see what's happening
+        print(f"DEBUG: Court lookup starting - City: '{city}', State: '{state}'")
+        print(f"DEBUG: User confirmed district: '{user_confirmed}'")
+        
+        # If user manually entered a district, prioritize that and set confidence to 'manual'
+        if user_confirmed and user_confirmed.strip():
+            cleaned_data['user_confirmed_district'] = user_confirmed.strip()
+            cleaned_data['district_lookup_confidence'] = 'manual'
+            print(f"DEBUG: Using manual override: {user_confirmed}")
+            # Also set suggested_federal_district to keep data in sync
+            cleaned_data['suggested_federal_district'] = user_confirmed.strip()
+        # Otherwise, do automatic court lookup
+        elif city and state:
+            try:
+                print("DEBUG: Attempting to import CourtLookupService")
+                from .services.court_lookup_service import CourtLookupService
+                print("DEBUG: Import successful, calling lookup")
+                court_result = CourtLookupService.lookup_court_by_location(city, state)
+                print(f"DEBUG: Court result: {court_result}")
                 
-#                 if court_result and court_result.get('court_name'):
-#                     cleaned_data['suggested_federal_district'] = court_result['court_name']
-#                     cleaned_data['district_lookup_confidence'] = court_result.get('confidence', 'medium')
+                if court_result and court_result.get('court_name'):
+                    cleaned_data['suggested_federal_district'] = court_result['court_name']
+                    cleaned_data['district_lookup_confidence'] = court_result.get('confidence', 'medium')
+                    print(f"DEBUG: Set court fields - District: {court_result['court_name']}")
                     
-#                     # Auto-confirm high confidence results
-#                     if court_result.get('confidence') == 'high':
-#                         cleaned_data['user_confirmed_district'] = court_result['court_name']
+                    # Auto-confirm high confidence results
+                    if court_result.get('confidence') == 'high':
+                        cleaned_data['user_confirmed_district'] = court_result['court_name']
+                        print("DEBUG: Auto-confirmed high confidence result")
+                    else:
+                        # Clear any previous user confirmation if we got a new auto-suggestion
+                        cleaned_data['user_confirmed_district'] = ''
+                else:
+                    print("DEBUG: No court result returned - clearing court fields")
+                    # No court found - clear the fields so the warning shows
+                    cleaned_data['suggested_federal_district'] = ''
+                    cleaned_data['district_lookup_confidence'] = ''
+                    cleaned_data['user_confirmed_district'] = ''
                         
-#             except Exception as e:
-#                 # Don't break form submission if court lookup fails
-#                 print(f"Court lookup error: {e}")
-#                 pass
+            except Exception as e:
+                # Don't break form submission if court lookup fails
+                print(f"DEBUG: Court lookup error: {e}")
+                import traceback
+                traceback.print_exc()
+                # Clear court fields on error
+                cleaned_data['suggested_federal_district'] = ''
+                cleaned_data['district_lookup_confidence'] = ''
+        else:
+            print(f"DEBUG: Skipping court lookup - City: '{city}', State: '{state}'")
         
-#         return cleaned_data
+        return cleaned_data
 
 
-# # Keep all your other existing forms exactly the same
 class DocumentSectionForm(forms.ModelForm):
     """Form for editing individual sections of a document"""
     class Meta:

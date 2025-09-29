@@ -179,27 +179,77 @@
                                         {% endif %}
                                     </div>
                                 </div>
-
-                                {% if document.suggested_federal_district %}
+                              
+                             {% if document.suggested_federal_district or document.user_confirmed_district %}
                                 <div class="alert alert-info">
                                     <h6><i class="fas fa-gavel"></i> Federal Court District</h6>
-                                    <p class="mb-2">Based on your incident location, this case appears to fall under:</p>
-                                    <div class="bg-light p-2 rounded">
-                                        <strong>{{ document.suggested_federal_district }}</strong>
+                                    
+                                    {% if document.user_confirmed_district %}
+                                        <p class="mb-2"><span class="badge bg-success">Manually Confirmed</span> You have set the court district to:</p>
+                                        <div class="p-3 rounded border border-success" style="background-color: rgba(25, 135, 84, 0.1);">
+                                            <strong class="text-success">{{ document.user_confirmed_district }}</strong>
+                                        </div>
+                                    {% else %}
+                                        <p class="mb-2">Based on your incident location, this case appears to fall under:</p>
+                                        <div class="p-3 rounded border border-info" style="background-color: rgba(13, 202, 240, 0.1);">
+                                            <strong class="text-info">{{ document.suggested_federal_district }}</strong>
+                                        </div>
+                                        <small class="text-muted mt-2 d-block">
+                                            Confidence: {{ document.get_district_lookup_confidence_display|default:"Auto-suggested" }}
+                                            {% if document.district_lookup_confidence == 'low' %}
+                                            - Please verify this is correct for your case.
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
+                                    
+                                    <!-- Manual Override Button -->
+                                    <button type="button" class="btn btn-sm btn-outline-info mt-3" data-bs-toggle="collapse" data-bs-target="#manualCourtOverride">
+                                        <i class="fas fa-edit"></i> {% if document.user_confirmed_district %}Change Court District{% else %}Manually Set Court District{% endif %}
+                                    </button>
+                                    
+                                    <!-- Manual Override Section (Collapsed by default) -->
+                                    <div class="collapse mt-3" id="manualCourtOverride">
+                                        <div class="card card-body" style="background-color: rgba(13, 202, 240, 0.05);">
+                                            <label for="id_user_confirmed_district" class="form-label">
+                                                <strong>Manual Court District Entry</strong>
+                                            </label>
+                                            <input type="text" 
+                                                name="user_confirmed_district" 
+                                                id="id_user_confirmed_district"
+                                                class="form-control" 
+                                                value="{{ form.user_confirmed_district.value|default:'' }}"
+                                                placeholder="e.g., United States District Court for the Eastern District of Michigan">
+                                            <small class="form-text text-muted mt-1">
+                                                Enter the full name of the federal district court. This will override the automatic suggestion.
+                                            </small>
+                                        </div>
                                     </div>
-                                    <small class="text-muted mt-2 d-block">
-                                        Confidence: {{ document.get_district_lookup_confidence_display|default:"Auto-suggested" }}
-                                        {% if document.district_lookup_confidence == 'low' %}
-                                        - Please verify this is correct for your case.
-                                        {% endif %}
-                                    </small>
                                 </div>
-                                {% else %}
-                                <div class="alert alert-info">
-                                    <h6><i class="fas fa-lightbulb"></i> Court District Information</h6>
-                                    <p class="mb-0">After you provide city and state information, we'll automatically suggest the appropriate federal district court for your case.</p>
+                            {% else %}
+                                <!-- No court district found -->
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle"></i> Court District Not Found</h6>
+                                    <p class="mb-2">We couldn't automatically determine the federal district court for <strong>{{ document.incident_city }}, {{ document.incident_state }}</strong>.</p>
+                                    
+                                    <p class="mb-3">Please enter the correct federal district court manually below:</p>
+                                    
+                                    <div class="card card-body" style="background-color: rgba(255, 193, 7, 0.05);">
+                                        <label for="id_user_confirmed_district" class="form-label">
+                                            <strong>Federal District Court <span class="text-danger">*</span></strong>
+                                        </label>
+                                        <input type="text" 
+                                            name="user_confirmed_district" 
+                                            id="id_user_confirmed_district"
+                                            class="form-control" 
+                                            value="{{ form.user_confirmed_district.value|default:'' }}"
+                                            placeholder="e.g., United States District Court for the Eastern District of Michigan"
+                                            required>
+                                        <small class="form-text text-muted mt-1">
+                                            Not sure which court? Visit <a href="https://www.uscourts.gov/about-federal-courts/federal-courts-public/court-website-links" target="_blank" class="alert-link">U.S. Courts Directory</a> to find your district.
+                                        </small>
+                                    </div>
                                 </div>
-                                {% endif %}
+                            {% endif %}
                             </div>
                         </div>
 

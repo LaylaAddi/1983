@@ -169,13 +169,27 @@ class SectionGenerationService:
                 'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
             }
             user_state = state_names.get(user_profile.state.upper(), user_profile.state)
-        
+
+
+        # Build the location string - prefer structured address over general location
+        location_str = "[LOCATION]"  # fallback
+        if document.incident_city and document.incident_state:
+            # Use structured address
+            if document.incident_street_address:
+                location_str = f"{document.incident_street_address}, {document.incident_city}, {document.incident_state}"
+            else:
+                location_str = f"{document.incident_city}, {document.incident_state}"
+        elif document.incident_location:
+            # Use general location field
+            location_str = document.incident_location
+
+
         # Default content templates for each section type
         default_content = {
             'introduction': 'Plaintiff brings this civil rights action seeking damages and injunctive relief for violations of constitutional rights under 42 U.S.C. § 1983.',
             'jurisdiction': 'This Court has jurisdiction over this action pursuant to 28 U.S.C. §§ 1331 and 1343, as this action arises under the Constitution and laws of the United States. Venue is proper in this district under 28 U.S.C. § 1391(b).',
             'parties': f'Plaintiff is a citizen and resident of {user_state}. {document.defendants or "[DEFENDANTS TO BE IDENTIFIED]"} are individuals acting under color of state law.',
-            'facts': f'On {document.incident_date.strftime("%B %d, %Y") if document.incident_date else "[DATE]"}, at {document.incident_location or "[LOCATION]"}, the following events occurred: {document.description or "[DESCRIPTION TO BE ADDED]"}',
+            'facts': f'On {document.incident_date.strftime("%B %d, %Y") if document.incident_date else "[DATE]"}, at {location_str}, the following events occurred: {document.description or "[DESCRIPTION TO BE ADDED]"}',
             'claims': 'COUNT I - VIOLATION OF CIVIL RIGHTS (42 U.S.C. § 1983)\n\nDefendants violated Plaintiff\'s constitutional rights by [SPECIFIC VIOLATIONS TO BE DETAILED].',
             'prayer': 'WHEREFORE, Plaintiff respectfully requests that this Court:\na) Award compensatory and punitive damages;\nb) Enter injunctive relief;\nc) Award attorney\'s fees and costs pursuant to 42 U.S.C. § 1988;\nd) Grant such other relief as this Court deems just and proper.',
             'jury_demand': 'Plaintiff hereby demands a trial by jury on all issues so triable as a matter of right pursuant to Federal Rule of Civil Procedure 38.'
