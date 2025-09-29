@@ -1,4 +1,5 @@
-# documents/forms.py
+# documents/forms.py - Just add court fields to your current working form
+
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import LawsuitDocument, DocumentSection, LegalTemplate
@@ -7,6 +8,33 @@ from urllib.parse import urlparse
 from django.forms import modelformset_factory
 
 class LawsuitDocumentForm(forms.ModelForm):
+    # US States choices for dropdown
+    STATE_CHOICES = [
+        ('', 'Select State'),
+        ('AL', 'Alabama'), ('AK', 'Alaska'), ('AZ', 'Arizona'), ('AR', 'Arkansas'),
+        ('CA', 'California'), ('CO', 'Colorado'), ('CT', 'Connecticut'), ('DE', 'Delaware'),
+        ('DC', 'District of Columbia'), ('FL', 'Florida'), ('GA', 'Georgia'), ('HI', 'Hawaii'),
+        ('ID', 'Idaho'), ('IL', 'Illinois'), ('IN', 'Indiana'), ('IA', 'Iowa'),
+        ('KS', 'Kansas'), ('KY', 'Kentucky'), ('LA', 'Louisiana'), ('ME', 'Maine'),
+        ('MD', 'Maryland'), ('MA', 'Massachusetts'), ('MI', 'Michigan'), ('MN', 'Minnesota'),
+        ('MS', 'Mississippi'), ('MO', 'Missouri'), ('MT', 'Montana'), ('NE', 'Nebraska'),
+        ('NV', 'Nevada'), ('NH', 'New Hampshire'), ('NJ', 'New Jersey'), ('NM', 'New Mexico'),
+        ('NY', 'New York'), ('NC', 'North Carolina'), ('ND', 'North Dakota'), ('OH', 'Ohio'),
+        ('OK', 'Oklahoma'), ('OR', 'Oregon'), ('PA', 'Pennsylvania'), ('RI', 'Rhode Island'),
+        ('SC', 'South Carolina'), ('SD', 'South Dakota'), ('TN', 'Tennessee'), ('TX', 'Texas'),
+        ('UT', 'Utah'), ('VT', 'Vermont'), ('VA', 'Virginia'), ('WA', 'Washington'),
+        ('WV', 'West Virginia'), ('WI', 'Wisconsin'), ('WY', 'Wyoming')
+    ]
+    
+    # Override the incident_state field to use choices
+    incident_state = forms.ChoiceField(
+        choices=STATE_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control'
+        })
+    )
+
     class Meta:
         model = LawsuitDocument
         fields = [
@@ -15,7 +43,9 @@ class LawsuitDocumentForm(forms.ModelForm):
             'incident_location',  # Keep for backward compatibility and additional details
             'incident_street_address', 'incident_city', 'incident_state', 'incident_zip_code',
             'defendants', 'youtube_url_1', 'youtube_url_2', 'youtube_url_3', 'youtube_url_4', 
-            'additional_evidence', 'include_videos_in_document'
+            'additional_evidence', 'include_videos_in_document',
+            # ADD: Court fields to prevent constraint errors
+            'suggested_federal_district', 'user_confirmed_district', 'district_lookup_confidence'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -44,11 +74,8 @@ class LawsuitDocumentForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Clarion'
             }),
-            'incident_state': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'PA',
-                'maxlength': '2',
-                'style': 'text-transform: uppercase;'
+            'incident_state': forms.Select(attrs={
+                'class': 'form-control'
             }),
             'incident_zip_code': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -84,6 +111,10 @@ class LawsuitDocumentForm(forms.ModelForm):
                 'class': 'form-check-input',
                 'id': 'include_videos_checkbox'
             }),
+            # ADD: Hidden court fields to prevent constraint errors
+            'suggested_federal_district': forms.HiddenInput(),
+            'user_confirmed_district': forms.HiddenInput(),
+            'district_lookup_confidence': forms.HiddenInput(),
         }
         labels = {
             'title': 'Case Title',
@@ -172,13 +203,10 @@ class LawsuitDocumentForm(forms.ModelForm):
         return defendants.strip() if defendants else defendants
 
     def clean_incident_state(self):
-        """Validate and format state code"""
+        """Validate state selection"""
         state = self.cleaned_data.get('incident_state')
-        if state:
-            state = state.strip().upper()
-            # Basic validation for 2-letter state codes
-            if len(state) != 2 or not state.isalpha():
-                raise ValidationError("Please enter a valid 2-letter state code (e.g., PA, NY, CA)")
+        if state and state not in [choice[0] for choice in self.STATE_CHOICES[1:]]:  # Skip empty choice
+            raise ValidationError("Please select a valid state")
         return state
 
     def clean_incident_zip_code(self):
@@ -191,24 +219,93 @@ class LawsuitDocumentForm(forms.ModelForm):
             if not re.match(r'^\d{5}(\d{4})?$', zip_code):
                 raise ValidationError("Please enter a valid ZIP code (e.g., 16214 or 16214-1234)")
         return zip_code
+    
 
     def clean(self):
-        """Cross-field validation"""
-        cleaned_data = super().clean()
+            """Cross-field validation and court lookup"""
+            cleaned_data = super().clean()
+            
+            # Check if either structured address or general location is provided
+            city = cleaned_data.get('incident_city')
+            state = cleaned_data.get('incident_state')
+            general_location = cleaned_data.get('incident_location')
+            
+            if not (city and state) and not general_location:
+                raise ValidationError(
+                    "Please provide either a city and state, or use the additional location details field."
+                )
+            
+            # DEBUGGING: Add print statements to see what's happening
+            print(f"DEBUG: Court lookup starting - City: '{city}', State: '{state}'")
+            
+            # Add automatic court lookup here
+            if city and state:
+                try:
+                    print("DEBUG: Attempting to import CourtLookupService")
+                    from .services.court_lookup_service import CourtLookupService
+                    print("DEBUG: Import successful, calling lookup")
+                    court_result = CourtLookupService.lookup_court_by_location(city, state)
+                    print(f"DEBUG: Court result: {court_result}")
+                    
+                    if court_result and court_result.get('court_name'):
+                        cleaned_data['suggested_federal_district'] = court_result['court_name']
+                        cleaned_data['district_lookup_confidence'] = court_result.get('confidence', 'medium')
+                        print(f"DEBUG: Set court fields - District: {court_result['court_name']}")
+                        
+                        # Auto-confirm high confidence results
+                        if court_result.get('confidence') == 'high':
+                            cleaned_data['user_confirmed_district'] = court_result['court_name']
+                            print("DEBUG: Auto-confirmed high confidence result")
+                    else:
+                        print("DEBUG: No court result returned")
+                            
+                except Exception as e:
+                    # Don't break form submission if court lookup fails
+                    print(f"DEBUG: Court lookup error: {e}")
+                    import traceback
+                    traceback.print_exc()
+            else:
+                print(f"DEBUG: Skipping court lookup - City: '{city}', State: '{state}'")
+            
+            return cleaned_data
+
+    # def clean(self):
+    #     """Cross-field validation and court lookup"""
+    #     cleaned_data = super().clean()
         
-        # Check if either structured address or general location is provided
-        city = cleaned_data.get('incident_city')
-        state = cleaned_data.get('incident_state')
-        general_location = cleaned_data.get('incident_location')
+    #     # Check if either structured address or general location is provided
+    #     city = cleaned_data.get('incident_city')
+    #     state = cleaned_data.get('incident_state')
+    #     general_location = cleaned_data.get('incident_location')
         
-        if not (city and state) and not general_location:
-            raise ValidationError(
-                "Please provide either a city and state, or use the additional location details field."
-            )
+    #     if not (city and state) and not general_location:
+    #         raise ValidationError(
+    #             "Please provide either a city and state, or use the additional location details field."
+    #         )
         
-        return cleaned_data
+#         # OPTIONAL: Add automatic court lookup here
+#         if city and state:
+#             try:
+#                 from .services.court_lookup_service import CourtLookupService
+#                 court_result = CourtLookupService.lookup_court_by_location(city, state)
+                
+#                 if court_result and court_result.get('court_name'):
+#                     cleaned_data['suggested_federal_district'] = court_result['court_name']
+#                     cleaned_data['district_lookup_confidence'] = court_result.get('confidence', 'medium')
+                    
+#                     # Auto-confirm high confidence results
+#                     if court_result.get('confidence') == 'high':
+#                         cleaned_data['user_confirmed_district'] = court_result['court_name']
+                        
+#             except Exception as e:
+#                 # Don't break form submission if court lookup fails
+#                 print(f"Court lookup error: {e}")
+#                 pass
+        
+#         return cleaned_data
 
 
+# # Keep all your other existing forms exactly the same
 class DocumentSectionForm(forms.ModelForm):
     """Form for editing individual sections of a document"""
     class Meta:
