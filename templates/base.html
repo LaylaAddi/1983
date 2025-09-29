@@ -181,13 +181,13 @@
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <div class="container">
-            <a href="{% url 'voice_recorder' %}" class="nav-link d-md-none">
-                <i class="fas fa-microphone"></i> Voice Recorder
-            </a>
+
             <a class="navbar-brand" href="{% url 'home' %}">
                 <i class="fas fa-gavel"></i> Section 1983 Generator
             </a>
-
+            <a href="{% url 'voice_recorder' %}" class="nav-link d-md-none">
+                <i class="fas fa-microphone"></i> Voice Recorder
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
