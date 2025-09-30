@@ -46,6 +46,7 @@ def voice_create_document(request):
             suggested_federal_district='',
             user_confirmed_district='',
             district_lookup_confidence='',
+            use_manual_court=False,
             status='draft'
         )
         
