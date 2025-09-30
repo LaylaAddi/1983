@@ -269,43 +269,84 @@
             parsedDiv.style.display = 'block';
         }
 
+
+        
+        // function submitToDocument() {
+        //     // Get CSRF token
+        //     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        //     // Collect parsed data
+        //     const parsedData = {
+        //         incident_date: document.querySelector('.field:nth-child(1)').textContent.replace('Incident Date: ', ''),
+        //         location: document.querySelector('.field:nth-child(2)').textContent.replace('Location: ', ''),
+        //         city: document.querySelector('.field:nth-child(3)').textContent.replace('City: ', ''),
+        //         state: document.querySelector('.field:nth-child(4)').textContent.replace('State: ', ''),
+        //         defendants: document.querySelector('.field:nth-child(5)').textContent.replace('Defendants: ', '')
+        //     };
+
+        //     fetch('/documents/api/voice-create/', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/json',
+        //             'X-CSRFToken': csrftoken
+        //         },
+        //         body: JSON.stringify({
+        //             transcript: fullTranscript,
+        //             parsed_data: parsedData
+        //         })
+        //     })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             if (data.success) {
+        //                 alert('Document created successfully!');
+        //                 window.location.href = data.redirect_url;
+        //             } else {
+        //                 alert('Error: ' + data.error);
+        //             }
+        //         })
+        //         .catch(error => {
+        //             alert('Error creating document: ' + error);
+        //         });
+        // }
+
+
         function submitToDocument() {
-            // Get CSRF token
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            // Collect parsed data
-            const parsedData = {
-                incident_date: document.querySelector('.field:nth-child(1)').textContent.replace('Incident Date: ', ''),
-                location: document.querySelector('.field:nth-child(2)').textContent.replace('Location: ', ''),
-                city: document.querySelector('.field:nth-child(3)').textContent.replace('City: ', ''),
-                state: document.querySelector('.field:nth-child(4)').textContent.replace('State: ', ''),
-                defendants: document.querySelector('.field:nth-child(5)').textContent.replace('Defendants: ', '')
-            };
-
-            fetch('/documents/api/voice-create/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken
-                },
-                body: JSON.stringify({
-                    transcript: fullTranscript,
-                    parsed_data: parsedData
-                })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Document created successfully!');
-                        window.location.href = data.redirect_url;
-                    } else {
-                        alert('Error: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    alert('Error creating document: ' + error);
-                });
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    const parsedData = {
+        incident_date: document.querySelector('.field:nth-child(1)').textContent.replace('Incident Date: ', ''),
+        location: document.querySelector('.field:nth-child(2)').textContent.replace('Location: ', ''),
+        city: document.querySelector('.field:nth-child(3)').textContent.replace('City: ', ''),
+        state: document.querySelector('.field:nth-child(4)').textContent.replace('State: ', ''),
+        defendants: document.querySelector('.field:nth-child(5)').textContent.replace('Defendants: ', '')
+    };
+    
+    fetch('/documents/api/voice-create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({
+            transcript: fullTranscript,
+            parsed_data: parsedData
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Document created successfully!');
+            window.location.href = data.redirect_url;
+        } else {
+            // Show full error with traceback
+            alert('ERROR:\n' + data.error + '\n\nTRACEBACK:\n' + (data.traceback || 'No traceback'));
+            console.error('Full error:', data);
         }
+    })
+    .catch(error => {
+        alert('Network error: ' + error);
+    });
+}
     </script>
 </body>
 
