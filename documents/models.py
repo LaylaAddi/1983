@@ -32,6 +32,7 @@ class LawsuitDocument(models.Model):
     incident_zip_code = models.CharField(max_length=20, blank=True, help_text="ZIP code where incident occurred")
     
     # Federal court information (auto-populated based on incident location)
+    use_manual_court = models.BooleanField(default=False, help_text="Whether user manually entered court district")
     suggested_federal_district = models.TextField(blank=True, help_text="Auto-suggested federal district court")
     user_confirmed_district = models.TextField(blank=True, help_text="User-confirmed federal district court")
     district_lookup_confidence = models.CharField(max_length=20, blank=True, choices=[
