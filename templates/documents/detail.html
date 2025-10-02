@@ -10,7 +10,7 @@
             <div class="card shadow">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="mb-0"><i class="fas fa-file-alt text-primary"></i> {{ document.title }}</h2>
+                        <h2 class="mb-0"><i class="fas fa-file-alt text-primary"></i>{{ document.title }}</h2>
                         <span class="badge badge-{{ document.status|default:'secondary' }} mt-1">
                             {{ document.get_status_display }}
                         </span>
@@ -34,11 +34,17 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <!-- Description -->
-                    <div class="mb-4">
-                        <h5><i class="fas fa-comment-alt text-primary"></i> Description</h5>
-                        <div class="bg-body-tertiary p-3 rounded">{{ document.description|linebreaks }}</div>
-                    </div>
+<!-- Description -->
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5><i class="fas fa-comment-alt text-primary"></i> Description</h5>
+        <a href="{% url 'voice_recorder' %}?document_id={{ document.pk }}" 
+           class="btn btn-success btn-sm d-md-none">
+            <i class="fas fa-microphone"></i> Add Voice Note
+        </a>
+    </div>
+    <div class="bg-body-tertiary p-3 rounded">{{ document.description|linebreaks }}</div>
+</div>
 
                     <!-- Incident Information -->
                     <div class="card border-primary mb-4">

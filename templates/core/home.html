@@ -1,68 +1,339 @@
 {% extends 'base.html' %}
 
-{% block title %}Home - Section 1983 Document Generator{% endblock %}
+{% block title %}Section 1983 Lawsuit Generator - Protect Your First Amendment Rights{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Hero Section */
+    .hero-section {
+        position: relative;
+        min-height: 600px;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(135deg, #1a472a 0%, #0f2818 100%);
+        color: white;
+        overflow: hidden;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 800px;
+    }
+
+    .hero-title {
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+
+    .hero-pattern {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 50%;
+        height: 100%;
+        opacity: 0.1;
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    .cta-primary {
+        background: white;
+        color: #1a472a;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 1rem;
+    }
+
+    .cta-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        color: #1a472a;
+    }
+
+    .cta-secondary {
+        background: transparent;
+        color: white;
+        padding: 15px 40px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border: 2px solid white;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .cta-secondary:hover {
+        background: white;
+        color: #1a472a;
+    }
+
+    /* Features Section */
+    .features-section {
+        padding: 80px 0;
+    }
+
+    .feature-card {
+        text-align: center;
+        padding: 40px 30px;
+        height: 100%;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        border: 1px solid var(--bs-border-color);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1a472a 0%, #28a745 100%);
+        border-radius: 50%;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    /* How It Works Section */
+    .how-it-works {
+        padding: 80px 0;
+        background: var(--bs-secondary-bg);
+    }
+
+    .step-card {
+        text-align: center;
+        padding: 30px;
+    }
+
+    .step-number {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1a472a;
+        color: white;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .step-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    /* Trust Section */
+    .trust-section {
+        padding: 60px 0;
+        text-align: center;
+    }
+
+    .disclaimer-box {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 30px;
+        background: var(--bs-warning-bg-subtle);
+        border: 2px solid var(--bs-warning-border-subtle);
+        border-radius: 12px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+        
+        .cta-primary, .cta-secondary {
+            display: block;
+            margin: 0.5rem 0;
+            text-align: center;
+        }
+    }
+
+    /* Dark mode adjustments */
+    [data-bs-theme="dark"] .hero-section {
+        background: linear-gradient(135deg, #1a472a 0%, #0d1f12 100%);
+    }
+
+    [data-bs-theme="dark"] .feature-card {
+        background: var(--bs-body-bg);
+    }
+
+    /* mobile optimization */
+    @media (max-width: 576px) {
+        .hero-section {
+            min-height: 450px;
+        }
+        .features-section, .how-it-works {
+            padding: 50px 0; /* Less vertical padding on mobile */
+        }
+    }
+
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-pattern"></div>
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">Protect Your First Amendment Rights</h1>
+            <p class="hero-subtitle">
+                Generate professional Section 1983 civil rights lawsuit documents with automatic federal court jurisdiction lookup. Built specifically for First Amendment auditors.
+            </p>
+            <div class="hero-cta">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'document_create' %}" class="cta-primary">Create Document</a>
+                    <a href="{% url 'document_list' %}" class="cta-secondary">My Documents</a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="cta-primary">Get Started Free</a>
+                    <a href="{% url 'login' %}" class="cta-secondary">Sign In</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
         <div class="text-center mb-5">
-            <h1 class="display-4">Section 1983 Document Generator</h1>
-            <p class="lead">Generate legal documents for civil rights lawsuits under 42 U.S.C. § 1983</p>
+            <h2 class="display-5 fw-bold">Powerful Features for Civil Rights Protection</h2>
+            <p class="lead text-muted">Everything you need to document and pursue civil rights violations</p>
         </div>
         
-        {% if user.is_authenticated %}
-            <div class="card">
-                <div class="card-body text-center">
-                    <h2>Welcome back, 
-                        {% if user.first_name %}
-                            {{ user.first_name }}{% if user.last_name %} {{ user.last_name }}{% endif %}
-                        {% elif user.profile.full_legal_name %}
-                            {{ user.profile.full_legal_name }}
-                        {% else %}
-                            {{ user.email|truncatechars:30 }}
-                        {% endif %}!
-                    </h2>
-                    <p>You can start creating legal documents or manage your existing ones from your dashboard.</p>
-                    
-                    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-                        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
-                            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
-                        </a>
-                        <a href="{% url 'document_create' %}" class="btn btn-success btn-lg">
-                            <i class="fas fa-plus-circle"></i> Create New Document
-                        </a>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-gavel"></i>
                     </div>
-
-                    {% if user.profile and not user.profile.is_complete %}
-                    <div class="alert alert-warning mt-4" role="alert">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Complete your profile</strong> to enable document generation with your legal information.
-                        <a href="{% url 'profile' %}" class="btn btn-sm btn-outline-warning ms-2">Update Profile</a>
-                    </div>
-                    {% endif %}
+                    <h3 class="feature-title">Automatic Court Lookup</h3>
+                    <p class="text-muted">
+                        Our system automatically identifies the correct federal district court based on your incident location across all 50 states and DC.
+                    </p>
                 </div>
             </div>
-        {% else %}
-            <div class="card">
-                <div class="card-body">
-                    <h2>Get Started</h2>
-                    <p>This application helps you create legal documents for civil rights lawsuits under Section 1983.</p>
-                    
-                    <h4>Features:</h4>
-                    <ul>
-                        <li>Document generation based on your case details</li>
-                        <li>YouTube video evidence integration</li>
-                        <li>Secure document storage</li>
-                        <li>Professional formatting</li>
-                    </ul>
-                    
-                    <div class="text-center mt-4">
-                        <a href="{% url 'register' %}" class="btn btn-primary btn-lg me-3">Register Free</a>
-                        <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg">Login</a>
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-microphone"></i>
                     </div>
+                    <h3 class="feature-title">Voice Recording</h3>
+                    <p class="text-muted">
+                        Document incidents in real-time using voice recording on your mobile device. Perfect for field documentation.
+                    </p>
                 </div>
             </div>
-        {% endif %}
+            
+            <div class="col-md-4">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Professional Formatting</h3>
+                    <p class="text-muted">
+                        Generate court-ready documents with proper legal formatting, including all 7 standard sections required for Section 1983 claims.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
+
+<!-- How It Works Section -->
+<section class="how-it-works">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">How It Works</h2>
+            <p class="lead text-muted">Create your civil rights lawsuit in 4 simple steps</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h4 class="step-title">Create Account</h4>
+                    <p class="text-muted">Sign up and complete your profile with contact information</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h4 class="step-title">Document Incident</h4>
+                    <p class="text-muted">Enter incident details, location, and involved parties</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h4 class="step-title">Generate Sections</h4>
+                    <p class="text-muted">Auto-populate legal sections or customize them yourself</p>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h4 class="step-title">Preview & File</h4>
+                    <p class="text-muted">Review your document and prepare for court filing</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Trust/Disclaimer Section -->
+<section class="trust-section">
+    <div class="container">
+        <div class="disclaimer-box">
+            <h3 class="mb-3"><i class="fas fa-exclamation-triangle text-warning"></i> Important Legal Notice</h3>
+            <p class="mb-3">
+                This tool is designed to help First Amendment auditors document and prepare civil rights lawsuit documents. 
+                However, it is <strong>not a substitute for legal advice</strong>.
+            </p>
+            <p class="mb-0">
+                <strong>Always consult with a qualified attorney</strong> before filing any legal documents. 
+                Every case is unique and requires professional legal review to ensure your rights are properly protected.
+            </p>
+        </div>
+    </div>
+</section>
 {% endblock %}
