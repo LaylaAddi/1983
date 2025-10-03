@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+
+{% block title %}Know Your Rights - Section 1983 & Constitutional Protections{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rights-hero {
+        background: linear-gradient(135deg, #1a472a 0%, #0f2818 100%);
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+
+    .content-section {
+        padding: 60px 0;
+    }
+
+    .content-section:nth-child(even) {
+        background: var(--bs-secondary-bg);
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: #1a472a;
+    }
+
+    [data-bs-theme="dark"] .section-title {
+        color: #28a745;
+    }
+
+    .amendment-card {
+        border-left: 4px solid #1a472a;
+        padding: 25px;
+        margin-bottom: 30px;
+        background: var(--bs-body-bg);
+        border-radius: 8px;
+    }
+
+    .amendment-card h4 {
+        color: #1a472a;
+        margin-bottom: 15px;
+    }
+
+    [data-bs-theme="dark"] .amendment-card h4 {
+        color: #28a745;
+    }
+
+    .violation-type {
+        background: var(--bs-body-bg);
+        border: 1px solid var(--bs-border-color);
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+
+    .violation-type h5 {
+        color: #1a472a;
+        font-weight: 600;
+    }
+
+    [data-bs-theme="dark"] .violation-type h5 {
+        color: #28a745;
+    }
+
+    .resource-link {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 20px;
+        background: #1a472a;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .resource-link:hover {
+        background: #28a745;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .resource-link i {
+        margin-right: 8px;
+    }
+
+    .callout-box {
+        background: var(--bs-info-bg-subtle);
+        border-left: 4px solid var(--bs-info);
+        padding: 20px;
+        margin: 30px 0;
+        border-radius: 5px;
+    }
+
+    .warning-box {
+        background: var(--bs-warning-bg-subtle);
+        border-left: 4px solid var(--bs-warning);
+        padding: 20px;
+        margin: 30px 0;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="rights-hero">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3">Know Your Rights</h1>
+        <p class="lead">Understanding Section 1983, Constitutional Protections, and Pro Se Litigation</p>
+    </div>
+</section>
+
+<!-- Section 1983 Overview -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">What is Section 1983?</h2>
+        <p class="lead">42 U.S.C. § 1983 provides a federal remedy for violations of constitutional rights by government officials.</p>
+        
+        <p>Originally enacted as part of the Civil Rights Act of 1871, Section 1983 states:</p>
+        
+        <blockquote class="border-start border-4 border-secondary ps-3 my-4">
+            "Every person who, under color of any statute, ordinance, regulation, custom, or usage, of any State or Territory... subjects, or causes to be subjected, any citizen of the United States... to the deprivation of any rights, privileges, or immunities secured by the Constitution and laws, shall be liable to the party injured."
+        </blockquote>
+
+        <p>In simpler terms, Section 1983 allows you to sue government officials in federal court when they violate your constitutional rights while acting in their official capacity.</p>
+
+        <div class="callout-box">
+            <h5>Key Requirements for a Section 1983 Claim:</h5>
+            <ul>
+                <li>The defendant must be acting "under color of state law" (as a government official)</li>
+                <li>The defendant's actions violated your constitutional or federal statutory rights</li>
+                <li>The violation caused you harm</li>
+            </ul>
+        </div>
+
+        <div class="mt-4">
+            <h5>Learn More:</h5>
+            <a href="https://www.law.cornell.edu/uscode/text/42/1983" target="_blank" class="resource-link">
+                <i class="fas fa-external-link-alt"></i> Read the Full Text (Cornell Law)
+            </a>
+            <a href="https://en.wikipedia.org/wiki/Section_1983_of_the_Civil_Rights_Act_of_1871" target="_blank" class="resource-link">
+                <i class="fas fa-book"></i> Wikipedia: Section 1983
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- First Amendment Rights -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">First Amendment Protections</h2>
+        
+        <div class="amendment-card">
+            <h4>The First Amendment</h4>
+            <p class="fst-italic">"Congress shall make no law... abridging the freedom of speech, or of the press; or the right of the people peaceably to assemble..."</p>
+        </div>
+
+        <h4 class="mb-3">Right to Record in Public Spaces</h4>
+        <p>Federal courts across the United States have consistently recognized that the First Amendment protects the right to record government officials performing their duties in public spaces. This includes:</p>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="violation-type">
+                    <h5>Recording Police Officers</h5>
+                    <p>You have the right to record police officers performing their duties in public. This right has been upheld in multiple circuit courts including the First, Third, Fifth, Seventh, Ninth, and Eleventh Circuits.</p>
+                    <p class="small text-muted mb-0">Key cases: Glik v. Cunniffe (1st Cir. 2011), Fields v. Philadelphia (3rd Cir. 2017)</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="violation-type">
+                    <h5>Recording in Public Buildings</h5>
+                    <p>Generally, you may record in public areas of government buildings where the public is allowed. This includes lobbies, waiting areas, and public meetings (though some restrictions may apply to courtrooms and secure areas).</p>
+                    <p class="small text-muted mb-0">Traditional public forums have the highest level of First Amendment protection.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout-box mt-4">
+            <h5>Common First Amendment Violations by Officials:</h5>
+            <ul class="mb-0">
+                <li><strong>Demanding you stop recording:</strong> Officers cannot order you to stop recording their public duties without legitimate safety concerns</li>
+                <li><strong>Seizing or deleting footage:</strong> Taking your phone or deleting recordings violates your rights</li>
+                <li><strong>Retaliatory arrest:</strong> Arresting someone solely for lawfully recording (charges like "obstruction" or "interference" used as pretext)</li>
+                <li><strong>Threats or intimidation:</strong> Threatening arrest or harm to discourage recording</li>
+            </ul>
+        </div>
+
+        <div class="mt-4">
+            <h5>Learn More:</h5>
+            <a href="https://www.aclu.org/know-your-rights/protesters-rights" target="_blank" class="resource-link">
+                <i class="fas fa-external-link-alt"></i> ACLU: Your Right to Record
+            </a>
+            <a href="https://www.rcfp.org/reporters-recording-guide/" target="_blank" class="resource-link">
+                <i class="fas fa-video"></i> Reporters Committee Recording Guide
+            </a>
+            <a href="https://en.wikipedia.org/wiki/First_Amendment_to_the_United_States_Constitution" target="_blank" class="resource-link">
+                <i class="fas fa-book"></i> Wikipedia: First Amendment
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Fourth Amendment Rights -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">Fourth Amendment Protections</h2>
+        
+        <div class="amendment-card">
+            <h4>The Fourth Amendment</h4>
+            <p class="fst-italic">"The right of the people to be secure in their persons, houses, papers, and effects, against unreasonable searches and seizures, shall not be violated..."</p>
+        </div>
+
+        <h4 class="mb-3">What the Fourth Amendment Protects</h4>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="violation-type">
+                    <h5>Unlawful Detention</h5>
+                    <p>Police cannot detain you without reasonable suspicion of criminal activity. Simply recording in public or exercising First Amendment rights does not constitute reasonable suspicion.</p>
+                    <p class="small text-muted mb-0">You have the right to leave if you're not being detained or arrested.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="violation-type">
+                    <h5>Unlawful Search</h5>
+                    <p>Officers generally need a warrant, your consent, or probable cause with exigent circumstances to search you or your belongings. Recording equipment cannot be seized without lawful justification.</p>
+                    <p class="small text-muted mb-0">You can refuse consent to searches.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="violation-type">
+                    <h5>Excessive Force</h5>
+                    <p>The use of force must be objectively reasonable under the circumstances. Force used solely to punish or retaliate for exercising constitutional rights is unlawful.</p>
+                    <p class="small text-muted mb-0">Graham v. Connor (1989) established the "objective reasonableness" standard.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="violation-type">
+                    <h5>False Arrest</h5>
+                    <p>Arrests must be supported by probable cause. Retaliatory arrests or arrests on false pretenses violate the Fourth Amendment and may support a Section 1983 claim.</p>
+                    <p class="small text-muted mb-0">Common pretextual charges: obstruction, disorderly conduct, trespassing.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h5>Learn More:</h5>
+            <a href="https://www.aclu.org/know-your-rights/stopped-by-police" target="_blank" class="resource-link">
+                <i class="fas fa-external-link-alt"></i> ACLU: Know Your Rights - Police
+            </a>
+            <a href="https://en.wikipedia.org/wiki/Fourth_Amendment_to_the_United_States_Constitution" target="_blank" class="resource-link">
+                <i class="fas fa-book"></i> Wikipedia: Fourth Amendment
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Pro Se Litigation -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">Pro Se Representation</h2>
+        
+        <p class="lead">"Pro se" (Latin for "for oneself") means representing yourself in court without an attorney.</p>
+
+        <h4 class="mb-3">Why Citizens Represent Themselves</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="violation-type">
+                    <h5>Access to Justice</h5>
+                    <p>Legal representation is expensive. Pro se litigation allows individuals to pursue valid claims regardless of financial resources.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="violation-type">
+                    <h5>Constitutional Right</h5>
+                    <p>The right to represent yourself is protected by the Constitution. Federal courts must accept pro se filings.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="violation-type">
+                    <h5>Personal Control</h5>
+                    <p>Some plaintiffs prefer direct control over their case strategy and presentation.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <h5><i class="fas fa-exclamation-triangle text-warning"></i> Important Considerations</h5>
+            <p>While you have the right to represent yourself, civil rights litigation is complex. Consider:</p>
+            <ul class="mb-0">
+                <li>Federal courts expect pro se litigants to follow the same rules as attorneys</li>
+                <li>You'll need to understand civil procedure, evidence rules, and legal standards</li>
+                <li>Government defendants typically have experienced attorneys</li>
+                <li>Even if proceeding pro se, consulting with an attorney for strategy can be invaluable</li>
+            </ul>
+        </div>
+
+        <div class="callout-box">
+            <h5>Pro Se Resources:</h5>
+            <p>Many federal courts provide pro se assistance, including:</p>
+            <ul class="mb-2">
+                <li>Pro se clinics and help desks</li>
+                <li>Form complaints and instructions</li>
+                <li>Pro bono attorney programs</li>
+                <li>Self-help centers</li>
+            </ul>
+            <p class="mb-0">Check your district court's website for local resources.</p>
+        </div>
+
+        <div class="mt-4">
+            <h5>Learn More:</h5>
+            <a href="https://www.uscourts.gov/forms/pro-se-forms" target="_blank" class="resource-link">
+                <i class="fas fa-file-alt"></i> Federal Courts Pro Se Forms
+            </a>
+            <a href="https://en.wikipedia.org/wiki/Pro_se_legal_representation_in_the_United_States" target="_blank" class="resource-link">
+                <i class="fas fa-book"></i> Wikipedia: Pro Se Representation
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Importance of Standing Up -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">Why Accountability Matters</h2>
+        
+        <p class="lead">Civil rights litigation serves purposes beyond individual compensation—it helps establish precedent, deter future violations, and maintain constitutional accountability.</p>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="violation-type">
+                    <h5>Establishing Rights</h5>
+                    <p>Many foundational civil rights cases were brought by ordinary citizens. Precedents established through litigation protect everyone's rights.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="violation-type">
+                    <h5>Deterrence</h5>
+                    <p>Successful Section 1983 cases create accountability. They signal to government officials that constitutional violations have consequences.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="violation-type">
+                    <h5>Policy Change</h5>
+                    <p>Litigation can lead to policy reforms, better training, and institutional changes that benefit entire communities.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="callout-box mt-4">
+            <h5>The Role of First Amendment Auditors</h5>
+            <p>First Amendment auditors test and document how government officials respond to the exercise of constitutional rights. While controversial to some, auditing serves several purposes:</p>
+            <ul>
+                <li>Documenting how officials respond to protected activity</li>
+                <li>Educating the public about their rights</li>
+                <li>Identifying problematic policies or training deficiencies</li>
+                <li>Creating accountability through transparency</li>
+            </ul>
+            <p class="mb-0">Courts have consistently held that recording government officials in public is protected by the First Amendment, even when the purpose is to test their response.</p>
+        </div>
+
+        <div class="warning-box mt-4">
+            <h5><i class="fas fa-balance-scale"></i> Legal Disclaimer</h5>
+            <p class="mb-0">This information is educational and should not be considered legal advice. Every situation is unique, and laws vary by jurisdiction. Always consult with a qualified attorney before filing any legal action. This tool is designed to assist with document preparation, not to replace professional legal counsel.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Additional Resources -->
+<section class="content-section">
+    <div class="container">
+        <h2 class="section-title">Additional Resources</h2>
+        
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <h5>Legal Organizations</h5>
+                <a href="https://www.aclu.org/" target="_blank" class="resource-link d-block mb-2">
+                    <i class="fas fa-external-link-alt"></i> American Civil Liberties Union (ACLU)
+                </a>
+                <a href="https://www.eff.org/" target="_blank" class="resource-link d-block mb-2">
+                    <i class="fas fa-external-link-alt"></i> Electronic Frontier Foundation (EFF)
+                </a>
+                <a href="https://www.rcfp.org/" target="_blank" class="resource-link d-block mb-2">
+                    <i class="fas fa-external-link-alt"></i> Reporters Committee for Freedom of the Press
+                </a>
+            </div>
+            <div class="col-md-6 mb-3">
+                <h5>Legal Research</h5>
+                <a href="https://www.law.cornell.edu/" target="_blank" class="resource-link d-block mb-2">
+                    <i class="fas fa-book"></i> Cornell Legal Information Institute
+                </a>
+                <a href="https://www.uscourts.gov/" target="_blank" class="resource-link d-block mb-2">
+                    <i class="fas fa-landmark"></i> U.S. Courts Official Website
+                </a>
+                <a href="https://scholar.google.com/" target="_blank" class="resource-link d-block mb-2">
+                    <i class="fas fa-graduation-cap"></i> Google Scholar (Case Law)
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

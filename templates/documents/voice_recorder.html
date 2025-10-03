@@ -209,9 +209,7 @@
             document.getElementById('status').textContent = 'Recording stopped';
             document.getElementById('parseBtn').disabled = false;
         }
-
         function parseTranscript() {
-            // Simple client-side parsing (basic pattern matching)
             const text = fullTranscript.toLowerCase();
 
             // Extract date patterns
@@ -220,7 +218,7 @@
                 /(?:on |date[:\s]+)?(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/
             ];
 
-            let incidentDate = 'Not found';
+            let incidentDate = '';  // Changed from 'Not found'
             for (const pattern of datePatterns) {
                 const match = fullTranscript.match(pattern);
                 if (match) {
@@ -230,7 +228,7 @@
             }
 
             // Extract location
-            let location = 'Not found';
+            let location = '';  // Changed from 'Not found'
             const locationMatch = fullTranscript.match(/(?:at|location[:\s]+)([^.,]+(?:library|building|park|station|office|street|avenue|center)[^.,]*)/i);
             if (locationMatch) {
                 location = locationMatch[1].trim();
@@ -247,106 +245,66 @@
 
             // Extract city/state
             const cityStateMatch = fullTranscript.match(/in\s+([a-z\s]+),\s+(alabama|alaska|arizona|arkansas|california|colorado|connecticut|delaware|florida|georgia|hawaii|idaho|illinois|indiana|iowa|kansas|kentucky|louisiana|maine|maryland|massachusetts|michigan|minnesota|mississippi|missouri|montana|nebraska|nevada|new\s+hampshire|new\s+jersey|new\s+mexico|new\s+york|north\s+carolina|north\s+dakota|ohio|oklahoma|oregon|pennsylvania|rhode\s+island|south\s+carolina|south\s+dakota|tennessee|texas|utah|vermont|virginia|washington|west\s+virginia|wisconsin|wyoming)/i);
-            let city = 'Not found', state = 'Not found';
+            let city = '', state = '';  // Changed from 'Not found'
             if (cityStateMatch) {
                 city = cityStateMatch[1].trim();
                 state = cityStateMatch[2].trim();
             }
 
-            // Display parsed data
+            // Display parsed data - show "Not detected" in UI, but send empty strings to backend
             const parsedDiv = document.getElementById('parsedData');
             const fieldsDiv = document.getElementById('parsedFields');
 
             fieldsDiv.innerHTML = `
-                <div class="field"><strong>Incident Date:</strong> ${incidentDate}</div>
-                <div class="field"><strong>Location:</strong> ${location}</div>
-                <div class="field"><strong>City:</strong> ${city}</div>
-                <div class="field"><strong>State:</strong> ${state}</div>
-                <div class="field"><strong>Defendants:</strong> ${defendants.length > 0 ? defendants.join('; ') : 'Not found'}</div>
-                <div class="field"><strong>Full Description:</strong> ${fullTranscript.substring(0, 200)}...</div>
-            `;
+        <div class="field"><strong>Incident Date:</strong> ${incidentDate || 'Not detected'}</div>
+        <div class="field"><strong>Location:</strong> ${location || 'Not detected'}</div>
+        <div class="field"><strong>City:</strong> ${city || 'Not detected'}</div>
+        <div class="field"><strong>State:</strong> ${state || 'Not detected'}</div>
+        <div class="field"><strong>Defendants:</strong> ${defendants.length > 0 ? defendants.join('; ') : 'Not detected'}</div>
+        <div class="field"><strong>Full Description:</strong> ${fullTranscript.substring(0, 200)}...</div>
+    `;
 
             parsedDiv.style.display = 'block';
         }
 
 
-        
-        // function submitToDocument() {
-        //     // Get CSRF token
-        //     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        //     // Collect parsed data
-        //     const parsedData = {
-        //         incident_date: document.querySelector('.field:nth-child(1)').textContent.replace('Incident Date: ', ''),
-        //         location: document.querySelector('.field:nth-child(2)').textContent.replace('Location: ', ''),
-        //         city: document.querySelector('.field:nth-child(3)').textContent.replace('City: ', ''),
-        //         state: document.querySelector('.field:nth-child(4)').textContent.replace('State: ', ''),
-        //         defendants: document.querySelector('.field:nth-child(5)').textContent.replace('Defendants: ', '')
-        //     };
-
-        //     fetch('/documents/api/voice-create/', {
-        //         method: 'POST',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CSRFToken': csrftoken
-        //         },
-        //         body: JSON.stringify({
-        //             transcript: fullTranscript,
-        //             parsed_data: parsedData
-        //         })
-        //     })
-        //         .then(response => response.json())
-        //         .then(data => {
-        //             if (data.success) {
-        //                 alert('Document created successfully!');
-        //                 window.location.href = data.redirect_url;
-        //             } else {
-        //                 alert('Error: ' + data.error);
-        //             }
-        //         })
-        //         .catch(error => {
-        //             alert('Error creating document: ' + error);
-        //         });
-        // }
-
-
         function submitToDocument() {
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
-    const parsedData = {
-        incident_date: document.querySelector('.field:nth-child(1)').textContent.replace('Incident Date: ', ''),
-        location: document.querySelector('.field:nth-child(2)').textContent.replace('Location: ', ''),
-        city: document.querySelector('.field:nth-child(3)').textContent.replace('City: ', ''),
-        state: document.querySelector('.field:nth-child(4)').textContent.replace('State: ', ''),
-        defendants: document.querySelector('.field:nth-child(5)').textContent.replace('Defendants: ', '')
-    };
-    
-    fetch('/documents/api/voice-create/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken
-        },
-        body: JSON.stringify({
-            transcript: fullTranscript,
-            parsed_data: parsedData
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Document created successfully!');
-            window.location.href = data.redirect_url;
-        } else {
-            // Show full error with traceback
-            alert('ERROR:\n' + data.error + '\n\nTRACEBACK:\n' + (data.traceback || 'No traceback'));
-            console.error('Full error:', data);
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            const parsedData = {
+                incident_date: document.querySelector('.field:nth-child(1)').textContent.replace('Incident Date: ', ''),
+                location: document.querySelector('.field:nth-child(2)').textContent.replace('Location: ', ''),
+                city: document.querySelector('.field:nth-child(3)').textContent.replace('City: ', ''),
+                state: document.querySelector('.field:nth-child(4)').textContent.replace('State: ', ''),
+                defendants: document.querySelector('.field:nth-child(5)').textContent.replace('Defendants: ', '')
+            };
+
+            fetch('/documents/api/voice-create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    transcript: fullTranscript,
+                    parsed_data: parsedData
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Document created successfully!');
+                        window.location.href = data.redirect_url;
+                    } else {
+                        // Show full error with traceback
+                        alert('ERROR:\n' + data.error + '\n\nTRACEBACK:\n' + (data.traceback || 'No traceback'));
+                        console.error('Full error:', data);
+                    }
+                })
+                .catch(error => {
+                    alert('Network error: ' + error);
+                });
         }
-    })
-    .catch(error => {
-        alert('Network error: ' + error);
-    });
-}
     </script>
 </body>
 

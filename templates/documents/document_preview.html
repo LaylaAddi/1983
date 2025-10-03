@@ -237,27 +237,27 @@
         Respectfully submitted,<br><br><br>
         
         _________________________________<br>
-        {% if document.user.user_profile.full_legal_name %}
-            {{ document.user.user_profile.full_legal_name }}
-        {% else %}
-            {{ document.user.get_full_name|default:document.user.username }}
-        {% endif %}<br>
-        Plaintiff, Pro Se<br>
-        {% if document.user.user_profile %}
-            {% if document.user.user_profile.street_address %}
-                {{ document.user.user_profile.street_address }}<br>
-            {% endif %}
-            {% if document.user.user_profile.city and document.user.user_profile.state %}
-                {{ document.user.user_profile.city }}, {{ document.user.user_profile.state }} 
-                {% if document.user.user_profile.zip_code %}{{ document.user.user_profile.zip_code }}{% endif %}<br>
-            {% endif %}
-            {% if document.user.user_profile.phone_number %}
-                Tel: {{ document.user.user_profile.phone_number }}<br>
-            {% endif %}
-        {% endif %}
-        {% if document.user.email %}
-            Email: {{ document.user.email }}
-        {% endif %}
+        {% if document.user.profile.full_legal_name %}
+    {{ document.user.profile.full_legal_name }}
+{% else %}
+    {{ document.user.get_full_name|default:document.user.username }}
+{% endif %}<br>
+Plaintiff, Pro Se<br>
+{% if document.user.profile %}
+    {% if document.user.profile.street_address %}
+        {{ document.user.profile.street_address }}<br>
+    {% endif %}
+    {% if document.user.profile.city and document.user.profile.state %}
+        {{ document.user.profile.city }}, {{ document.user.profile.state }} 
+        {% if document.user.profile.zip_code %}{{ document.user.profile.zip_code }}{% endif %}<br>
+    {% endif %}
+    {% if document.user.profile.phone_number %}
+        Tel: {{ document.user.profile.phone_number }}<br>
+    {% endif %}
+{% endif %}
+{% if document.user.email %}
+    Email: {{ document.user.email }}
+{% endif %}
     </div>
     
     <div style="clear: both;"></div>

@@ -6,3 +6,7 @@ def home(request):
     """Home page view"""
     return render(request, 'core/home.html')
 
+def know_your_rights(request):
+    """Home page view"""
+    return render(request, 'core/know-your-rights.html')
+
