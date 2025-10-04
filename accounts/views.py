@@ -8,7 +8,33 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from .models import UserProfile
 from .forms import UserProfileForm, EmailUserCreationForm
+from .forms import CustomPasswordChangeForm
 import json
+
+@login_required
+def password_change_view(request):
+    """Allow logged-in users to change their password"""
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            # Update session to prevent logout after password change
+            from django.contrib.auth import update_session_auth_hash
+            update_session_auth_hash(request, form.user)
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('password_change_done')
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        form = CustomPasswordChangeForm(user=request.user)
+    
+    return render(request, 'accounts/password_change.html', {'form': form})
+
+
+@login_required
+def password_change_done_view(request):
+    """Success page after password change"""
+    return render(request, 'accounts/password_change_done.html')
 
 
 def register_view(request):

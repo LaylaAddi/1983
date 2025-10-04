@@ -9,9 +9,15 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('profile/', views.profile_view, name='profile'),
+    
+    # Password Change (for logged-in users)
+    path('password-change/', views.password_change_view, name='password_change'),
+    path('password-change/done/', views.password_change_done_view, name='password_change_done'),
+    
+    # Keep your existing AJAX endpoint if needed
     path('change-password/', views.change_password_ajax, name='change_password_ajax'),
     
-    # Password reset URLs
+    # Password Reset (forgot password flow)
     path('password-reset/', 
          auth_views.PasswordResetView.as_view(
              template_name='accounts/password_reset_form.html',

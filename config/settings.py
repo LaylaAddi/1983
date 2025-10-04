@@ -6,7 +6,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-fallback-secret-key')
-DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 'yes']
+
+
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
@@ -21,7 +23,7 @@ if os.environ.get('DATABASE_URL'):
             conn_health_checks=True,
         )
     }
-    DEBUG = False
+
     ALLOWED_HOSTS.extend(['.onrender.com'])
     
     # CSRF settings for Render
@@ -135,7 +137,7 @@ else:
     EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    
+    PASSWORD_RESET_TIMEOUT = 3600  # Token valid for 1 hour
     # Only set DEFAULT_FROM_EMAIL if EMAIL_HOST_USER is provided
     if EMAIL_HOST_USER:
         DEFAULT_FROM_EMAIL = f'Section 1983 Generator <{EMAIL_HOST_USER}>'

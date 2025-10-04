@@ -34,7 +34,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DEBUG=1
+      - DEBUG=true
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/lawsuit_app
       - REDIS_URL=redis://redis:6379/0
     depends_on:

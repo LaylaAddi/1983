@@ -2,6 +2,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.forms import PasswordChangeForm
 from .models import UserProfile
 
 # US States choices
@@ -97,7 +98,6 @@ class UserProfileForm(forms.ModelForm):
         
         return profile
 
-
 class EmailUserCreationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
@@ -152,3 +152,32 @@ class EmailUserCreationForm(UserCreationForm):
         if commit:
             user.save()
         return user
+    
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    """Custom password change form with Bootstrap styling"""
+    
+    old_password = forms.CharField(
+        label="Current Password",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your current password'
+        })
+    )
+    
+    new_password1 = forms.CharField(
+        label="New Password",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter new password'
+        }),
+        help_text="Password must be at least 8 characters and not entirely numeric."
+    )
+    
+    new_password2 = forms.CharField(
+        label="Confirm New Password",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm new password'
+        })
+    )
