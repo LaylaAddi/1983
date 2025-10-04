@@ -13,3 +13,4 @@ dj-database-url==2.1.0
 gunicorn
 whitenoise
 python-dotenv
+django-weasyprint==2.3.0

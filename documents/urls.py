@@ -2,6 +2,7 @@
 from django.urls import path
 from . import views
 from . import views_main
+from django.contrib.auth.decorators import login_required
 
 urlpatterns = [
     path('create/', views.document_create, name='document_create'),
@@ -18,5 +19,6 @@ urlpatterns = [
     path('<int:pk>/generate-defaults/', views.generate_default_sections, name='generate_default_sections'),
     path('voice-recorder/', views.voice_recorder_view, name='voice_recorder'),
     path('api/voice-create/', views.voice_create_document, name='voice_create_document'),
+    path('<int:pk>/download-pdf/', login_required(views_main.DocumentPDFView.as_view()), name='download_pdf'),
 
 ]

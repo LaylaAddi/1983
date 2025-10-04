@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ document.title }}</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 1in;
+        }
+        
+        body {
+            font-family: "Times New Roman", serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #000;
+        }
+        
+        .court-heading {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .case-caption {
+            border: 2px solid #000;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        
+        .case-caption table {
+            width: 100%;
+            border: none;
+        }
+        
+        .case-caption td {
+            vertical-align: top;
+            padding: 5px;
+        }
+        
+        .case-caption .divider {
+            border-left: 2px solid #000;
+            padding-left: 20px;
+        }
+        
+        .section-number {
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        
+        .section-content {
+            text-align: justify;
+            margin-bottom: 15px;
+        }
+        
+        .section-content p {
+            text-indent: 0.5in;
+            margin-bottom: 0.1in;
+        }
+        
+        .signature-block {
+            margin-top: 50px;
+            float: right;
+            width: 300px;
+        }
+        
+        h1, h2, h3, .section-number {
+            page-break-after: avoid;
+        }
+        
+        .section-content {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Court Heading -->
+    <div class="court-heading">
+        {% if document.user_confirmed_district %}
+            {{ document.user_confirmed_district|upper }}
+        {% elif document.suggested_federal_district %}
+            {{ document.suggested_federal_district|upper }}
+        {% else %}
+            UNITED STATES DISTRICT COURT<br>
+            [DISTRICT TO BE DETERMINED]
+        {% endif %}
+    </div>
+    
+    <!-- Case Caption -->
+    <div class="case-caption">
+        <table>
+            <tr>
+                <td style="width: 60%;">
+                    {% if document.user.profile.full_legal_name %}
+                        {{ document.user.profile.full_legal_name }}
+                    {% else %}
+                        {{ document.user.get_full_name|default:document.user.username }}
+                    {% endif %},
+                    <br><br>
+                    <div style="margin-left: 100px;">Plaintiff,</div>
+                    <br>
+                    v.
+                    <br><br>
+                    {% if document.defendants %}
+                        {{ document.defendants|linebreaks }}
+                    {% else %}
+                        [DEFENDANTS TO BE IDENTIFIED],
+                    {% endif %}
+                    <br>
+                    <div style="margin-left: 100px;">Defendants.</div>
+                </td>
+                <td class="divider">
+                    Case No. [TO BE ASSIGNED]
+                    <br><br>
+                    COMPLAINT FOR VIOLATIONS<br>
+                    OF CIVIL RIGHTS<br>
+                    (42 U.S.C. § 1983)
+                    <br><br>
+                    DEMAND FOR JURY TRIAL
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <!-- Document Sections -->
+    {% for section in sections %}
+        <div class="section-number">
+            {{ forloop.counter }}. {{ section.title|upper }}
+        </div>
+        <div class="section-content">
+            {{ section.content|linebreaks }}
+        </div>
+    {% endfor %}
+    
+    <!-- Signature Block -->
+    <div class="signature-block">
+        <br><br>
+        Respectfully submitted,<br><br><br>
+        
+        _________________________________<br>
+        {% if document.user.profile.full_legal_name %}
+            {{ document.user.profile.full_legal_name }}
+        {% else %}
+            {{ document.user.get_full_name|default:document.user.username }}
+        {% endif %}<br>
+        Plaintiff, Pro Se<br>
+        {% if document.user.profile %}
+            {% if document.user.profile.street_address %}
+                {{ document.user.profile.street_address }}<br>
+            {% endif %}
+            {% if document.user.profile.city and document.user.profile.state %}
+                {{ document.user.profile.city }}, {{ document.user.profile.state }} 
+                {% if document.user.profile.zip_code %}{{ document.user.profile.zip_code }}{% endif %}<br>
+            {% endif %}
+            {% if document.user.profile.phone_number %}
+                Tel: {{ document.user.profile.phone_number }}<br>
+            {% endif %}
+        {% endif %}
+        {% if document.user.email %}
+            Email: {{ document.user.email }}
+        {% endif %}
+    </div>
+    
+    <div style="clear: both;"></div>
+
+</body>
+</html>

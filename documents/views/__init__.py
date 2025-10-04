@@ -34,4 +34,5 @@ from documents.views_main import (
     auto_populate_legal_sections,
     document_preview,
     generate_default_sections, 
+    DocumentPDFView,
 )

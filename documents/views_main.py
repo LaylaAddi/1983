@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from django.db import models
 import json
 from django.views.decorators.http import require_POST
+from django_weasyprint import WeasyTemplateResponseMixin
+from django.views.generic import DetailView
 
 
 @login_required
@@ -289,3 +291,27 @@ def generate_default_sections(request, pk):
         )
     
     return redirect('document_detail', pk=pk)
+
+
+class DocumentPDFView(WeasyTemplateResponseMixin, DetailView):
+    """
+    Generate PDF of lawsuit document using django-weasyprint.
+    This class-based view handles all the PDF generation automatically.
+    """
+    model = LawsuitDocument
+    template_name = 'documents/document_pdf.html'
+    context_object_name = 'document'
+    
+    def get_queryset(self):
+        # Security: only return documents owned by current user
+        return LawsuitDocument.objects.filter(user=self.request.user)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sections'] = self.object.sections.all().order_by('order')
+        return context
+    
+    def get_pdf_filename(self):
+        # Custom filename for the PDF
+        safe_title = self.object.title[:30].replace(' ', '_').replace('/', '-')
+        return f"lawsuit_{self.object.pk}_{safe_title}.pdf"

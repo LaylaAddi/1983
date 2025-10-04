@@ -10,19 +10,19 @@
         line-height: 1.6;
         min-height: 200px;
     }
-    
+
     /* Keep this - custom button color for legal theme */
     .btn-legal {
         background: #1a472a;
         color: white;
         border: none;
     }
-    
+
     .btn-legal:hover {
         background: #0f2818;
         color: white;
     }
-    
+
     .legal-document {
         font-family: "Times New Roman", serif;
         line-height: 1.6;
@@ -31,49 +31,55 @@
         max-width: 8.5in;
         margin: 0 auto;
         padding: 1in;
-        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     }
-    
+
     .court-heading {
         text-align: center;
         font-weight: bold;
         margin-bottom: 30px;
         line-height: 1.4;
     }
-    
+
     .case-caption {
         border: 2px solid #000;
         padding: 20px;
         margin: 30px 0;
         text-align: center;
     }
-    
+
     .section-number {
         font-weight: bold;
         margin-top: 25px;
         margin-bottom: 10px;
     }
-    
+
     .section-content {
         text-align: justify;
         text-indent: 30px;
         margin-bottom: 15px;
     }
-    
+
     .signature-block {
         margin-top: 50px;
         float: right;
         width: 300px;
     }
-    
+
     @media print {
-        .no-print { display: none !important; }
-        .legal-document { 
-            box-shadow: none; 
+        .no-print {
+            display: none !important;
+        }
+
+        .legal-document {
+            box-shadow: none;
             padding: 0;
             margin: 0;
         }
-        body { background: white; }
+
+        body {
+            background: white;
+        }
     }
 </style>
 {% endblock %}
@@ -88,9 +94,9 @@
                     <p class="text-muted">{{ document.title }}</p>
                 </div>
                 <div>
-                    <button onclick="window.print()" class="btn btn-success btn-lg me-2">
-                        <i class="fas fa-file-pdf"></i> Save as PDF
-                    </button>
+                    <a href="{% url 'download_pdf' document.pk %}" class="btn btn-success btn-lg me-2">
+                        <i class="fas fa-file-pdf"></i> Download PDF
+                    </a>
                     <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-secondary me-2">
                         <i class="fas fa-edit"></i> Edit Sections
                     </a>
@@ -99,38 +105,33 @@
                     </a>
                 </div>
             </div>
-            
-            <!-- Simple Instructions -->
-            <div class="alert alert-info mt-3">
-                <i class="fas fa-info-circle"></i> <strong>To save as PDF:</strong> Click the "Save as PDF" button above. In the print dialog, select "Save as PDF" or "Microsoft Print to PDF" as your destination, then click Save.
-            </div>
         </div>
     </div>
 </div>
 
 <div class="legal-document">
 
-<!-- Court Heading -->
-<div class="court-heading">
-    {% if document.user_confirmed_district %}
+    <!-- Court Heading -->
+    <div class="court-heading">
+        {% if document.user_confirmed_district %}
         {{ document.user_confirmed_district|upper }}
-    {% elif document.suggested_federal_district %}
+        {% elif document.suggested_federal_district %}
         {{ document.suggested_federal_district|upper }}
-    {% else %}
+        {% else %}
         UNITED STATES DISTRICT COURT<br>
         [DISTRICT TO BE DETERMINED]
-    {% endif %}
-</div>
-    
+        {% endif %}
+    </div>
+
     <!-- Case Caption -->
     <div class="case-caption">
         <table width="100%" style="border: none;">
             <tr>
                 <td style="text-align: left; vertical-align: top; width: 60%;">
                     {% if document.user.user_profile.full_legal_name %}
-                        {{ document.user.user_profile.full_legal_name }}
+                    {{ document.user.user_profile.full_legal_name }}
                     {% else %}
-                        {{ document.user.get_full_name|default:document.user.username }}
+                    {{ document.user.get_full_name|default:document.user.username }}
                     {% endif %},
                     <br><br>
                     <div style="margin-left: 100px;">Plaintiff,</div>
@@ -138,9 +139,9 @@
                     v.
                     <br><br>
                     {% if document.defendants %}
-                        {{ document.defendants|linebreaks }}
+                    {{ document.defendants|linebreaks }}
                     {% else %}
-                        [DEFENDANTS TO BE IDENTIFIED],
+                    [DEFENDANTS TO BE IDENTIFIED],
                     {% endif %}
                     <br>
                     <div style="margin-left: 100px;">Defendants.</div>
@@ -157,114 +158,119 @@
             </tr>
         </table>
     </div>
-    
+
     <!-- Document Sections -->
     {% if sections %}
-        {% for section in sections %}
-            <div class="section-number">
-                {{ forloop.counter }}. {{ section.title|upper }}
-            </div>
-            <div class="section-content">
-                {{ section.content|linebreaks }}
-            </div>
-        {% endfor %}
+    {% for section in sections %}
+    <div class="section-number">
+        {{ forloop.counter }}. {{ section.title|upper }}
+    </div>
+    <div class="section-content">
+        {{ section.content|linebreaks }}
+    </div>
+    {% endfor %}
     {% else %}
-        <div class="alert alert-warning no-print">
-            <h5>No Sections Available</h5>
-            <p>This document doesn't have any sections yet. <a href="{% url 'manage_document_sections' document.pk %}">Add sections</a> to see them in the preview.</p>
-        </div>
+    <div class="alert alert-warning no-print">
+        <h5>No Sections Available</h5>
+        <p>This document doesn't have any sections yet. <a href="{% url 'manage_document_sections' document.pk %}">Add
+                sections</a> to see them in the preview.</p>
+    </div>
     {% endif %}
-    
+
     <!-- Exhibits Section -->
     {% if document.youtube_url_1 or document.youtube_url_2 or document.youtube_url_3 or document.youtube_url_4 %}
     <div style="page-break-before: always; margin-top: 50px;">
         <div class="section-number">
             EXHIBITS
         </div>
-        
+
         <div class="section-content" style="text-indent: 0;">
             <p>The following exhibits are incorporated herein by reference and attached hereto:</p>
-            
+
             {% if document.youtube_url_1 %}
             <p><strong>EXHIBIT A:</strong> Video Recording of Incident<br>
-            Original URL: {{ document.youtube_url_1 }}<br>
-            Description: Primary video evidence documenting the civil rights violation that occurred on {{ document.incident_date|date:"F d, Y"|default:"[DATE]" }} at {{ document.incident_location|default:"[LOCATION]" }}.</p>
+                Original URL: {{ document.youtube_url_1 }}<br>
+                Description: Primary video evidence documenting the civil rights violation that occurred on {{
+                document.incident_date|date:"F d, Y"|default:"[DATE]" }} at {{
+                document.incident_location|default:"[LOCATION]" }}.</p>
             {% endif %}
-            
+
             {% if document.youtube_url_2 %}
-                {% if document.youtube_url_1 %}
-                <p><strong>EXHIBIT B:</strong> Additional Video Recording<br>
+            {% if document.youtube_url_1 %}
+            <p><strong>EXHIBIT B:</strong> Additional Video Recording<br>
                 {% else %}
-                <p><strong>EXHIBIT A:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT A:</strong> Additional Video Recording<br>
                 {% endif %}
-            Original URL: {{ document.youtube_url_2 }}<br>
-            Description: Supplemental video evidence related to the incident.</p>
+                Original URL: {{ document.youtube_url_2 }}<br>
+                Description: Supplemental video evidence related to the incident.</p>
             {% endif %}
-            
+
             {% if document.youtube_url_3 %}
-                {% if document.youtube_url_1 and document.youtube_url_2 %}
-                <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
+            {% if document.youtube_url_1 and document.youtube_url_2 %}
+            <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
                 {% elif document.youtube_url_1 or document.youtube_url_2 %}
-                <p><strong>EXHIBIT B:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT B:</strong> Additional Video Recording<br>
                 {% else %}
-                <p><strong>EXHIBIT A:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT A:</strong> Additional Video Recording<br>
                 {% endif %}
-            Original URL: {{ document.youtube_url_3 }}<br>
-            Description: Additional video evidence related to the incident.</p>
+                Original URL: {{ document.youtube_url_3 }}<br>
+                Description: Additional video evidence related to the incident.</p>
             {% endif %}
-            
+
             {% if document.youtube_url_4 %}
-                {% if document.youtube_url_1 and document.youtube_url_2 and document.youtube_url_3 %}
-                <p><strong>EXHIBIT D:</strong> Additional Video Recording<br>
+            {% if document.youtube_url_1 and document.youtube_url_2 and document.youtube_url_3 %}
+            <p><strong>EXHIBIT D:</strong> Additional Video Recording<br>
                 {% elif document.youtube_url_1 and document.youtube_url_2 %}
-                <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
                 {% elif document.youtube_url_1 and document.youtube_url_3 %}
-                <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
                 {% elif document.youtube_url_2 and document.youtube_url_3 %}
-                <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT C:</strong> Additional Video Recording<br>
                 {% elif document.youtube_url_1 or document.youtube_url_2 or document.youtube_url_3 %}
-                <p><strong>EXHIBIT B:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT B:</strong> Additional Video Recording<br>
                 {% else %}
-                <p><strong>EXHIBIT A:</strong> Additional Video Recording<br>
+            <p><strong>EXHIBIT A:</strong> Additional Video Recording<br>
                 {% endif %}
-            Original URL: {{ document.youtube_url_4 }}<br>
-            Description: Additional video evidence related to the incident.</p>
+                Original URL: {{ document.youtube_url_4 }}<br>
+                Description: Additional video evidence related to the incident.</p>
             {% endif %}
-            
-            <p style="margin-top: 30px;"><em>Note: Video exhibits should be downloaded and submitted to the court in an appropriate digital format per local court rules. Original URLs are provided for reference and verification purposes.</em></p>
+
+            <p style="margin-top: 30px;"><em>Note: Video exhibits should be downloaded and submitted to the court in an
+                    appropriate digital format per local court rules. Original URLs are provided for reference and
+                    verification purposes.</em></p>
         </div>
     </div>
     {% endif %}
-    
+
     <!-- Signature Block -->
     <div class="signature-block">
         <br><br>
         Respectfully submitted,<br><br><br>
-        
+
         _________________________________<br>
         {% if document.user.profile.full_legal_name %}
-    {{ document.user.profile.full_legal_name }}
-{% else %}
-    {{ document.user.get_full_name|default:document.user.username }}
-{% endif %}<br>
-Plaintiff, Pro Se<br>
-{% if document.user.profile %}
-    {% if document.user.profile.street_address %}
+        {{ document.user.profile.full_legal_name }}
+        {% else %}
+        {{ document.user.get_full_name|default:document.user.username }}
+        {% endif %}<br>
+        Plaintiff, Pro Se<br>
+        {% if document.user.profile %}
+        {% if document.user.profile.street_address %}
         {{ document.user.profile.street_address }}<br>
-    {% endif %}
-    {% if document.user.profile.city and document.user.profile.state %}
-        {{ document.user.profile.city }}, {{ document.user.profile.state }} 
+        {% endif %}
+        {% if document.user.profile.city and document.user.profile.state %}
+        {{ document.user.profile.city }}, {{ document.user.profile.state }}
         {% if document.user.profile.zip_code %}{{ document.user.profile.zip_code }}{% endif %}<br>
-    {% endif %}
-    {% if document.user.profile.phone_number %}
+        {% endif %}
+        {% if document.user.profile.phone_number %}
         Tel: {{ document.user.profile.phone_number }}<br>
-    {% endif %}
-{% endif %}
-{% if document.user.email %}
-    Email: {{ document.user.email }}
-{% endif %}
+        {% endif %}
+        {% endif %}
+        {% if document.user.email %}
+        Email: {{ document.user.email }}
+        {% endif %}
     </div>
-    
+
     <div style="clear: both;"></div>
 </div>
 {% endblock %}
