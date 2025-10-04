@@ -88,16 +88,21 @@
                     <p class="text-muted">{{ document.title }}</p>
                 </div>
                 <div>
-                    <button onclick="window.print()" class="btn btn-primary me-2">
-                        <i class="fas fa-print"></i> Print Document
+                    <button onclick="window.print()" class="btn btn-success btn-lg me-2">
+                        <i class="fas fa-file-pdf"></i> Save as PDF
                     </button>
-                    <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-secondary">
+                    <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-secondary me-2">
                         <i class="fas fa-edit"></i> Edit Sections
                     </a>
                     <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Back to Document
                     </a>
                 </div>
+            </div>
+            
+            <!-- Simple Instructions -->
+            <div class="alert alert-info mt-3">
+                <i class="fas fa-info-circle"></i> <strong>To save as PDF:</strong> Click the "Save as PDF" button above. In the print dialog, select "Save as PDF" or "Microsoft Print to PDF" as your destination, then click Save.
             </div>
         </div>
     </div>
