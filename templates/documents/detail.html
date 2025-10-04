@@ -10,7 +10,7 @@
             <div class="card shadow">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="mb-0"><i class="fas fa-file-alt text-primary"></i>{{ document.title }}</h2>
+                        <h2 class="mb-0"><i class="fas fa-file-alt text-primary"></i> {{ document.title }}</h2>
                         <span class="badge badge-{{ document.status|default:'secondary' }} mt-1">
                             {{ document.get_status_display }}
                         </span>
@@ -34,17 +34,17 @@
                     </div>
                 </div>
                 <div class="card-body">
-<!-- Description -->
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h5><i class="fas fa-comment-alt text-primary"></i> Description</h5>
-        <a href="{% url 'voice_recorder' %}?document_id={{ document.pk }}" 
-           class="btn btn-success btn-sm d-md-none">
-            <i class="fas fa-microphone"></i> Add Voice Note
-        </a>
-    </div>
-    <div class="bg-body-tertiary p-3 rounded">{{ document.description|linebreaks }}</div>
-</div>
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5><i class="fas fa-comment-alt text-primary"></i> Description</h5>
+                            <a href="{% url 'voice_recorder' %}?document_id={{ document.pk }}" 
+                               class="btn btn-success btn-sm d-md-none">
+                                <i class="fas fa-microphone"></i> Add Voice Note
+                            </a>
+                        </div>
+                        <div class="bg-body-tertiary p-3 rounded">{{ document.description|linebreaks }}</div>
+                    </div>
 
                     <!-- Incident Information -->
                     <div class="card border-primary mb-4">
@@ -164,46 +164,104 @@
             </div>
 
             <!-- Legal Sections -->
-            {% if sections %}
             <div class="card shadow mt-4">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h4 class="mb-0"><i class="fas fa-balance-scale text-primary"></i> Legal Sections</h4>
+                    <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-edit"></i> Manage Sections
+                    </a>
                 </div>
                 <div class="card-body">
-                    {% for section in sections %}
-                    <div class="border-bottom pb-3 mb-3">
-                        <h5>{{ section.order }}. {{ section.title }}</h5>
-                        <div class="text-muted small mb-2">{{ section.get_section_type_display }}</div>
-                        <div class="bg-body-tertiary p-3 rounded" style="font-family: 'Times New Roman', serif; line-height: 1.6;">
-                            {{ section.content|linebreaks }}
+                    {% if sections %}
+                        <p class="text-muted small mb-3">
+                            <i class="fas fa-info-circle"></i> These are the legal sections of your complaint. 
+                            Click "Manage Sections" to edit, reorder, add, or delete sections.
+                        </p>
+                        {% for section in sections %}
+                        <div class="border-bottom pb-3 mb-3">
+                            <h5>{{ section.order }}. {{ section.title }}</h5>
+                            <div class="text-muted small mb-2">{{ section.get_section_type_display }}</div>
+                            <div class="bg-body-tertiary p-3 rounded" style="font-family: 'Times New Roman', serif; line-height: 1.6;">
+                                {{ section.content|truncatewords:50 }}
+                                {% if section.content|wordcount > 50 %}
+                                    <span class="text-muted">... <a href="{% url 'manage_document_sections' document.pk %}">view full section</a></span>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-exclamation-triangle"></i> No Legal Sections Yet</h6>
+                            <p class="mb-2">Your document doesn't have legal sections. You have two options:</p>
+                            <ol class="mb-2">
+                                <li><strong>Smart Auto-Populate:</strong> Analyzes your incident description and generates customized legal language</li>
+                                <li><strong>Generate 7 Standard Sections:</strong> Creates all required sections (Introduction, Jurisdiction, Parties, Facts, Claims, Prayer for Relief, Jury Demand) with template text</li>
+                            </ol>
+                            <p class="mb-0"><strong>Both options create editable sections</strong> - you can customize every word after generation.</p>
+                            <div class="d-grid gap-2 mt-3">
+                                <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-info">
+                                    <i class="fas fa-magic"></i> Smart Auto-Populate
+                                </a>
+                                <a href="{% url 'generate_default_sections' document.pk %}" class="btn btn-secondary">
+                                    <i class="fas fa-list"></i> Generate 7 Standard Sections
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
-            {% endif %}
         </div>
 
         <!-- Sidebar -->
         <div class="col-lg-4">
             <!-- Quick Actions -->
             <div class="card shadow mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-bolt text-warning"></i> Quick Actions</h5>
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
                 </div>
                 <div class="card-body">
+                    <!-- Manage Sections - Primary Action -->
+                    <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-success btn-lg w-100 mb-3">
+                        <i class="fas fa-edit"></i> Manage Legal Sections
+                    </a>
+                    
+                    <!-- Section Generation Options -->
+                    <div class="card border-info mb-3">
+                        <div class="card-header bg-info bg-opacity-10">
+                            <h6 class="mb-0"><i class="fas fa-magic"></i> Generate Sections</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="small mb-2">
+                                <strong>Don't have sections yet?</strong> Generate them automatically:
+                            </p>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-magic"></i> Smart Auto-Populate
+                                </a>
+                                <a href="{% url 'generate_default_sections' document.pk %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-list"></i> Generate 7 Standard Sections
+                                </a>
+                            </div>
+                            
+                            <div class="alert alert-light mt-2 mb-0 small">
+                                <strong>What's the difference?</strong>
+                                <ul class="mb-0 mt-1">
+                                    <li><strong>Smart Auto-Populate:</strong> Analyzes your incident and creates customized legal language</li>
+                                    <li><strong>7 Standard Sections:</strong> Creates all required sections with placeholder text you can edit</li>
+                                </ul>
+                                <p class="mb-0 mt-2"><em>Either way, you can edit everything after generation.</em></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Other Actions -->
                     <div class="d-grid gap-2">
-                        <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-success">
-                            <i class="fas fa-magic"></i> Auto-Populate Legal Sections
-                        </a>
-                        <a href="{% url 'generate_default_sections' document.pk %}" class="btn btn-primary">
-                            <i class="fas fa-plus-circle"></i> Generate All Standard Sections
-                        </a>
-                        <a href="{% url 'document_preview' document.pk %}" class="btn btn-info">
+                        <a href="{% url 'document_preview' document.pk %}" class="btn btn-outline-primary">
                             <i class="fas fa-eye"></i> Preview Document
                         </a>
-                        <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-primary">
-                            <i class="fas fa-edit"></i> Edit Document
+                        <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-edit"></i> Edit Details
                         </a>
                     </div>
                 </div>
@@ -257,6 +315,31 @@
                             Always consult an attorney before filing legal documents
                         </li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Bottom Action Bar -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow bg-body-secondary">
+                <div class="card-body">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Documents
+                        </a>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{% url 'manage_document_sections' document.pk %}" class="btn btn-success">
+                                <i class="fas fa-edit"></i> Manage Sections
+                            </a>
+                            <a href="{% url 'document_preview' document.pk %}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Preview & Download PDF
+                            </a>
+                            <a href="{% url 'document_edit' document.pk %}" class="btn btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit Details
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
