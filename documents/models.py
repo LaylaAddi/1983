@@ -110,6 +110,7 @@ class DocumentSection(models.Model):
         ('claims', 'Claims for Relief'),
         ('prayer', 'Prayer for Relief'),
         ('jury_demand', 'Jury Trial Demand'),
+        ('exhibits', 'List of Exhibits'), 
     ]
     
     document = models.ForeignKey(LawsuitDocument, on_delete=models.CASCADE, related_name='sections')
@@ -153,3 +154,70 @@ class LegalTemplate(models.Model):
     
     def __str__(self):
         return f"{self.get_violation_type_display()} - {self.section_type}"
+
+class VideoEvidence(models.Model):
+    """
+    Stores video evidence segments with timestamps and transcripts.
+    Allows multiple segments per video URL.
+    """
+    document = models.ForeignKey(
+        LawsuitDocument, 
+        on_delete=models.CASCADE, 
+        related_name='video_evidence'
+    )
+    
+    # Video information
+    youtube_url = models.URLField(help_text="Full YouTube URL")
+    video_title = models.CharField(max_length=300, blank=True, help_text="Auto-fetched from YouTube")
+    
+    # Timestamp segment
+    start_time = models.CharField(max_length=10, help_text="Start time (MM:SS or HH:MM:SS)")
+    end_time = models.CharField(max_length=10, help_text="End time (MM:SS or HH:MM:SS)")
+    start_seconds = models.IntegerField(help_text="Start time in seconds for sorting")
+    end_seconds = models.IntegerField(help_text="End time in seconds")
+    
+    # Transcripts
+    raw_transcript = models.TextField(blank=True, help_text="Original AI-generated transcript (preserved)")
+    edited_transcript = models.TextField(blank=True, help_text="User-edited transcript with speaker attribution")
+    
+    # Manual entry option
+    manually_entered = models.BooleanField(default=False, help_text="True if transcript was manually entered")
+    
+    # Analysis and categorization
+    violation_tags = models.CharField(
+        max_length=500, 
+        blank=True,
+        help_text="Comma-separated violation types: first_amendment,fourth_amendment,etc"
+    )
+    notes = models.TextField(blank=True, help_text="User notes about this segment")
+    
+    # Status
+    is_reviewed = models.BooleanField(default=False, help_text="User has reviewed and approved")
+    include_in_complaint = models.BooleanField(default=False, help_text="Include in final document")
+    
+    # Metadata
+    extraction_cost = models.DecimalField(max_digits=6, decimal_places=4, null=True, blank=True, help_text="API cost in USD")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['youtube_url', 'start_seconds']
+        verbose_name = "Video Evidence Segment"
+        verbose_name_plural = "Video Evidence Segments"
+    
+    def __str__(self):
+        return f"{self.youtube_url} ({self.start_time}-{self.end_time})"
+    
+    @property
+    def duration_seconds(self):
+        """Calculate segment duration"""
+        return self.end_seconds - self.start_seconds
+    
+    @property
+    def youtube_embed_url(self):
+        """Generate embeddable YouTube URL with timestamp"""
+        from documents.services.whisper_transcript_service import WhisperTranscriptService
+        video_id = WhisperTranscriptService.extract_video_id(self.youtube_url)
+        if video_id:
+            return f"https://www.youtube.com/embed/{video_id}?start={self.start_seconds}"
+        return None

@@ -102,9 +102,17 @@ def document_detail(request, pk):
     document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
     sections = document.sections.all().order_by('order')
     
+    # Video evidence counts
+    video_evidence = document.video_evidence.all()
+    reviewed_count = video_evidence.filter(is_reviewed=True).count()
+    included_count = video_evidence.filter(include_in_complaint=True).count()
+    
     context = {
         'document': document,
         'sections': sections,
+        'video_evidence_count': video_evidence.count(),
+        'video_evidence_reviewed': reviewed_count,
+        'video_evidence_included': included_count,
     }
     
     return render(request, 'documents/detail.html', context)

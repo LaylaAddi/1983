@@ -5,6 +5,8 @@ from . import views_main
 from django.contrib.auth.decorators import login_required
 # from .views import transcript_views
 from .views import whisper_views
+from .views import evidence_views
+
 
 urlpatterns = [
     path('create/', views.document_create, name='document_create'),
@@ -25,4 +27,13 @@ urlpatterns = [
     # path('api/extract-transcript-mock/', transcript_views.extract_transcript_mock, name='extract_transcript_mock'),
     path('api/extract-transcript/', whisper_views.extract_transcript_whisper, name='extract_transcript_whisper'),
 
+
+    # Evidence management URLs
+    path('<int:pk>/evidence/', evidence_views.evidence_manager, name='evidence_manager'),
+    path('<int:pk>/evidence/extract/', evidence_views.extract_evidence_segment, name='extract_evidence_segment'),
+    path('<int:pk>/evidence/<int:segment_id>/update/', evidence_views.update_evidence_segment, name='update_evidence_segment'),
+    path('<int:pk>/evidence/<int:segment_id>/delete/', evidence_views.delete_evidence_segment, name='delete_evidence_segment'),
+    path('<int:pk>/evidence/add-manual/', evidence_views.add_manual_segment, name='add_manual_segment'),
+    path('<int:pk>/evidence/generate-facts/', evidence_views.generate_facts_from_evidence, name='generate_facts_from_evidence'),
+    path('<int:pk>/evidence/preview-facts/', evidence_views.preview_facts_from_evidence, name='preview_facts_from_evidence'),
 ]

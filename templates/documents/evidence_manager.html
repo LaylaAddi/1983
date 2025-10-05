@@ -1,0 +1,598 @@
+{% extends 'base.html' %}
+
+{% block title %}Video Evidence Manager - {{ document.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h2><i class="fas fa-video text-danger"></i> Video Evidence Manager</h2>
+        <p class="text-muted">{{ document.title }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if included_count > 0 %}
+        <a href="{% url 'generate_facts_from_evidence' document.pk %}" class="btn btn-success">
+            <i class="fas fa-magic"></i> Generate Statement of Facts
+        </a>
+        {% endif %}
+        <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Document
+        </a>
+    </div>
+</div>
+    </div>
+
+    <!-- Important Notice -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <h5 class="alert-heading"><i class="fas fa-exclamation-triangle"></i> Important: AI Transcript Limitations</h5>
+                <ul class="mb-2">
+                    <li><strong>Not 100% accurate:</strong> AI transcription may mishear words, especially with background noise or accents</li>
+                    <li><strong>No speaker identification:</strong> Transcripts don't identify who is speaking. You must manually add "Officer Smith:", "Plaintiff:", etc.</li>
+                    <li><strong>YouTube blocking:</strong> Some videos cannot be downloaded due to privacy settings or regional restrictions</li>
+                    <li><strong>Review required:</strong> Always review and edit transcripts before including them in legal documents</li>
+                    <li><strong>Manual entry available:</strong> If extraction fails, you can manually type or paste transcripts</li>
+                </ul>
+                <p class="mb-0"><strong>Best practice:</strong> Extract the raw transcript, then carefully edit it while watching the video to ensure accuracy and add speaker attribution.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="text-primary">{{ total_segments }}</h3>
+                    <small class="text-muted">Total Segments</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="text-success">{{ reviewed_count }}</h3>
+                    <small class="text-muted">Reviewed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="text-info">{{ included_count }}</h3>
+                    <small class="text-muted">Included in Complaint</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h3 class="text-warning">{{ total_segments|add:"-"|add:reviewed_count }}</h3>
+                    <small class="text-muted">Needs Review</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Segment -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Add Video Evidence Segment</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Tab Navigation -->
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#extract-tab">
+                                <i class="fas fa-robot"></i> AI Extract
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#manual-tab">
+                                <i class="fas fa-keyboard"></i> Manual Entry
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- AI Extract Tab -->
+                        <div class="tab-pane fade show active" id="extract-tab">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">YouTube URL</label>
+                                    <input type="url" id="new-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">Start Time</label>
+                                    <input type="text" id="new-start" class="form-control" placeholder="0:00">
+                                </div>
+                                <div class="col-md-2 mb-3">
+                                    <label class="form-label">End Time</label>
+                                    <input type="text" id="new-end" class="form-control" placeholder="0:30">
+                                </div>
+                                <div class="col-md-2 mb-3 d-flex align-items-end">
+                                    <button type="button" class="btn btn-success w-100" onclick="extractNewSegment()">
+                                        <i class="fas fa-download"></i> Extract
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="extract-status" class="mt-2"></div>
+                        </div>
+
+                        <!-- Manual Entry Tab -->
+                        <div class="tab-pane fade" id="manual-tab">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">YouTube URL</label>
+                                    <input type="url" id="manual-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Start Time</label>
+                                    <input type="text" id="manual-start" class="form-control" placeholder="0:00">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">End Time</label>
+                                    <input type="text" id="manual-end" class="form-control" placeholder="0:30">
+                                </div>
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Transcript Text</label>
+                                    <textarea id="manual-transcript" class="form-control" rows="6" placeholder="Type or paste the transcript here. Add speaker attribution like 'Officer Smith: ...' and 'Plaintiff: ...'"></textarea>
+                                    <small class="text-muted">Tip: Watch the video and type what you hear, adding speaker names for clarity.</small>
+                                </div>
+                                <div class="col-md-12">
+                                    <button type="button" class="btn btn-primary" onclick="addManualSegment()">
+                                        <i class="fas fa-plus"></i> Add Manual Segment
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="manual-status" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence Segments List -->
+    <div class="row">
+        <div class="col-12">
+            {% if segments_by_video %}
+                {% for video_url, segments in segments_by_video.items %}
+                <div class="card mb-4">
+                    <div class="card-header bg-body-secondary">
+                        <h5 class="mb-0">
+                            <i class="fas fa-video text-danger"></i> 
+                            {{ video_url|truncatechars:80 }}
+                            <span class="badge bg-secondary ms-2">{{ segments|length }} segment{{ segments|length|pluralize }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for segment in segments %}
+                        <div class="card mb-3 segment-card" data-segment-id="{{ segment.id }}">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Segment {{ forloop.counter }}: {{ segment.start_time }} - {{ segment.end_time }}</strong>
+                                    {% if segment.manually_entered %}
+                                        <span class="badge bg-info ms-2">Manual Entry</span>
+                                    {% endif %}
+                                    {% if segment.is_reviewed %}
+                                        <span class="badge bg-success ms-2"><i class="fas fa-check"></i> Reviewed</span>
+                                    {% endif %}
+                                    {% if segment.include_in_complaint %}
+                                        <span class="badge bg-primary ms-2"><i class="fas fa-file-alt"></i> In Complaint</span>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <a href="{{ segment.youtube_embed_url }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Watch segment">
+                                        <i class="fas fa-play"></i> Watch
+                                    </a>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteSegment({{ segment.id }})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!-- Raw Transcript (Read-only) -->
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">
+                                        <i class="fas fa-lock"></i> Original Transcript (AI Generated - Read Only)
+                                    </label>
+                                    <div class="bg-body-secondary p-2 rounded small" style="max-height: 150px; overflow-y: auto;">
+                                        {{ segment.raw_transcript }}
+                                    </div>
+                                </div>
+
+                                <!-- Editable Transcript -->
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-edit"></i> Edited Transcript (Add speaker names, fix errors)
+                                    </label>
+                                    <textarea 
+                                        class="form-control edited-transcript" 
+                                        data-segment-id="{{ segment.id }}"
+                                        rows="6" 
+                                        style="font-family: monospace;">{{ segment.edited_transcript }}</textarea>
+                                    <small class="text-muted">
+                                        Example: "Officer Smith: You need to show ID. Plaintiff: Am I being detained? Officer Smith: Yes, you're being detained."
+                                    </small>
+                                </div>
+
+                                <!-- Violation Tags -->
+                                <div class="mb-3">
+                                    <label class="form-label">Violation Tags</label>
+                                    <div class="btn-group-sm mb-2" role="group">
+                                        <input type="checkbox" class="btn-check violation-tag" data-segment-id="{{ segment.id }}" data-tag="first_amendment" id="tag-1st-{{ segment.id }}" {% if 'first_amendment' in segment.violation_tags %}checked{% endif %}>
+                                        <label class="btn btn-outline-primary" for="tag-1st-{{ segment.id }}">1st Amendment</label>
+
+                                        <input type="checkbox" class="btn-check violation-tag" data-segment-id="{{ segment.id }}" data-tag="fourth_amendment" id="tag-4th-{{ segment.id }}" {% if 'fourth_amendment' in segment.violation_tags %}checked{% endif %}>
+                                        <label class="btn btn-outline-primary" for="tag-4th-{{ segment.id }}">4th Amendment</label>
+
+                                        <input type="checkbox" class="btn-check violation-tag" data-segment-id="{{ segment.id }}" data-tag="unlawful_detention" id="tag-detention-{{ segment.id }}" {% if 'unlawful_detention' in segment.violation_tags %}checked{% endif %}>
+                                        <label class="btn btn-outline-primary" for="tag-detention-{{ segment.id }}">Unlawful Detention</label>
+
+                                        <input type="checkbox" class="btn-check violation-tag" data-segment-id="{{ segment.id }}" data-tag="excessive_force" id="tag-force-{{ segment.id }}" {% if 'excessive_force' in segment.violation_tags %}checked{% endif %}>
+                                        <label class="btn btn-outline-primary" for="tag-force-{{ segment.id }}">Excessive Force</label>
+                                    </div>
+                                </div>
+
+                                <!-- Notes -->
+                                <div class="mb-3">
+                                    <label class="form-label">Notes</label>
+                                    <textarea 
+                                        class="form-control segment-notes" 
+                                        data-segment-id="{{ segment.id }}"
+                                        rows="2" 
+                                        placeholder="Add context or notes about this segment...">{{ segment.notes }}</textarea>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success" onclick="markReviewed({{ segment.id }}, {{ segment.is_reviewed|yesno:'false,true' }})">
+                                        {% if segment.is_reviewed %}
+                                            <i class="fas fa-times"></i> Mark as Not Reviewed
+                                        {% else %}
+                                            <i class="fas fa-check"></i> Mark as Reviewed
+                                        {% endif %}
+                                    </button>
+                                    <div class="form-check form-switch">
+                                        <input 
+                                            class="form-check-input include-in-complaint-checkbox" 
+                                            type="checkbox" 
+                                            id="include-{{ segment.id }}"
+                                            {% if segment.include_in_complaint %}checked{% endif %}
+                                            onchange="toggleInclude({{ segment.id }}, this.checked)">
+                                        <label class="form-check-label fw-bold" for="include-{{ segment.id }}">
+                                            <i class="fas fa-file-alt"></i> Include in Complaint
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-info" onclick="saveSegment({{ segment.id }})">
+                                        <i class="fas fa-save"></i> Save Changes
+                                    </button>
+                                </div>
+
+                                {% if segment.extraction_cost %}
+                                <div class="mt-2 small text-muted">
+                                    Extraction cost: ${{ segment.extraction_cost }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-info">
+                    <h5><i class="fas fa-info-circle"></i> No Video Evidence Yet</h5>
+                    <p class="mb-0">Use the form above to extract or manually add video evidence segments.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<!-- Sticky Action Bar (shows when segments selected) -->
+<div id="sticky-action-bar" class="sticky-bottom bg-success text-white p-3 shadow-lg" style="display: none; z-index: 1000;">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">
+                    <i class="fas fa-check-circle"></i> 
+                    <span id="selected-count">0</span> segment<span id="plural-s">s</span> selected for complaint
+                </h5>
+                <small>These will be converted into numbered factual statements</small>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-light" onclick="previewFacts()">
+                    <i class="fas fa-eye"></i> Preview Facts
+                </button>
+                <button class="btn btn-warning btn-lg" onclick="generateFacts()">
+                    <i class="fas fa-magic"></i> Generate Statement of Facts
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Preview: Statement of Facts</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> This preview shows how your video evidence will appear as numbered facts in the legal document.
+                </div>
+                <div id="preview-content" style="font-family: 'Times New Roman', serif; line-height: 1.8;">
+                    <!-- Preview content loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="generateFacts()">
+                    <i class="fas fa-check"></i> Looks Good - Generate Facts
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const DOCUMENT_ID = {{ document.pk }};
+const CSRF_TOKEN = '{{ csrf_token }}';
+
+// Extract new segment with AI
+function extractNewSegment() {
+    const url = document.getElementById('new-url').value.trim();
+    const start = document.getElementById('new-start').value.trim() || '0';
+    const end = document.getElementById('new-end').value.trim() || '30';
+    const statusDiv = document.getElementById('extract-status');
+
+    if (!url) {
+        statusDiv.innerHTML = '<div class="alert alert-danger">Please enter a YouTube URL</div>';
+        return;
+    }
+
+    statusDiv.innerHTML = '<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Extracting transcript... This may take 10-30 seconds.</div>';
+
+    fetch(`/documents/${DOCUMENT_ID}/evidence/extract/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            youtube_url: url,
+            start_time: start,
+            end_time: end
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = `<div class="alert alert-success">
+                <strong>Success!</strong> Segment extracted. Cost: $${data.cost}
+                <br>Refreshing page...
+            </div>`;
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            statusDiv.innerHTML = `<div class="alert alert-danger">
+                <strong>Error:</strong> ${data.error}
+                <br><small>Try using manual entry if extraction continues to fail.</small>
+            </div>`;
+        }
+    })
+    .catch(error => {
+        statusDiv.innerHTML = `<div class="alert alert-danger">Network error: ${error}</div>`;
+    });
+}
+
+// Add manual segment
+function addManualSegment() {
+    const url = document.getElementById('manual-url').value.trim();
+    const start = document.getElementById('manual-start').value.trim() || '0';
+    const end = document.getElementById('manual-end').value.trim() || '30';
+    const transcript = document.getElementById('manual-transcript').value.trim();
+    const statusDiv = document.getElementById('manual-status');
+
+    if (!url || !transcript) {
+        statusDiv.innerHTML = '<div class="alert alert-danger">URL and transcript are required</div>';
+        return;
+    }
+
+    statusDiv.innerHTML = '<div class="alert alert-info">Adding segment...</div>';
+
+    fetch(`/documents/${DOCUMENT_ID}/evidence/add-manual/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            youtube_url: url,
+            start_time: start,
+            end_time: end,
+            transcript: transcript
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = '<div class="alert alert-success">Segment added! Refreshing...</div>';
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            statusDiv.innerHTML = `<div class="alert alert-danger">Error: ${data.error}</div>`;
+        }
+    });
+}
+
+// Save segment changes
+function saveSegment(segmentId) {
+    const editedTranscript = document.querySelector(`.edited-transcript[data-segment-id="${segmentId}"]`).value;
+    const notes = document.querySelector(`.segment-notes[data-segment-id="${segmentId}"]`).value;
+    
+    // Get checked violation tags
+    const tags = [];
+    document.querySelectorAll(`.violation-tag[data-segment-id="${segmentId}"]:checked`).forEach(checkbox => {
+        tags.push(checkbox.dataset.tag);
+    });
+
+    fetch(`/documents/${DOCUMENT_ID}/evidence/${segmentId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            edited_transcript: editedTranscript,
+            notes: notes,
+            violation_tags: tags.join(',')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Changes saved successfully!');
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+
+// Mark as reviewed
+function markReviewed(segmentId, newValue) {
+    fetch(`/documents/${DOCUMENT_ID}/evidence/${segmentId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            is_reviewed: newValue
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+// Toggle include in complaint
+function toggleInclude(segmentId, newValue) {
+    fetch(`/documents/${DOCUMENT_ID}/evidence/${segmentId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            include_in_complaint: newValue
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+// Delete segment
+function deleteSegment(segmentId) {
+    if (!confirm('Are you sure you want to delete this segment?')) return;
+
+    fetch(`/documents/${DOCUMENT_ID}/evidence/${segmentId}/delete/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+// Update sticky action bar when segments are selected/deselected
+function updateStickyBar() {
+    const checkedBoxes = document.querySelectorAll('.include-in-complaint-checkbox:checked');
+    const count = checkedBoxes.length;
+    const stickyBar = document.getElementById('sticky-action-bar');
+    const countSpan = document.getElementById('selected-count');
+    const pluralSpan = document.getElementById('plural-s');
+    
+    if (count > 0) {
+        stickyBar.style.display = 'block';
+        countSpan.textContent = count;
+        pluralSpan.textContent = count === 1 ? '' : 's';
+    } else {
+        stickyBar.style.display = 'none';
+    }
+}
+
+// Preview what the facts will look like
+function previewFacts() {
+    const previewContent = document.getElementById('preview-content');
+    previewContent.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading preview...</div>';
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+    modal.show();
+    
+    // Fetch preview from server
+    fetch(`/documents/${DOCUMENT_ID}/evidence/preview-facts/`, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let html = '<ol>';
+            data.facts.forEach(fact => {
+                html += `<li class="mb-3">${fact}</li>`;
+            });
+            html += '</ol>';
+            
+            if (data.exhibits) {
+                html += '<hr><h6 class="mt-4">Exhibits:</h6>';
+                html += `<pre class="border p-3 rounded" style="background-color: var(--bs-body-bg); color: var(--bs-body-color);">${data.exhibits}</pre>`;
+
+            }
+            
+            previewContent.innerHTML = html;
+        } else {
+            previewContent.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        }
+    })
+    .catch(error => {
+        previewContent.innerHTML = `<div class="alert alert-danger">Error loading preview: ${error}</div>`;
+    });
+}
+
+// Generate facts and redirect
+function generateFacts() {
+    if (confirm('Generate Statement of Facts from selected video segments? This will create/update the Statement of Facts section in your document.')) {
+        window.location.href = `/documents/${DOCUMENT_ID}/evidence/generate-facts/`;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateStickyBar();
+});
+</script>
+
+{% endblock %}

@@ -40,3 +40,14 @@ from documents.views_main import (
     generate_default_sections, 
     DocumentPDFView,
 )
+
+
+from .evidence_views import (
+    evidence_manager,
+    extract_evidence_segment,
+    update_evidence_segment,
+    delete_evidence_segment,
+    add_manual_segment,
+    generate_facts_from_evidence,
+    preview_facts_from_evidence,
+)

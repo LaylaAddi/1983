@@ -162,7 +162,58 @@
                     {% endif %}
                 </div>
             </div>
-
+            <!-- Video Evidence Summary -->
+            {% if document.video_evidence.exists %}
+            <div class="card shadow mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0"><i class="fas fa-video text-danger"></i> Video Evidence</h4>
+                    <a href="{% url 'evidence_manager' document.pk %}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i> Manage Evidence
+                    </a>
+                </div>
+                <div class="card-body">
+<p class="text-muted small mb-3">
+    <i class="fas fa-info-circle"></i> 
+    {{ video_evidence_count }} video segment{{ video_evidence_count|pluralize }} collected. 
+    {{ video_evidence_reviewed }} reviewed, 
+    {{ video_evidence_included }} included in complaint.
+</p>
+                    {% for segment in document.video_evidence.all|slice:":5" %}
+                    <div class="border-bottom pb-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ segment.start_time }} - {{ segment.end_time }}</strong>
+                                {% if segment.is_reviewed %}
+                                    <span class="badge bg-success">Reviewed</span>
+                                {% endif %}
+                                {% if segment.include_in_complaint %}
+                                    <span class="badge bg-primary">In Complaint</span>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">{{ segment.youtube_url|truncatechars:60 }}</small>
+                            </div>
+                            <a href="{{ segment.youtube_embed_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-play"></i> Watch
+                            </a>
+                        </div>
+                        {% if segment.edited_transcript %}
+                        <div class="mt-2 small bg-body-tertiary p-2 rounded">
+                            {{ segment.edited_transcript|truncatewords:30 }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    {% if document.video_evidence.count > 5 %}
+                    <div class="text-center mt-3">
+                        <a href="{% url 'evidence_manager' document.pk %}" class="btn btn-outline-secondary">
+                            View All {{ document.video_evidence.count }} Segments
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
             <!-- Legal Sections -->
             <div class="card shadow mt-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -257,6 +308,9 @@
 
                     <!-- Other Actions -->
                     <div class="d-grid gap-2">
+                        <a href="{% url 'evidence_manager' document.pk %}" class="btn btn-warning btn-lg w-100 mb-3">
+                            <i class="fas fa-video"></i> Manage Video Evidence
+                        </a>
                         <a href="{% url 'document_preview' document.pk %}" class="btn btn-outline-primary">
                             <i class="fas fa-eye"></i> Preview Document
                         </a>
