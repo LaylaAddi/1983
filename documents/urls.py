@@ -3,6 +3,8 @@ from django.urls import path
 from . import views
 from . import views_main
 from django.contrib.auth.decorators import login_required
+# from .views import transcript_views
+from .views import whisper_views
 
 urlpatterns = [
     path('create/', views.document_create, name='document_create'),
@@ -20,5 +22,7 @@ urlpatterns = [
     path('voice-recorder/', views.voice_recorder_view, name='voice_recorder'),
     path('api/voice-create/', views.voice_create_document, name='voice_create_document'),
     path('<int:pk>/download-pdf/', login_required(views_main.DocumentPDFView.as_view()), name='download_pdf'),
+    # path('api/extract-transcript-mock/', transcript_views.extract_transcript_mock, name='extract_transcript_mock'),
+    path('api/extract-transcript/', whisper_views.extract_transcript_whisper, name='extract_transcript_whisper'),
 
 ]

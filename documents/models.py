@@ -46,9 +46,24 @@ class LawsuitDocument(models.Model):
     
     # Evidence
     youtube_url_1 = models.URLField(blank=True, help_text="Primary video evidence")
+    youtube_url_1_start_time = models.CharField(max_length=10, blank=True, help_text="Start timestamp (MM:SS)")
+    youtube_url_1_end_time = models.CharField(max_length=10, blank=True, help_text="End timestamp (MM:SS)")
+    youtube_url_1_transcript = models.TextField(blank=True, help_text="Extracted transcript snippet")
+    
     youtube_url_2 = models.URLField(blank=True, help_text="Additional video evidence")
+    youtube_url_2_start_time = models.CharField(max_length=10, blank=True, help_text="Start timestamp (MM:SS)")
+    youtube_url_2_end_time = models.CharField(max_length=10, blank=True, help_text="End timestamp (MM:SS)")
+    youtube_url_2_transcript = models.TextField(blank=True, help_text="Extracted transcript snippet")
+    
     youtube_url_3 = models.URLField(blank=True, help_text="Additional video evidence")
+    youtube_url_3_start_time = models.CharField(max_length=10, blank=True, help_text="Start timestamp (MM:SS)")
+    youtube_url_3_end_time = models.CharField(max_length=10, blank=True, help_text="End timestamp (MM:SS)")
+    youtube_url_3_transcript = models.TextField(blank=True, help_text="Extracted transcript snippet")
+    
     youtube_url_4 = models.URLField(blank=True, help_text="Additional video evidence")
+    youtube_url_4_start_time = models.CharField(max_length=10, blank=True, help_text="Start timestamp (MM:SS)")
+    youtube_url_4_end_time = models.CharField(max_length=10, blank=True, help_text="End timestamp (MM:SS)")
+    youtube_url_4_transcript = models.TextField(blank=True, help_text="Extracted transcript snippet")
     
     additional_evidence = models.TextField(blank=True, help_text="Description of other evidence")
     

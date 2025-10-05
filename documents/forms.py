@@ -47,14 +47,39 @@ class LawsuitDocumentForm(forms.ModelForm):
     class Meta:
         model = LawsuitDocument
         fields = [
-            'title', 'description', 'incident_date', 
+            'title', 
+            'description', 
+            'incident_date', 
             # Use both location fields
-            'incident_location', 'user_confirmed_district',
-            'incident_street_address', 'incident_city', 'incident_state', 'incident_zip_code',
-            'defendants', 'youtube_url_1', 'youtube_url_2', 'youtube_url_3', 'youtube_url_4', 
-            'additional_evidence', 'include_videos_in_document',
+            'incident_location', 
+            'user_confirmed_district',
+            'incident_street_address', 
+            'incident_city', 
+            'incident_state', 
+            'incident_zip_code',
+            'defendants', 
+            'youtube_url_1', 
+            'youtube_url_1_start_time',
+            'youtube_url_1_end_time', 
+            'youtube_url_1_transcript',
+            'youtube_url_2', 
+            'youtube_url_2_start_time',
+            'youtube_url_2_end_time', 
+            'youtube_url_2_transcript',
+            'youtube_url_3', 
+            'youtube_url_3_start_time',
+            'youtube_url_3_end_time', 
+            'youtube_url_3_transcript',
+            'youtube_url_4', 
+            'youtube_url_4_start_time',
+            'youtube_url_4_end_time', 
+            'youtube_url_4_transcript',
+            'additional_evidence', 
+            'include_videos_in_document',
             
-            'suggested_federal_district', 'user_confirmed_district', 'district_lookup_confidence'
+            'suggested_federal_district', 
+            'user_confirmed_district', 
+            'district_lookup_confidence'
         ]
         widgets = {
             'title': forms.TextInput(attrs={
@@ -99,19 +124,27 @@ class LawsuitDocumentForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'https://youtube.com/watch?v=... (primary video)'
             }),
+             'youtube_url_1_start_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:00'}),
+            'youtube_url_1_end_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:30'}),
             'youtube_url_2': forms.URLInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'https://youtube.com/watch?v=... (additional video)'
             }),
+             'youtube_url_2_start_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:00'}),
+            'youtube_url_2_end_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:30'}),
             'youtube_url_3': forms.URLInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'https://youtube.com/watch?v=... (additional video)'
             }),
+             'youtube_url_3_start_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:00'}),
+            'youtube_url_3_end_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:30'}),
             'youtube_url_4': forms.URLInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'https://youtube.com/watch?v=... (additional video)'
             }),
-            'additional_evidence': forms.Textarea(attrs={
+             'youtube_url_4_start_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:00'}),
+             'youtube_url_4_end_time': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '0:30'}),
+             'additional_evidence': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
                 'placeholder': 'Describe other evidence: photos, witnesses, medical records, body cam footage, etc.'

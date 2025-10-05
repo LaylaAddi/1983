@@ -4,6 +4,10 @@
 from .voice_views import voice_recorder_view
 from .voice_views import voice_recorder_view, voice_create_document
 
+# Transcript views
+# from .transcript_views import extract_transcript_mock
+from .whisper_views import extract_transcript_whisper
+
 
 from ..views_main import (
     document_create,

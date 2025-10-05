@@ -33,13 +33,38 @@
                         <small><strong>Required fields are marked with a red asterisk (*)</strong></small>
                     </div>
 
+                    <!-- Form Errors -->
+                    {% if form.errors %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <h6 class="alert-heading"><i class="fas fa-exclamation-circle"></i> Please correct the errors below</h6>
+                        <ul class="mb-0">
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <li><strong>{{ field.label }}:</strong> {{ field.errors|striptags }}</li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if form.non_field_errors %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endif %}
+                        </ul>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
+
                     <form method="post" novalidate>
                         {% csrf_token %}
-
+<!-- <div style="background: yellow; padding: 10px;">
+    DEBUG - Available form fields:<br>
+    {% for field in form %}
+        {{ field.name }}<br>
+    {% endfor %}
+</div> -->
                         <!-- Case Title -->
                         <div class="mb-4">
                             <label for="{{ form.title.id_for_label }}" class="form-label fw-bold">
-                                <i class="fas fa-file-alt text-primary"></i> {{ form.title.label }}
+                                <i class="fas fa-file-alt text-primary"></i> Document Title
                                 <span class="text-danger">*</span>
                             </label>
                             {{ form.title }}
@@ -58,7 +83,7 @@
                         <!-- Description -->
                         <div class="mb-4">
                             <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
-                                <i class="fas fa-comment-alt text-primary"></i> {{ form.description.label }}
+                                <i class="fas fa-comment-alt text-primary"></i> Incident Description
                                 <span class="text-danger">*</span>
                             </label>
                             {{ form.description }}
@@ -85,7 +110,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label for="{{ form.incident_date.id_for_label }}" class="form-label fw-bold">
-                                            <i class="fas fa-calendar text-primary"></i> {{ form.incident_date.label }}
+                                            <i class="fas fa-calendar text-primary"></i> Incident Date
                                         </label>
                                         {{ form.incident_date }}
                                         {% if form.incident_date.help_text %}
@@ -105,7 +130,7 @@
                                 <div class="row mb-3">
                                     <div class="col-12">
                                         <label for="{{ form.incident_street_address.id_for_label }}" class="form-label fw-bold">
-                                            <i class="fas fa-road text-primary"></i> {{ form.incident_street_address.label }}
+                                            <i class="fas fa-road text-primary"></i> Street Address
                                         </label>
                                         {{ form.incident_street_address }}
                                         {% if form.incident_street_address.help_text %}
@@ -124,7 +149,7 @@
                                 <div class="row mb-3">
                                     <div class="col-md-6">
                                         <label for="{{ form.incident_city.id_for_label }}" class="form-label fw-bold">
-                                            <i class="fas fa-city text-primary"></i> {{ form.incident_city.label }}
+                                            <i class="fas fa-city text-primary"></i> City
                                             <span class="text-danger">*</span>
                                         </label>
                                         {{ form.incident_city }}
@@ -141,7 +166,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <label for="{{ form.incident_state.id_for_label }}" class="form-label fw-bold">
-                                            <i class="fas fa-flag text-primary"></i> {{ form.incident_state.label }}
+                                            <i class="fas fa-flag text-primary"></i> State
                                             <span class="text-danger">*</span>
                                         </label>
                                         {{ form.incident_state }}
@@ -158,7 +183,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <label for="{{ form.incident_zip_code.id_for_label }}" class="form-label fw-bold">
-                                            <i class="fas fa-mail-bulk text-primary"></i> {{ form.incident_zip_code.label }}
+                                            <i class="fas fa-mail-bulk text-primary"></i> ZIP Code
                                         </label>
                                         {{ form.incident_zip_code }}
                                         {% if form.incident_zip_code.help_text %}
@@ -178,7 +203,7 @@
                                 <div class="row mb-3">
                                     <div class="col-12">
                                         <label for="{{ form.incident_location.id_for_label }}" class="form-label">
-                                            <i class="fas fa-info-circle text-secondary"></i> {{ form.incident_location.label }}
+                                            <i class="fas fa-info-circle text-secondary"></i> Additional Location Details (optional)
                                         </label>
                                         {{ form.incident_location }}
                                         {% if form.incident_location.help_text %}
@@ -196,7 +221,8 @@
 
                                 <div class="alert alert-info">
                                     <h6><i class="fas fa-lightbulb"></i> Why we need this information:</h6>
-                                    <p class="mb-2">The incident location determines which federal district court has jurisdiction over your case. Our system will:</p>
+                                    <p class="mb-2">The incident location determines which federal district court has
+                                        jurisdiction over your case. Our system will:</p>
                                     <ul class="mb-0">
                                         <li>Automatically suggest the correct federal district court</li>
                                         <li>Generate proper court headers in your legal documents</li>
@@ -209,7 +235,7 @@
                         <!-- Defendants -->
                         <div class="mb-4">
                             <label for="{{ form.defendants.id_for_label }}" class="form-label fw-bold">
-                                <i class="fas fa-users text-primary"></i> {{ form.defendants.label }}
+                                <i class="fas fa-users text-primary"></i> Defendants
                             </label>
                             {{ form.defendants }}
                             {% if form.defendants.help_text %}
@@ -228,121 +254,220 @@
                         <div class="card border-secondary mb-4">
                             <div class="card-header bg-body-secondary">
                                 <h5 class="mb-0"><i class="fas fa-video text-danger"></i> Video Evidence</h5>
-                                <small class="text-muted">Provide YouTube links to video evidence supporting your case (optional)</small>
+                                <small class="text-muted">Provide YouTube links and extract key transcript moments</small>
                             </div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label for="{{ form.youtube_url_1.id_for_label }}" class="form-label">
-                                            <i class="fas fa-play-circle text-danger"></i> Primary Video Evidence
-                                        </label>
-                                        {{ form.youtube_url_1 }}
-                                        {% if form.youtube_url_1.help_text %}
-                                        <div class="form-text">{{ form.youtube_url_1.help_text }}</div>
-                                        {% endif %}
-                                        {% if form.youtube_url_1.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.youtube_url_1.errors %}
-                                            {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
+                                <!-- Video 1 -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-body-secondary">
+                                        <strong><i class="fas fa-play-circle text-danger"></i> Primary Video Evidence</strong>
                                     </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label for="{{ form.youtube_url_2.id_for_label }}" class="form-label">
-                                            <i class="fas fa-plus-circle text-secondary"></i> Additional Video Evidence
-                                        </label>
-                                        {{ form.youtube_url_2 }}
-                                        {% if form.youtube_url_2.help_text %}
-                                        <div class="form-text">{{ form.youtube_url_2.help_text }}</div>
-                                        {% endif %}
-                                        {% if form.youtube_url_2.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.youtube_url_2.errors %}
-                                            {{ error }}
-                                            {% endfor %}
+                                    <div class="card-body">
+                                        <button type="button" class="btn btn-sm btn-warning" onclick="fillTestData()">Fill Test Data</button>
+                                        <div class="mb-3">
+                                            <label for="{{ form.youtube_url_1.id_for_label }}" class="form-label">YouTube URL</label>
+                                            {{ form.youtube_url_1 }}
+                                            {% if form.youtube_url_1.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {% for error in form.youtube_url_1.errors %}{{ error }}{% endfor %}
+                                            </div>
+                                            {% endif %}
                                         </div>
-                                        {% endif %}
-                                    </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label for="{{ form.youtube_url_3.id_for_label }}" class="form-label">
-                                            <i class="fas fa-plus-circle text-secondary"></i> Additional Video Evidence
-                                        </label>
-                                        {{ form.youtube_url_3 }}
-                                        {% if form.youtube_url_3.help_text %}
-                                        <div class="form-text">{{ form.youtube_url_3.help_text }}</div>
-                                        {% endif %}
-                                        {% if form.youtube_url_3.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.youtube_url_3.errors %}
-                                            {{ error }}
-                                            {% endfor %}
+                                        <!-- Timestamp Extraction -->
+                                        <div class="row">
+                                            <div class="col-md-4 mb-2">
+                                                <label for="{{ form.youtube_url_1_start_time.id_for_label }}" class="form-label small">Start Time (MM:SS)</label>
+                                                {{ form.youtube_url_1_start_time }}
+                                                {% if form.youtube_url_1_start_time.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.youtube_url_1_start_time.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <label for="{{ form.youtube_url_1_end_time.id_for_label }}" class="form-label small">End Time (MM:SS)</label>
+                                                {{ form.youtube_url_1_end_time }}
+                                                {% if form.youtube_url_1_end_time.errors %}
+                                                <div class="invalid-feedback d-block">{{ form.youtube_url_1_end_time.errors }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="col-md-4 mb-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-info btn-sm w-100" onclick="extractTranscript(1)">
+                                                    <i class="fas fa-download"></i> Extract Transcript
+                                                </button>
+                                            </div>
                                         </div>
-                                        {% endif %}
-                                    </div>
 
-                                    <div class="col-md-6 mb-3">
-                                        <label for="{{ form.youtube_url_4.id_for_label }}" class="form-label">
-                                            <i class="fas fa-plus-circle text-secondary"></i> Additional Video Evidence
-                                        </label>
-                                        {{ form.youtube_url_4 }}
-                                        {% if form.youtube_url_4.help_text %}
-                                        <div class="form-text">{{ form.youtube_url_4.help_text }}</div>
-                                        {% endif %}
-                                        {% if form.youtube_url_4.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.youtube_url_4.errors %}
-                                            {{ error }}
-                                            {% endfor %}
+                                        <!-- Transcript Display -->
+                                        <div id="transcript-preview-1" class="mt-2" style="display:none;">
+                                            <label class="form-label small">Extracted Transcript:</label>
+                                            <div class="border rounded p-3 small" id="transcript-text-1" style="background-color: var(--bs-body-bg); color: var(--bs-body-color); line-height: 1.6;"></div>
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button type="button" class="btn btn-success btn-sm" onclick="useTranscript(1, 'description')">
+                                                    <i class="fas fa-plus"></i> Add to Description
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="useTranscript(1, 'evidence')">
+                                                    <i class="fas fa-folder"></i> Add to Evidence
+                                                </button>
+                                            </div>
                                         </div>
-                                        {% endif %}
+
+                                        <!-- Hidden field for transcript -->
+                                        <textarea name="youtube_url_1_transcript" id="{{ form.youtube_url_1_transcript.id_for_label }}" style="display:none;">{{ form.youtube_url_1_transcript.value }}</textarea>
                                     </div>
                                 </div>
 
-                                <!-- Video Evidence Options -->
+                                <!-- Video 2 -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-body-secondary">
+                                        <strong><i class="fas fa-video text-secondary"></i> Additional Video Evidence #2</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="{{ form.youtube_url_2.id_for_label }}" class="form-label">YouTube URL</label>
+                                            {{ form.youtube_url_2 }}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label small">Start Time (MM:SS)</label>
+                                                {{ form.youtube_url_2_start_time }}
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label small">End Time (MM:SS)</label>
+                                                {{ form.youtube_url_2_end_time }}
+                                            </div>
+                                            <div class="col-md-4 mb-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-info btn-sm w-100" onclick="extractTranscript(2)">
+                                                    <i class="fas fa-download"></i> Extract Transcript
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="transcript-preview-2" class="mt-2" style="display:none;">
+                                            <label class="form-label small">Extracted Transcript:</label>
+                                            <div class="border rounded p-3 small" id="transcript-text-2" style="background-color: var(--bs-body-bg); color: var(--bs-body-color); line-height: 1.6;"></div>
+
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button type="button" class="btn btn-success btn-sm" onclick="useTranscript(2, 'description')">
+                                                    <i class="fas fa-plus"></i> Add to Description
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="useTranscript(2, 'evidence')">
+                                                    <i class="fas fa-folder"></i> Add to Evidence
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <textarea name="youtube_url_2_transcript" id="{{ form.youtube_url_2_transcript.id_for_label }}" style="display:none;">{{ form.youtube_url_2_transcript.value }}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Video 3 -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-body-secondary">
+                                        <strong><i class="fas fa-video text-secondary"></i> Additional Video Evidence #3</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="{{ form.youtube_url_3.id_for_label }}" class="form-label">YouTube URL</label>
+                                            {{ form.youtube_url_3 }}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label small">Start Time (MM:SS)</label>
+                                                {{ form.youtube_url_3_start_time }}
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label small">End Time (MM:SS)</label>
+                                                {{ form.youtube_url_3_end_time }}
+                                            </div>
+                                            <div class="col-md-4 mb-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-info btn-sm w-100" onclick="extractTranscript(3)">
+                                                    <i class="fas fa-download"></i> Extract Transcript
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="transcript-preview-3" class="mt-2" style="display:none;">
+                                            <label class="form-label small">Extracted Transcript:</label>
+                                            <div class="border rounded p-3 small" id="transcript-text-3" style="background-color: var(--bs-body-bg); color: var(--bs-body-color); line-height: 1.6;"></div>
+
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button type="button" class="btn btn-success btn-sm" onclick="useTranscript(3, 'description')">
+                                                    <i class="fas fa-plus"></i> Add to Description
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="useTranscript(3, 'evidence')">
+                                                    <i class="fas fa-folder"></i> Add to Evidence
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <textarea name="youtube_url_3_transcript" id="{{ form.youtube_url_3_transcript.id_for_label }}" style="display:none;">{{ form.youtube_url_3_transcript.value }}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Video 4 -->
+                                <div class="card mb-3">
+                                    <div class="card-header bg-body-secondary">
+                                        <strong><i class="fas fa-video text-secondary"></i> Additional Video Evidence #4</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-3">
+                                            <label for="{{ form.youtube_url_4.id_for_label }}" class="form-label">YouTube URL</label>
+                                            {{ form.youtube_url_4 }}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label small">Start Time (MM:SS)</label>
+                                                {{ form.youtube_url_4_start_time }}
+                                            </div>
+                                            <div class="col-md-4 mb-2">
+                                                <label class="form-label small">End Time (MM:SS)</label>
+                                                {{ form.youtube_url_4_end_time }}
+                                            </div>
+                                            <div class="col-md-4 mb-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-info btn-sm w-100" onclick="extractTranscript(4)">
+                                                    <i class="fas fa-download"></i> Extract Transcript
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="transcript-preview-4" class="mt-2" style="display:none;">
+                                            <label class="form-label small">Extracted Transcript:</label>
+                                            <div class="border rounded p-3 small" id="transcript-text-4" style="background-color: var(--bs-body-bg); color: var(--bs-body-color); line-height: 1.6;"></div>
+
+                                            <div class="mt-2 d-flex gap-2">
+                                                <button type="button" class="btn btn-success btn-sm" onclick="useTranscript(4, 'description')">
+                                                    <i class="fas fa-plus"></i> Add to Description
+                                                </button>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="useTranscript(4, 'evidence')">
+                                                    <i class="fas fa-folder"></i> Add to Evidence
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <textarea name="youtube_url_4_transcript" id="{{ form.youtube_url_4_transcript.id_for_label }}" style="display:none;">{{ form.youtube_url_4_transcript.value }}</textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Include Videos Checkbox -->
                                 <div class="card border-info mt-3">
                                     <div class="card-header bg-info bg-opacity-10">
                                         <h6 class="mb-0"><i class="fas fa-cog"></i> Video Evidence Options</h6>
                                     </div>
                                     <div class="card-body">
                                         <div class="form-check">
-                                            {{ form.include_videos_in_document }}
-                                            <label class="form-check-label" for="{{ form.include_videos_in_document.id_for_label }}">
-                                                <strong>{{ form.include_videos_in_document.label }}</strong>
+                                            <input type="checkbox" name="include_videos_in_document" id="id_include_videos_in_document" class="form-check-input" {% if form.include_videos_in_document.value %}checked{% endif %}>
+                                            <label class="form-check-label" for="id_include_videos_in_document">
+                                                <strong>Include videos as exhibits in legal documents</strong>
                                             </label>
                                         </div>
-                                        {% if form.include_videos_in_document.help_text %}
                                         <small class="text-muted d-block mt-1">
-                                            {{ form.include_videos_in_document.help_text }}
+                                            When enabled, video URLs and transcripts will be included as formal exhibits in your legal complaint.
                                         </small>
-                                        {% endif %}
-                                        {% if form.include_videos_in_document.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {% for error in form.include_videos_in_document.errors %}
-                                            {{ error }}
-                                            {% endfor %}
-                                        </div>
-                                        {% endif %}
-
-                                        <div class="mt-3 alert alert-info">
-                                            <h6><i class="fas fa-lightbulb"></i> When to include videos as exhibits:</h6>
-                                            <ul class="mb-2">
-                                                <li><strong>Include:</strong> If videos are central evidence and you want them formally referenced in court documents</li>
-                                                <li><strong>Don't include:</strong> If videos are for personal reference, contain sensitive content, or you prefer to submit them separately</li>
-                                            </ul>
-                                            <small><strong>Note:</strong> You can change this setting later when editing your document.</small>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        
+
                         <!-- Additional Evidence -->
                         <div class="mb-4">
                             <label for="{{ form.additional_evidence.id_for_label }}" class="form-label fw-bold">
-                                <i class="fas fa-folder-open text-primary"></i> {{ form.additional_evidence.label }}
+                                <i class="fas fa-folder-open text-primary"></i> Additional Evidence
                             </label>
                             {{ form.additional_evidence }}
                             {% if form.additional_evidence.help_text %}
@@ -393,4 +518,111 @@
         </div>
     </div>
 </div>
+<script>
+// Transcript extraction functionality
+let extractedTranscripts = { 1: '', 2: '', 3: '', 4: '' };
+
+function extractTranscript(videoNum) {
+    console.log('Extract called for video:', videoNum);
+    
+    const urlField = document.getElementById('id_youtube_url_' + videoNum);
+    const startField = document.getElementById('id_youtube_url_' + videoNum + '_start_time');
+    const endField = document.getElementById('id_youtube_url_' + videoNum + '_end_time');
+    const button = event.target.closest('button');
+    
+    if (!urlField || !startField || !endField) {
+        console.error('Fields not found:', urlField, startField, endField);
+        alert('Error: Form fields not found');
+        return;
+    }
+
+    const url = urlField.value.trim();
+    const startTime = startField.value.trim() || '0';
+    const endTime = endField.value.trim() || '30';
+
+    if (!url) {
+        alert('Please enter a YouTube URL first');
+        return;
+    }
+
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Extracting...';
+
+    fetch('{% url "extract_transcript_whisper" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            youtube_url: url,
+            start_time: startTime,
+            end_time: endTime
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-download"></i> Extract Transcript';
+
+   if (data.success) {
+    extractedTranscripts[videoNum] = data.text;
+
+    const previewDiv = document.getElementById('transcript-preview-' + videoNum);
+    const textDiv = document.getElementById('transcript-text-' + videoNum);
+
+    // No more mock badge
+    textDiv.innerHTML = data.text + 
+        '<div class="mt-2 small text-muted">Cost: $' + data.cost_estimate + 
+        ' | Duration: ~' + data.duration_minutes + ' min</div>';
+    previewDiv.style.display = 'block';
+
+    document.getElementById('id_youtube_url_' + videoNum + '_transcript').value = data.text;
+} else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-download"></i> Extract Transcript';
+        alert('Error extracting transcript: ' + error);
+        console.error('Fetch error:', error);
+    });
+}
+
+function useTranscript(videoNum, target) {
+    const transcript = extractedTranscripts[videoNum];
+    if (!transcript) return;
+
+    const startTime = document.getElementById('id_youtube_url_' + videoNum + '_start_time').value || '0:00';
+    const endTime = document.getElementById('id_youtube_url_' + videoNum + '_end_time').value || '0:30';
+
+    const timestampNote = `\n\n[Video ${videoNum} Transcript - ${startTime} to ${endTime}]\n${transcript}\n`;
+
+    if (target === 'description') {
+        const descField = document.getElementById('id_description');
+        descField.value += timestampNote;
+        descField.scrollIntoView({ behavior: 'smooth' });
+    } else if (target === 'evidence') {
+        const evidenceField = document.getElementById('id_additional_evidence');
+        evidenceField.value += timestampNote;
+        evidenceField.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+    }, 2000);
+}
+
+function fillTestData() {
+    document.getElementById('id_youtube_url_1').value = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
+    document.getElementById('id_youtube_url_1_start_time').value = '0';
+    document.getElementById('id_youtube_url_1_end_time').value = '10';
+    alert('Test data filled - 10 second clip from "Me at the zoo"');
+}
+</script>
+
 {% endblock %}
