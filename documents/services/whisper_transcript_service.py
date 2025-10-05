@@ -129,12 +129,13 @@ class WhisperTranscriptService:
                 # Get file size for cost estimate
                 file_size_mb = os.path.getsize(audio_file) / (1024 * 1024)
                 
-                # Transcribe with Whisper
+                # Transcribe with Whisper - FORCE ENGLISH LANGUAGE
                 client = OpenAI(api_key=api_key)
                 with open(audio_file, 'rb') as f:
                     transcript = client.audio.transcriptions.create(
                         model="whisper-1",
                         file=f,
+                        language="en",  # Force English - prevents Chinese/wrong language detection
                         response_format="text"
                     )
                 
