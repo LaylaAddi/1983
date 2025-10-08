@@ -38,12 +38,17 @@ class WhisperTranscriptService:
     def parse_timestamp(timestamp_str):
         """
         Convert timestamp string to seconds.
-        Supports: "3:45", "1:23:45", "125"
+        Supports: "3:45", "1:23:45", "125", or integer
         """
         if not timestamp_str:
             return None
         
-        timestamp_str = timestamp_str.strip()
+        # If already an integer, return it
+        if isinstance(timestamp_str, int):
+            return timestamp_str
+        
+        # Convert to string if needed
+        timestamp_str = str(timestamp_str).strip()
         
         if timestamp_str.isdigit():
             return int(timestamp_str)
@@ -61,6 +66,49 @@ class WhisperTranscriptService:
         
         return None
     
+    @staticmethod
+    def get_youtube_transcript(video_id, start_seconds=None, end_seconds=None):
+        """
+        Try to get transcript from YouTube's captions (free, no download).
+        Returns dict with 'success', 'text', and optional 'error'.
+        """
+        try:
+            from youtube_transcript_api import YouTubeTranscriptApi
+            
+            # Fetch the transcript
+            api = YouTubeTranscriptApi()
+            transcript_list = api.fetch(video_id)
+            
+            # Filter by time range if specified
+            if start_seconds is not None and end_seconds is not None:
+                filtered_text = []
+                for entry in transcript_list:
+                    entry_start = entry.start
+                    entry_end = entry.start + entry.duration
+                    
+                    # Include if entry overlaps with our time range
+                    if entry_end >= start_seconds and entry_start <= end_seconds:
+                        filtered_text.append(entry.text)
+                
+                full_text = ' '.join(filtered_text)
+            else:
+                # No time filter - get all text
+                full_text = ' '.join([entry.text for entry in transcript_list])
+            
+            return {
+                'success': True,
+                'text': full_text.strip(),
+                'method': 'youtube_transcript'
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'No YouTube transcript available: {str(e)}',
+                'method': 'youtube_transcript'
+            }
+
+
     @staticmethod
     def get_transcript(youtube_url, start_time=None, end_time=None):
         """
@@ -90,6 +138,24 @@ class WhisperTranscriptService:
                 'error': 'Invalid YouTube URL. Please provide a valid YouTube link.'
             }
         
+        start_seconds = WhisperTranscriptService.parse_timestamp(start_time) if start_time else None
+        end_seconds = WhisperTranscriptService.parse_timestamp(end_time) if end_time else None
+
+    # TRY YOUTUBE TRANSCRIPT FIRST
+        youtube_result = WhisperTranscriptService.get_youtube_transcript(video_id, start_seconds, end_seconds)
+        if youtube_result['success']:
+            # Calculate duration
+            if start_seconds is not None and end_seconds is not None:
+                duration_minutes = (end_seconds - start_seconds) / 60.0
+            else:
+                duration_minutes = 0
+            
+            return {
+                'success': True,
+                'text': youtube_result['text'],
+                'cost_estimate': 0.0,
+                'duration_minutes': round(duration_minutes, 1)
+            }
         try:
             # Create temporary directory for audio file
             with tempfile.TemporaryDirectory() as temp_dir:

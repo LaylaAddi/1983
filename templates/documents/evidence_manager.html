@@ -547,6 +547,8 @@ async function extractNewSegment() {
     const start = document.getElementById('new-start').value.trim();
     const end = document.getElementById('new-end').value.trim();
     const statusDiv = document.getElementById('extract-status');
+    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+
 
     // Validation
     if (!url) {
@@ -554,6 +556,12 @@ async function extractNewSegment() {
         return;
     }
     
+    // Validate YouTube URL format
+    if (!youtubeRegex.test(url)) {
+        statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Invalid YouTube URL format. Please use a valid YouTube link like:<br><small>• https://www.youtube.com/watch?v=VIDEO_ID<br>• https://youtu.be/VIDEO_ID</small></div>';
+        return;
+    }
+
     if (!start || !end) {
         statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Both start and end times are required</div>';
         return;
@@ -585,11 +593,17 @@ async function extractNewSegment() {
         try {
             // Show status based on attempt
             if (attempt === 1) {
-                statusDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Extracting ${duration} seconds of audio... This may take 10-30 seconds.</div>`;
-            } else {
-                statusDiv.innerHTML = `<div class="alert alert-warning">
-                    <i class="fas fa-redo fa-spin"></i> <strong>Retry ${attempt}/${MAX_RETRIES}</strong><br>
-                    Previous attempt failed. Trying again...
+                statusDiv.innerHTML = `<div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin"></i> <strong>Step 1:</strong> Checking for YouTube captions...<br>
+                    <small>If captions are available, extraction is instant and free. Otherwise, will use AI transcription.</small>
+                </div>`;
+                }
+            else {
+                statusDiv.innerHTML = `<div class="alert alert-success">
+                    <strong>✅ Success!</strong> Segment extracted.
+                    ${data.cost == 0 ? '<br><small>📝 Used YouTube captions (free)</small>' : `<br><small>🤖 Used AI transcription - Cost: $${data.cost}</small>`}
+                    ${attempt > 1 ? `<br><small>Succeeded on attempt ${attempt}/${MAX_RETRIES}</small>` : ''}
+                    <br>Refreshing page...
                 </div>`;
             }
 
@@ -611,13 +625,29 @@ async function extractNewSegment() {
             if (data.success) {
                 // SUCCESS - Exit retry loop
                 statusDiv.innerHTML = `<div class="alert alert-success">
-                    <strong>✅ Success!</strong> Segment extracted. Cost: $${data.cost}
+                    <strong>✅ Success!</strong> Segment extracted.
+                    ${data.cost == 0 ? '<br><small>📝 Used YouTube captions (free)</small>' : `<br><small>🤖 Used AI transcription - Cost: $${data.cost}</small>`}
                     ${attempt > 1 ? `<br><small>Succeeded on attempt ${attempt}/${MAX_RETRIES}</small>` : ''}
-                    <br>Refreshing page...
+                    <br><small class="text-muted mt-2 d-block">Refreshing in <span id="reload-countdown">3</span> seconds...</small>
                 </div>`;
-                setTimeout(() => location.reload(), 1500);
+                
+                // Countdown timer
+                let countdown = 3;
+                const countdownInterval = setInterval(() => {
+                    const countdownEl = document.getElementById('reload-countdown');
+                    if (countdownEl) {
+                        countdownEl.textContent = countdown;
+                    }
+                    countdown--;
+                    if (countdown < 0) {
+                        clearInterval(countdownInterval);
+                        location.reload();
+                    }
+                }, 1000);
+                
                 return; // Exit function on success
-            } else {
+            }
+             else {
                 // Failed - check if we should retry
                 if (attempt < MAX_RETRIES) {
                     // Wait before retrying
