@@ -538,8 +538,11 @@ function updateEndFromDuration(prefix) {
     updateParsedTime(`${prefix}-end`, `${prefix}-end-parsed`);
 }
 
-// Extract new segment with AI
-function extractNewSegment() {
+// Extract new segment with AI - WITH AUTO-RETRY
+async function extractNewSegment() {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 2000; // 2 seconds
+    
     const url = document.getElementById('new-url').value.trim();
     const start = document.getElementById('new-start').value.trim();
     const end = document.getElementById('new-end').value.trim();
@@ -576,38 +579,90 @@ function extractNewSegment() {
     }
 
     const duration = endSeconds - startSeconds;
-    statusDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Extracting ${duration} seconds of audio... This may take 10-30 seconds.</div>`;
+    
+    // Retry loop
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            // Show status based on attempt
+            if (attempt === 1) {
+                statusDiv.innerHTML = `<div class="alert alert-info"><i class="fas fa-spinner fa-spin"></i> Extracting ${duration} seconds of audio... This may take 10-30 seconds.</div>`;
+            } else {
+                statusDiv.innerHTML = `<div class="alert alert-warning">
+                    <i class="fas fa-redo fa-spin"></i> <strong>Retry ${attempt}/${MAX_RETRIES}</strong><br>
+                    Previous attempt failed. Trying again...
+                </div>`;
+            }
 
-    fetch(`/documents/${DOCUMENT_ID}/evidence/extract/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': CSRF_TOKEN
-        },
-        body: JSON.stringify({
-            youtube_url: url,
-            start_time: start,
-            end_time: end
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            statusDiv.innerHTML = `<div class="alert alert-success">
-                <strong>Success!</strong> Segment extracted. Cost: $${data.cost}
-                <br>Refreshing page...
-            </div>`;
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            statusDiv.innerHTML = `<div class="alert alert-danger">
-                <strong>Error:</strong> ${data.error}
-                <br><small>Try using manual entry if extraction continues to fail.</small>
-            </div>`;
+            const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/extract/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    youtube_url: url,
+                    start_time: start,
+                    end_time: end
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // SUCCESS - Exit retry loop
+                statusDiv.innerHTML = `<div class="alert alert-success">
+                    <strong>✅ Success!</strong> Segment extracted. Cost: $${data.cost}
+                    ${attempt > 1 ? `<br><small>Succeeded on attempt ${attempt}/${MAX_RETRIES}</small>` : ''}
+                    <br>Refreshing page...
+                </div>`;
+                setTimeout(() => location.reload(), 1500);
+                return; // Exit function on success
+            } else {
+                // Failed - check if we should retry
+                if (attempt < MAX_RETRIES) {
+                    // Wait before retrying
+                    statusDiv.innerHTML = `<div class="alert alert-warning">
+                        <strong>⚠️ Attempt ${attempt} failed</strong><br>
+                        ${data.error}<br>
+                        <small>Retrying in ${RETRY_DELAY / 1000} seconds... (${MAX_RETRIES - attempt} attempts remaining)</small>
+                    </div>`;
+                    await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+                } else {
+                    // Final attempt failed
+                    statusDiv.innerHTML = `<div class="alert alert-danger">
+                        <strong>❌ Extraction failed after ${MAX_RETRIES} attempts</strong><br>
+                        ${data.error}<br>
+                        <hr>
+                        <small class="d-block mt-2">
+                            <strong>💡 What to try:</strong><br>
+                            • Click "Extract" again (sometimes works on 2nd try)<br>
+                            • Use the <strong>Manual Entry</strong> tab instead<br>
+                            • Check if the video is private or restricted<br>
+                            • Try a different video URL
+                        </small>
+                    </div>`;
+                }
+            }
+            
+        } catch (error) {
+            console.error('Network error:', error);
+            
+            if (attempt < MAX_RETRIES) {
+                statusDiv.innerHTML = `<div class="alert alert-warning">
+                    <strong>⚠️ Network error on attempt ${attempt}</strong><br>
+                    ${error.message}<br>
+                    <small>Retrying in ${RETRY_DELAY / 1000} seconds...</small>
+                </div>`;
+                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+            } else {
+                statusDiv.innerHTML = `<div class="alert alert-danger">
+                    <strong>❌ Network error after ${MAX_RETRIES} attempts</strong><br>
+                    ${error.message}<br>
+                    <small class="d-block mt-2">Please check your internet connection and try again.</small>
+                </div>`;
+            }
         }
-    })
-    .catch(error => {
-        statusDiv.innerHTML = `<div class="alert alert-danger">Network error: ${error}</div>`;
-    });
+    }
 }
 
 // Add manual segment
