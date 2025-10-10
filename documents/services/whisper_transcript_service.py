@@ -162,12 +162,18 @@ class WhisperTranscriptService:
                 audio_file = os.path.join(temp_dir, 'audio.mp3')
                 
                 # Build yt-dlp command
+                # Build yt-dlp command
                 cmd = [
                     'yt-dlp',
                     '-x',  # Extract audio only
                     '--audio-format', 'mp3',
                     '-o', audio_file,
                 ]
+
+                # Add proxy if configured
+                proxy_url = os.getenv('PROXY_URL')
+                if proxy_url:
+                    cmd.extend(['--proxy', proxy_url])
                 
                 # Add time range if specified
                 if start_time is not None or end_time is not None:

@@ -595,13 +595,13 @@ async function extractNewSegment() {
             if (attempt === 1) {
                 statusDiv.innerHTML = `<div class="alert alert-info">
                     <i class="fas fa-spinner fa-spin"></i> <strong>Step 1:</strong> Checking for YouTube captions...<br>
-                    <small>If captions are available, extraction is instant and free. Otherwise, will use AI transcription.</small>
+                    <small>If captions are available, extraction is instant. Otherwise, will use AI transcription.</small>
                 </div>`;
                 }
             else {
                 statusDiv.innerHTML = `<div class="alert alert-success">
                     <strong>✅ Success!</strong> Segment extracted.
-                    ${data.cost == 0 ? '<br><small>📝 Used YouTube captions (free)</small>' : `<br><small>🤖 Used AI transcription - Cost: $${data.cost}</small>`}
+                    ${data.cost == 0 ? '<br><small>📝 Used YouTube captions</small>' : `<br><small>🤖 Used AI transcription service</small>`}
                     ${attempt > 1 ? `<br><small>Succeeded on attempt ${attempt}/${MAX_RETRIES}</small>` : ''}
                     <br>Refreshing page...
                 </div>`;
