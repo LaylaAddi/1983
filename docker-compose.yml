@@ -38,7 +38,6 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/lawsuit_app
       - REDIS_URL=redis://redis:6379/0
       - OPENAI_API_KEY=${OPENAI_API_KEY} 
-      - ASSEMBLYAI_API_KEY=${ASSEMBLYAI_API_KEY}
       - PROXY_URL=${PROXY_URL}
     depends_on:
       db:
