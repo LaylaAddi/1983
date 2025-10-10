@@ -592,35 +592,33 @@ async function extractNewSegment() {
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
             // Show status based on attempt
-            if (attempt === 1) {
-                statusDiv.innerHTML = `<div class="alert alert-info">
-                    <i class="fas fa-spinner fa-spin"></i> <strong>Step 1:</strong> Checking for YouTube captions...<br>
-                    <small>If captions are available, extraction is instant. Otherwise, will use AI transcription.</small>
-                </div>`;
-                }
-            else {
-                statusDiv.innerHTML = `<div class="alert alert-success">
-                    <strong>✅ Success!</strong> Segment extracted.
-                    ${data.cost == 0 ? '<br><small>📝 Used YouTube captions</small>' : `<br><small>🤖 Used AI transcription service</small>`}
-                    ${attempt > 1 ? `<br><small>Succeeded on attempt ${attempt}/${MAX_RETRIES}</small>` : ''}
-                    <br>Refreshing page...
-                </div>`;
-            }
+           // Show status based on attempt
+if (attempt === 1) {
+    statusDiv.innerHTML = `<div class="alert alert-info">
+        <i class="fas fa-spinner fa-spin"></i> <strong>Step 1:</strong> Checking for YouTube captions...<br>
+        <small>If captions are available, extraction is instant. Otherwise, will use AI transcription.</small>
+    </div>`;
+} else {
+    statusDiv.innerHTML = `<div class="alert alert-warning">
+        <i class="fas fa-redo fa-spin"></i> <strong>Retry ${attempt}/${MAX_RETRIES}</strong><br>
+        Previous attempt failed. Trying again...
+    </div>`;
+}
 
-            const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/extract/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': CSRF_TOKEN
-                },
-                body: JSON.stringify({
-                    youtube_url: url,
-                    start_time: start,
-                    end_time: end
-                })
-            });
-            
-            const data = await response.json();
+const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/extract/`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': CSRF_TOKEN
+    },
+    body: JSON.stringify({
+        youtube_url: url,
+        start_time: start,
+        end_time: end
+    })
+});
+
+const data = await response.json();
             
             if (data.success) {
                 // SUCCESS - Exit retry loop
