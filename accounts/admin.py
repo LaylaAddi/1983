@@ -1,7 +1,7 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import UserProfile
+from .models import UserProfile, Subscription, Payment, DiscountCode, ReferralReward
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -120,3 +120,186 @@ class UserProfileAdmin(admin.ModelAdmin):
             f'Successfully increased API limit to $5.00 for {count} user(s).'
         )
     increase_limit_to_5.short_description = 'Increase limit to $5.00'
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ['user', 'plan_type', 'api_credit_display', 'is_active', 'started_at']
+    list_filter = ['plan_type', 'is_active', 'started_at']
+    search_fields = ['user__username', 'user__email']
+    readonly_fields = ['stripe_customer_id', 'stripe_subscription_id', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('User & Plan', {
+            'fields': ('user', 'plan_type', 'is_active')
+        }),
+        ('Stripe Information', {
+            'fields': ('stripe_customer_id', 'stripe_subscription_id'),
+            'classes': ('collapse',)
+        }),
+        ('API Credits', {
+            'fields': ('api_credit_balance', 'last_credit_refill')
+        }),
+        ('Dates', {
+            'fields': ('started_at', 'expires_at', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['refill_credits', 'upgrade_to_unlimited', 'downgrade_to_free']
+    
+    def api_credit_display(self, obj):
+        """Display credit balance with color coding"""
+        balance = float(obj.api_credit_balance)
+        
+        if balance <= 0:
+            color = 'red'
+        elif balance < 1:
+            color = 'orange'
+        else:
+            color = 'green'
+        
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">${}</span>',
+            color,
+            f'{balance:.2f}'
+)
+    api_credit_display.short_description = 'API Credit'
+    
+    def refill_credits(self, request, queryset):
+        """Refill monthly credits for unlimited users"""
+        count = 0
+        for sub in queryset:
+            if sub.plan_type == 'unlimited':
+                sub.refill_monthly_credit()
+                count += 1
+        self.message_user(request, f'Refilled credits for {count} unlimited subscription(s)')
+    refill_credits.short_description = 'Refill monthly credits (Unlimited only)'
+    
+    def upgrade_to_unlimited(self, request, queryset):
+        """Upgrade users to unlimited plan"""
+        from decimal import Decimal
+        count = 0
+        for sub in queryset:
+            sub.plan_type = 'unlimited'
+            sub.api_credit_balance += Decimal('10.00')
+            sub.save()
+            count += 1
+        self.message_user(request, f'Upgraded {count} user(s) to Unlimited')
+    upgrade_to_unlimited.short_description = 'Upgrade to Unlimited plan'
+    
+    def downgrade_to_free(self, request, queryset):
+        """Downgrade users to free plan"""
+        count = queryset.update(plan_type='free')
+        self.message_user(request, f'Downgraded {count} user(s) to Free plan')
+    downgrade_to_free.short_description = 'Downgrade to Free plan'
+
+
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['user', 'payment_type', 'final_amount_display', 'status', 'created_at']
+    list_filter = ['payment_type', 'status', 'created_at']
+    search_fields = ['user__username', 'user__email', 'stripe_payment_intent_id']
+    readonly_fields = ['created_at', 'completed_at']
+    
+    fieldsets = (
+        ('Payment Info', {
+            'fields': ('user', 'payment_type', 'status')
+        }),
+        ('Stripe', {
+            'fields': ('stripe_payment_intent_id', 'stripe_charge_id')
+        }),
+        ('Amounts', {
+            'fields': ('amount', 'discount_code', 'discount_amount', 'final_amount')
+        }),
+        ('Document', {
+            'fields': ('document',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'completed_at')
+        }),
+    )
+    
+    def final_amount_display(self, obj):
+        """Display final amount"""
+        return format_html(
+            '<strong>${:.2f}</strong>',
+            float(obj.final_amount)
+        )
+    final_amount_display.short_description = 'Final Amount'
+
+
+@admin.register(DiscountCode)
+class DiscountCodeAdmin(admin.ModelAdmin):
+    list_display = ['code', 'discount_display', 'times_used', 'max_uses', 'is_active_badge', 'created_by']
+    list_filter = ['discount_type', 'is_active', 'created_at']
+    search_fields = ['code', 'created_by__username']
+    readonly_fields = ['times_used', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Code Details', {
+            'fields': ('code', 'discount_type', 'discount_value', 'is_active')
+        }),
+        ('Usage Limits', {
+            'fields': ('max_uses', 'times_used')
+        }),
+        ('Validity Period', {
+            'fields': ('valid_from', 'valid_until')
+        }),
+        ('Referral Tracking', {
+            'fields': ('created_by',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def discount_display(self, obj):
+        """Display discount value"""
+        if obj.discount_type == 'percentage':
+            return f"{obj.discount_value}%"
+        else:
+            return f"${obj.discount_value}"
+    discount_display.short_description = 'Discount'
+    
+    def is_active_badge(self, obj):
+        """Display active status badge"""
+        is_valid, message = obj.is_valid()
+        if is_valid:
+            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px;">ACTIVE</span>')
+        else:
+            return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 3px;">{}</span>', message.upper())
+    is_active_badge.short_description = 'Status'
+
+
+@admin.register(ReferralReward)
+class ReferralRewardAdmin(admin.ModelAdmin):
+    list_display = ['referrer', 'referred_user', 'reward_amount', 'is_paid_badge', 'created_at']
+    list_filter = ['is_paid', 'reward_type', 'created_at']
+    search_fields = ['referrer__username', 'referred_user__username']
+    readonly_fields = ['created_at', 'paid_at']
+    
+    fieldsets = (
+        ('Referral Info', {
+            'fields': ('referrer', 'referred_user')
+        }),
+        ('Discount & Payment', {
+            'fields': ('discount_code_used', 'payment')
+        }),
+        ('Reward', {
+            'fields': ('reward_amount', 'reward_type', 'is_paid', 'paid_at')
+        }),
+        ('Timestamp', {
+            'fields': ('created_at',)
+        }),
+    )
+    
+    def is_paid_badge(self, obj):
+        """Display paid status badge"""
+        if obj.is_paid:
+            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px;">PAID</span>')
+        else:
+            return format_html('<span style="background-color: #ffc107; color: black; padding: 3px 8px; border-radius: 3px;">PENDING</span>')
+    is_paid_badge.short_description = 'Status'
