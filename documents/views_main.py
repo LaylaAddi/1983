@@ -14,6 +14,7 @@ from django_weasyprint import WeasyTemplateResponseMixin
 from django.views.generic import DetailView
 
 
+
 @login_required
 def document_create(request):
     """Create a new lawsuit document"""
@@ -313,6 +314,38 @@ class DocumentPDFView(WeasyTemplateResponseMixin, DetailView):
     def get_queryset(self):
         # Security: only return documents owned by current user
         return LawsuitDocument.objects.filter(user=self.request.user)
+
+
+    def dispatch(self, request, *args, **kwargs):
+        """Check if user has permission to download this document"""
+        # Get the document
+        document = self.get_object()
+        
+        # Get user's subscription
+        from accounts.models import Subscription
+        from documents.models import PurchasedDocument
+        try:
+            subscription = Subscription.objects.get(user=request.user)
+        except Subscription.DoesNotExist:
+            messages.error(request, 'No subscription found. Please upgrade your plan.')
+            return redirect('pricing_page')
+        
+        # Check if user has unlimited plan
+        if subscription.is_unlimited:
+            return super().dispatch(request, *args, **kwargs)
+        
+        # Check if user purchased this specific document
+        has_purchased = PurchasedDocument.objects.filter(
+            user=request.user,
+            document=document
+        ).exists()
+        
+        if has_purchased:
+            return super().dispatch(request, *args, **kwargs)
+        
+        # User doesn't have access
+        messages.error(request, 'You need to purchase this document or upgrade to Unlimited plan to download PDFs.')
+        return redirect('document_detail', pk=document.pk)    
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

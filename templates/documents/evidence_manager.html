@@ -591,17 +591,21 @@ async function extractNewSegment() {
     // Retry loop
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
-            // Show status based on attempt
-           // Show status based on attempt
+// Show status based on attempt
 if (attempt === 1) {
     statusDiv.innerHTML = `<div class="alert alert-info">
-        <i class="fas fa-spinner fa-spin"></i> <strong>Step 1:</strong> Checking for YouTube captions...<br>
-        <small>If captions are available, extraction is instant. Otherwise, will use AI transcription.</small>
+        <i class="fas fa-spinner fa-spin"></i> <strong>Extracting transcript...</strong><br>
+        <div class="small mt-2">
+            <strong>🔍 Step 1:</strong> Checking for YouTube captions (instant if available)<br>
+            <strong>🤖 Step 2:</strong> If no captions, using AI transcription (may take 30-60 seconds)<br>
+            <em class="text-muted">Please be patient - we're working hard to get your transcript! ☕</em>
+        </div>
     </div>`;
 } else {
     statusDiv.innerHTML = `<div class="alert alert-warning">
-        <i class="fas fa-redo fa-spin"></i> <strong>Retry ${attempt}/${MAX_RETRIES}</strong><br>
-        Previous attempt failed. Trying again...
+        <i class="fas fa-redo fa-spin"></i> <strong>Retry attempt ${attempt} of ${MAX_RETRIES}</strong><br>
+        <small>No captions found, using AI transcription... This can take up to a minute.</small><br>
+        <small class="text-muted">Hang tight! We're downloading and processing the audio. ⏳</small>
     </div>`;
 }
 

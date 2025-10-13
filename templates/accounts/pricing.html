@@ -1,0 +1,218 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Pricing Plans{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1>Choose Your Plan</h1>
+        <p class="lead">Generate professional Section 1983 lawsuit documents with AI-powered video transcription</p>
+    </div>
+
+    <div class="row">
+        <!-- Free Tier -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white text-center">
+                    <h3>Free</h3>
+                    <h2 class="display-4">$0</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>✅ Unlimited documents</li>
+                        <li>✅ $0.50 API credit (~6 extractions)</li>
+                        <li>✅ Manual transcript entry</li>
+                        <li>✅ 3 min max per extraction</li>
+                        <li>✅ Preview in browser</li>
+                        <li>❌ No PDF downloads</li>
+                    </ul>
+                    <div class="text-center mt-4">
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'document_list' %}" class="btn btn-secondary btn-block">Get Started</a>
+                        {% else %}
+                            <a href="{% url 'register' %}" class="btn btn-secondary btn-block">Sign Up Free</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pay Per Document -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white text-center">
+                    <h3>Pay Per Document</h3>
+                    <h2 class="display-4">${{ price_per_doc|floatformat:0 }}</h2>
+                    <p class="mb-0">one-time</p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>✅ Everything in Free</li>
+                        <li>✅ <strong>Download ONE document PDF</strong></li>
+                        <li>✅ $5 API credit (~60 extractions)</li>
+                        <li>✅ Re-download unlimited times</li>
+                        <li>✅ 3 min max per extraction</li>
+                    </ul>
+                    
+                    <!-- Discount Code Input -->
+                    <div class="form-group mt-3">
+                        <label for="discount-code-ppd">Have a referral code?</label>
+                        <input type="text" class="form-control" id="discount-code-ppd" placeholder="Enter code">
+                        <small class="text-muted">Get 25% off with a referral code!</small>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        {% if user.is_authenticated %}
+                            <button class="btn btn-primary btn-block" onclick="checkout('pay_per_doc')">Purchase</button>
+                        {% else %}
+                            <a href="{% url 'login' %}?next={% url 'pricing_page' %}" class="btn btn-primary btn-block">Login to Purchase</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Unlimited -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white text-center">
+                    <h3>Unlimited</h3>
+                    <h2 class="display-4">${{ price_unlimited|floatformat:0 }}</h2>
+                    <p class="mb-0">lifetime</p>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li>✅ Everything in Pay-Per-Doc</li>
+                        <li>✅ <strong>Download ALL documents</strong></li>
+                        <li>✅ $10 API credit/month (forever)</li>
+                        <li>✅ ~120 extractions/month</li>
+                        <li>✅ 3 min max per extraction</li>
+                        <li>✅ Priority support</li>
+                    </ul>
+                    
+                    <!-- Discount Code Input -->
+                    <div class="form-group mt-3">
+                        <label for="discount-code-unl">Have a referral code?</label>
+                        <input type="text" class="form-control" id="discount-code-unl" placeholder="Enter code">
+                        <small class="text-muted">Get 25% off with a referral code!</small>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        {% if user.is_authenticated %}
+                            <button class="btn btn-success btn-block" onclick="checkout('unlimited')">Purchase</button>
+                        {% else %}
+                            <a href="{% url 'login' %}?next={% url 'pricing_page' %}" class="btn btn-success btn-block">Login to Purchase</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features Comparison -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Feature Comparison</h3>
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Feature</th>
+                            <th class="text-center">Free</th>
+                            <th class="text-center">Pay Per Document</th>
+                            <th class="text-center">Unlimited</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Create Documents</td>
+                            <td class="text-center">Unlimited</td>
+                            <td class="text-center">Unlimited</td>
+                            <td class="text-center">Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Download PDFs</td>
+                            <td class="text-center">❌</td>
+                            <td class="text-center">1 Document</td>
+                            <td class="text-center">All Documents</td>
+                        </tr>
+                        <tr>
+                            <td>API Credit</td>
+                            <td class="text-center">$0.50</td>
+                            <td class="text-center">$5</td>
+                            <td class="text-center">$10/month</td>
+                        </tr>
+                        <tr>
+                            <td>Video Extractions</td>
+                            <td class="text-center">~6</td>
+                            <td class="text-center">~60</td>
+                            <td class="text-center">~120/month</td>
+                        </tr>
+                        <tr>
+                            <td>Manual Entry</td>
+                            <td class="text-center">Unlimited</td>
+                            <td class="text-center">Unlimited</td>
+                            <td class="text-center">Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Max Extraction Length</td>
+                            <td class="text-center">3 minutes</td>
+                            <td class="text-center">3 minutes</td>
+                            <td class="text-center">3 minutes</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const stripe = Stripe('{{ stripe_public_key }}');
+
+async function checkout(planType) {
+    // Get discount code if entered
+    let discountCode = '';
+    if (planType === 'pay_per_doc') {
+        discountCode = document.getElementById('discount-code-ppd').value.trim();
+    } else if (planType === 'unlimited') {
+        discountCode = document.getElementById('discount-code-unl').value.trim();
+    }
+    
+    try {
+        const response = await fetch('/accounts/create-checkout-session/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                plan_type: planType,
+                discount_code: discountCode
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        
+        // Redirect to Stripe Checkout
+        const result = await stripe.redirectToCheckout({
+            sessionId: data.sessionId
+        });
+        
+        if (result.error) {
+            alert(result.error.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Payment error. Please try again.');
+    }
+}
+</script>
+{% endblock %}

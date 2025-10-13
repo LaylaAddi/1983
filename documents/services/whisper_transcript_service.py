@@ -161,13 +161,15 @@ class WhisperTranscriptService:
             with tempfile.TemporaryDirectory() as temp_dir:
                 audio_file = os.path.join(temp_dir, 'audio.mp3')
                 
-                # Build yt-dlp command
-                # Build yt-dlp command
+                # Build yt-dlp command with retry options
                 cmd = [
                     'yt-dlp',
                     '-x',  # Extract audio only
                     '--audio-format', 'mp3',
                     '-o', audio_file,
+                    '--retries', '5',              # Retry up to 5 times
+                    '--fragment-retries', '5',      # Retry fragments 5 times
+                    '--socket-timeout', '30',       # 30 second socket timeout
                 ]
 
                 # Add proxy if configured
@@ -184,7 +186,7 @@ class WhisperTranscriptService:
                 cmd.append(f'https://www.youtube.com/watch?v={video_id}')
                 
                 # Download audio segment
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
                 if result.returncode != 0:
                     return {
                         'success': False,

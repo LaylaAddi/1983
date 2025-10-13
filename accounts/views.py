@@ -11,6 +11,7 @@ from .forms import UserProfileForm, EmailUserCreationForm
 from .forms import CustomPasswordChangeForm
 import json
 
+
 @login_required
 def password_change_view(request):
     """Allow logged-in users to change their password"""

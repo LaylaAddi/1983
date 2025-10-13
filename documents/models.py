@@ -221,3 +221,22 @@ class VideoEvidence(models.Model):
         if video_id:
             return f"https://www.youtube.com/embed/{video_id}?start={self.start_seconds}"
         return None
+    
+class PurchasedDocument(models.Model):
+    """Tracks which documents user has purchased for pay-per-document plan"""
+    user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='purchased_documents')
+    document = models.ForeignKey('LawsuitDocument', on_delete=models.CASCADE, related_name='purchases')
+    
+    # Payment info
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2)
+    stripe_payment_intent_id = models.CharField(max_length=255)
+    discount_code_used = models.CharField(max_length=50, blank=True, null=True)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    
+    purchased_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'document']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.document.title}"

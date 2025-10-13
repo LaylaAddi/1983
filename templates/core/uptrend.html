@@ -1,0 +1,491 @@
+{% extends 'base.html' %}
+
+{% block title %}Know Your Rights - Section 1983 & Constitutional Protections{% endblock %}
+    {% block extra_css %}
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d9ff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        canvas {
+            background: #0f0f1e;
+            border: 2px solid #333;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-top: 25px;
+            padding: 20px;
+            background: #16213e;
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .legend-line {
+            width: 30px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        
+        .trade-details {
+            margin-top: 25px;
+            padding: 25px;
+            background: #16213e;
+            border-radius: 8px;
+            border-left: 4px solid #00d9ff;
+        }
+        
+        .trade-details h3 {
+            margin-top: 0;
+            color: #00d9ff;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #2a2a3e;
+        }
+        
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            color: #888;
+            font-weight: 600;
+        }
+        
+        .detail-value {
+            color: #fff;
+            font-weight: 700;
+        }
+        
+        .profit {
+            color: #00ff88;
+        }
+        
+        .risk {
+            color: #ff4444;
+        }
+    </style>
+    {% endblock %}
+{% block content %}
+
+    <div class="container">
+        <h1>Ascending Trendline Trade - Third Touch Entry</h1>
+        <div class="subtitle">MNQ 5-Minute Chart | Third Touch Bounce Setup</div>
+        
+        <canvas id="chart" width="1200" height="600"></canvas>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box" style="background: #00ff88;"></div>
+                <span>Bullish Candle</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ff4444;"></div>
+                <span>Bearish Candle</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-line" style="background: #00d9ff;"></div>
+                <span>Ascending Trendline</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ffaa00; border-radius: 50%;"></div>
+                <span>Trendline Touch</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #00ff88; border: 2px solid #fff;"></div>
+                <span>ENTRY</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ff4444; border: 2px solid #fff;"></div>
+                <span>STOP LOSS</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="background: #ffd700; border: 2px solid #fff;"></div>
+                <span>TARGET</span>
+            </div>
+        </div>
+        
+        <div class="trade-details">
+            <h3>Trade Breakdown</h3>
+            <div class="detail-row">
+                <span class="detail-label">Setup:</span>
+                <span class="detail-value">Third Touch of Ascending Trendline</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Entry:</span>
+                <span class="detail-value profit">16,530 (on hammer candle close at trendline)</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Stop Loss:</span>
+                <span class="detail-value risk">16,520 (below trendline & rejection candle)</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Target:</span>
+                <span class="detail-value profit">16,555 (previous swing high)</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Risk:</span>
+                <span class="detail-value risk">10 points = $100</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Reward:</span>
+                <span class="detail-value profit">25 points = $250</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Risk:Reward Ratio:</span>
+                <span class="detail-value profit">1 : 2.5</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Why It Works:</span>
+                <span class="detail-value">Third touch confirms trendline validity. Hammer candle shows buyers defending the line. Clear uptrend with higher lows.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('chart');
+        const ctx = canvas.getContext('2d');
+        
+        // Chart settings
+        const padding = 60;
+        const chartWidth = canvas.width - padding * 2;
+        const chartHeight = canvas.height - padding * 2;
+        
+        // Price data for MNQ (simulated 5-min candles showing ascending trendline)
+        const candles = [
+            // Time, Open, High, Low, Close
+            {time: '10:00', o: 16480, h: 16490, l: 16475, c: 16485},
+            {time: '10:05', o: 16485, h: 16500, l: 16482, c: 16495}, // Touch 1 low at 16482
+            {time: '10:10', o: 16495, h: 16510, l: 16490, c: 16505},
+            {time: '10:15', o: 16505, h: 16525, l: 16502, c: 16520},
+            {time: '10:20', o: 16520, h: 16528, l: 16512, c: 16515},
+            {time: '10:25', o: 16515, h: 16518, l: 16508, c: 16510}, // Touch 2 low at 16508
+            {time: '10:30', o: 16510, h: 16530, l: 16508, c: 16525},
+            {time: '10:35', o: 16525, h: 16542, l: 16522, c: 16538},
+            {time: '10:40', o: 16538, h: 16555, l: 16535, c: 16550}, // Previous high at 16555
+            {time: '10:45', o: 16550, h: 16553, l: 16540, c: 16545},
+            {time: '10:50', o: 16545, h: 16548, l: 16525, c: 16530}, // Touch 3 - HAMMER at 16525
+            {time: '10:55', o: 16530, h: 16548, l: 16528, c: 16545}, // Rally after entry
+            {time: '11:00', o: 16545, h: 16558, l: 16542, c: 16555}, // Hits target
+        ];
+        
+        // Find min/max for scaling
+        let minPrice = Math.min(...candles.map(c => c.l));
+        let maxPrice = Math.max(...candles.map(c => c.h));
+        const priceRange = maxPrice - minPrice;
+        minPrice -= priceRange * 0.1;
+        maxPrice += priceRange * 0.1;
+        
+        // Helper functions
+        function priceToY(price) {
+            return padding + chartHeight - ((price - minPrice) / (maxPrice - minPrice)) * chartHeight;
+        }
+        
+        function indexToX(index) {
+            return padding + (index * (chartWidth / (candles.length - 1)));
+        }
+        
+        // Draw grid
+        function drawGrid() {
+            ctx.strokeStyle = '#2a2a3e';
+            ctx.lineWidth = 1;
+            
+            // Horizontal grid lines
+            for (let i = 0; i <= 10; i++) {
+                const y = padding + (chartHeight / 10) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(canvas.width - padding, y);
+                ctx.stroke();
+                
+                // Price labels
+                const price = maxPrice - (priceRange / 10) * i;
+                ctx.fillStyle = '#666';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'right';
+                ctx.fillText(Math.round(price), padding - 10, y + 4);
+            }
+            
+            // Vertical grid lines
+            candles.forEach((candle, i) => {
+                if (i % 2 === 0) {
+                    const x = indexToX(i);
+                    ctx.beginPath();
+                    ctx.moveTo(x, padding);
+                    ctx.lineTo(x, canvas.height - padding);
+                    ctx.stroke();
+                    
+                    // Time labels
+                    ctx.fillStyle = '#666';
+                    ctx.font = '11px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(candle.time, x, canvas.height - padding + 20);
+                }
+            });
+        }
+        
+        // Draw candlesticks
+        function drawCandles() {
+            candles.forEach((candle, i) => {
+                const x = indexToX(i);
+                const candleWidth = 12;
+                
+                const openY = priceToY(candle.o);
+                const closeY = priceToY(candle.c);
+                const highY = priceToY(candle.h);
+                const lowY = priceToY(candle.l);
+                
+                const isBullish = candle.c > candle.o;
+                ctx.fillStyle = isBullish ? '#00ff88' : '#ff4444';
+                ctx.strokeStyle = isBullish ? '#00ff88' : '#ff4444';
+                
+                // Draw wick
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x, highY);
+                ctx.lineTo(x, lowY);
+                ctx.stroke();
+                
+                // Draw body
+                const bodyHeight = Math.abs(closeY - openY);
+                const bodyY = Math.min(openY, closeY);
+                ctx.fillRect(x - candleWidth/2, bodyY, candleWidth, Math.max(bodyHeight, 1));
+            });
+        }
+        
+        // Draw trendline
+        function drawTrendline() {
+            // Connect the three touches: index 1 (16482), index 5 (16508), index 10 (16525)
+            const touch1 = {x: indexToX(1), y: priceToY(16482)};
+            const touch2 = {x: indexToX(5), y: priceToY(16508)};
+            const touch3 = {x: indexToX(10), y: priceToY(16525)};
+            
+            // Calculate trendline slope
+            const slope = (touch3.y - touch1.y) / (touch3.x - touch1.x);
+            const intercept = touch1.y - slope * touch1.x;
+            
+            // Draw trendline extending across chart
+            ctx.strokeStyle = '#00d9ff';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            const startX = indexToX(0);
+            const endX = indexToX(candles.length - 1);
+            ctx.moveTo(startX, slope * startX + intercept);
+            ctx.lineTo(endX, slope * endX + intercept);
+            ctx.stroke();
+            
+            // Mark the three touches
+            [touch1, touch2, touch3].forEach((touch, i) => {
+                ctx.fillStyle = '#ffaa00';
+                ctx.beginPath();
+                ctx.arc(touch.x, touch.y, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Label
+                ctx.fillStyle = '#ffaa00';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Touch ${i + 1}`, touch.x, touch.y - 15);
+            });
+            
+            // Add trendline label
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Ascending Trendline', padding + 20, padding + 30);
+        }
+        
+        // Draw entry, stop, and target
+        function drawTradeMarkers() {
+            const entryX = indexToX(10);
+            const entryY = priceToY(16530);
+            const stopY = priceToY(16520);
+            const targetY = priceToY(16555);
+            
+            // ENTRY marker
+            ctx.fillStyle = '#00ff88';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(entryX, entryY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Entry label and line
+            ctx.fillStyle = '#00ff88';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('ENTRY: 16,530', entryX + 20, entryY + 5);
+            
+            ctx.strokeStyle = '#00ff88';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(padding, entryY);
+            ctx.lineTo(canvas.width - padding, entryY);
+            ctx.stroke();
+            
+            // STOP LOSS marker
+            ctx.fillStyle = '#ff4444';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(entryX, stopY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Stop loss label and line
+            ctx.fillStyle = '#ff4444';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('STOP: 16,520', entryX + 20, stopY + 5);
+            
+            ctx.strokeStyle = '#ff4444';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(padding, stopY);
+            ctx.lineTo(canvas.width - padding, stopY);
+            ctx.stroke();
+            
+            // TARGET marker
+            const targetX = indexToX(12);
+            ctx.fillStyle = '#ffd700';
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.arc(targetX, targetY, 12, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Target label and line
+            ctx.fillStyle = '#ffd700';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('TARGET: 16,555', canvas.width - padding - 20, targetY + 5);
+            
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(padding, targetY);
+            ctx.lineTo(canvas.width - padding, targetY);
+            ctx.stroke();
+            
+            // Draw risk/reward bracket
+            ctx.setLineDash([]);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            
+            // Risk bracket (entry to stop)
+            const bracketX = padding - 30;
+            ctx.beginPath();
+            ctx.moveTo(bracketX, entryY);
+            ctx.lineTo(bracketX - 5, entryY);
+            ctx.moveTo(bracketX, entryY);
+            ctx.lineTo(bracketX, stopY);
+            ctx.moveTo(bracketX, stopY);
+            ctx.lineTo(bracketX - 5, stopY);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#ff4444';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('RISK', bracketX - 10, (entryY + stopY) / 2 - 5);
+            ctx.fillText('10 pts', bracketX - 10, (entryY + stopY) / 2 + 10);
+            ctx.fillText('$100', bracketX - 10, (entryY + stopY) / 2 + 25);
+            
+            // Reward bracket (entry to target)
+            ctx.beginPath();
+            ctx.moveTo(bracketX, entryY);
+            ctx.lineTo(bracketX - 5, entryY);
+            ctx.moveTo(bracketX, entryY);
+            ctx.lineTo(bracketX, targetY);
+            ctx.moveTo(bracketX, targetY);
+            ctx.lineTo(bracketX - 5, targetY);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#00ff88';
+            ctx.fillText('REWARD', bracketX - 10, (entryY + targetY) / 2 - 5);
+            ctx.fillText('25 pts', bracketX - 10, (entryY + targetY) / 2 + 10);
+            ctx.fillText('$250', bracketX - 10, (entryY + targetY) / 2 + 25);
+            
+            // Highlight the hammer candle at touch 3
+            const hammerX = indexToX(10);
+            ctx.strokeStyle = '#ffff00';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([]);
+            ctx.strokeRect(hammerX - 20, priceToY(16540) - 5, 40, priceToY(16525) - priceToY(16540) + 10);
+            
+            ctx.fillStyle = '#ffff00';
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('HAMMER', hammerX, priceToY(16540) - 12);
+            ctx.fillText('(Rejection)', hammerX, priceToY(16540) - 0);
+        }
+        
+        // Draw everything
+        drawGrid();
+        drawCandles();
+        drawTrendline();
+        drawTradeMarkers();
+        
+        // Add annotations
+        ctx.fillStyle = '#888';
+        ctx.font = '13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('Notice: Each touch of the trendline is followed by a bounce. The third touch is your entry signal.', padding, canvas.height - 10);
+    </script>
+
+{% endblock %}

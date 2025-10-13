@@ -40,13 +40,13 @@ def evidence_manager(request, pk):
     
     return render(request, 'documents/evidence_manager.html', context)
 
-
 @login_required
 @require_POST
 def extract_evidence_segment(request, pk):
     """
     Extract a new video evidence segment using Whisper API.
     Creates a new VideoEvidence record with raw transcript.
+    Requires sufficient API credit and enforces 3-minute max length.
     """
     document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
     
@@ -72,6 +72,46 @@ def extract_evidence_segment(request, pk):
                 'error': 'Invalid timestamp format. Use MM:SS or HH:MM:SS'
             })
         
+        # Validate 3-minute maximum length
+        MAX_EXTRACTION_SECONDS = 180  # 3 minutes
+        duration = end_seconds - start_seconds
+        
+        if duration > MAX_EXTRACTION_SECONDS:
+            return JsonResponse({
+                'success': False,
+                'error': f'Extraction length exceeds maximum of {MAX_EXTRACTION_SECONDS // 60} minutes. Please use shorter segments.'
+            })
+        
+        if duration <= 0:
+            return JsonResponse({
+                'success': False,
+                'error': 'End time must be after start time.'
+            })
+        
+        # Get user's subscription and check API credit
+        from accounts.models import Subscription
+        try:
+            subscription = Subscription.objects.get(user=request.user)
+        except Subscription.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'No subscription found. Please contact support.',
+                'requires_payment': True
+            })
+        
+        # Estimate cost (roughly $0.006 per minute of audio)
+        estimated_cost = (duration / 60) * 0.006
+        
+        # Check if user has sufficient credit
+        if not subscription.has_sufficient_credit(estimated_cost):
+            return JsonResponse({
+                'success': False,
+                'error': f'Insufficient API credit. You need approximately ${estimated_cost:.2f} but have ${subscription.api_credit_balance:.2f}. Please upgrade your plan or purchase more credit.',
+                'requires_payment': True,
+                'current_balance': float(subscription.api_credit_balance),
+                'estimated_cost': estimated_cost
+            })
+        
         # Extract transcript using Whisper
         result = WhisperTranscriptService.get_transcript(
             youtube_url,
@@ -91,16 +131,21 @@ def extract_evidence_segment(request, pk):
             start_seconds=start_seconds,
             end_seconds=end_seconds,
             raw_transcript=result['text'],
-            edited_transcript=result['text'],  # Initialize with raw transcript
+            edited_transcript=result['text'],
             extraction_cost=result.get('cost_estimate', 0)
         )
+        
+        # Deduct actual cost from user's API credit
+        actual_cost = result.get('cost_estimate', estimated_cost)
+        subscription.deduct_api_cost(actual_cost)
         
         return JsonResponse({
             'success': True,
             'segment_id': evidence.id,
             'text': result['text'],
-            'cost': result.get('cost_estimate', 0),
-            'duration': result.get('duration_minutes', 0)
+            'cost': actual_cost,
+            'duration': result.get('duration_minutes', 0),
+            'remaining_balance': float(subscription.api_credit_balance)
         })
         
     except Exception as e:
@@ -108,7 +153,6 @@ def extract_evidence_segment(request, pk):
             'success': False,
             'error': f'Server error: {str(e)}'
         })
-
 
 @login_required
 @require_POST

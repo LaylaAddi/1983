@@ -2,6 +2,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from . import stripe_views
 
 urlpatterns = [
     path('register/', views.register_view, name='register'),
@@ -45,4 +46,10 @@ urlpatterns = [
              template_name='accounts/password_reset_complete.html'
          ), 
          name='password_reset_complete'),
+
+    # Stripe Payment URLs
+    path('pricing/', stripe_views.pricing_page, name='pricing_page'),
+    path('create-checkout-session/', stripe_views.create_checkout_session, name='create_checkout_session'),
+    path('payment-success/', stripe_views.payment_success, name='payment_success'),
+    path('stripe-webhook/', stripe_views.stripe_webhook, name='stripe_webhook'),
 ]

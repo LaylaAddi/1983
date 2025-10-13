@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Success{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="card">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+                    </div>
+                    
+                    <h1 class="mb-3">Payment Successful!</h1>
+                    
+                    <p class="lead mb-4">
+                        Thank you for your purchase of the <strong>{{ plan_name }}</strong>.
+                    </p>
+                    
+                    <div class="alert alert-success">
+                        <h5><strong>Your Account Has Been Updated</strong></h5>
+                        <hr>
+                        <p class="mb-2"><strong>API Credit Added:</strong> ${{ credit_added|floatformat:2 }}</p>
+                        <p class="mb-0"><strong>Total Credit Balance:</strong> ${{ total_credit|floatformat:2 }}</p>
+                        {% if is_unlimited %}
+                        <p class="mt-2 mb-0"><span class="badge badge-success">Unlimited Plan Active</span></p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>What's Next?</strong><br>
+                        {% if is_unlimited %}
+                        You can now download any document as a PDF and receive $10 API credit every month.
+                        {% else %}
+                        You can now use your API credits for video extraction and download your purchased documents.
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ next_url }}" class="btn btn-primary btn-lg mr-2">
+                            <i class="fas fa-file-alt"></i> Continue
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-tachometer-alt"></i> Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <p class="text-muted">
+                    A confirmation email has been sent to your email address.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,3 +10,12 @@ def know_your_rights(request):
     """Home page view"""
     return render(request, 'core/know-your-rights.html')
 
+def uptrend(request):
+    """Uptrend page view"""
+    return render(request, 'core/uptrend.html')
+
+def downtrend(request):
+    """Uptrend page view"""
+    return render(request, 'core/downtrend.html')
+
+
