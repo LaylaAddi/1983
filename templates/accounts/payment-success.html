@@ -23,18 +23,22 @@
                         <h5><strong>Your Account Has Been Updated</strong></h5>
                         <hr>
                         <p class="mb-2"><strong>API Credit Added:</strong> ${{ credit_added|floatformat:2 }}</p>
-                        <p class="mb-0"><strong>Total Credit Balance:</strong> ${{ total_credit|floatformat:2 }}</p>
-                        {% if is_unlimited %}
-                        <p class="mt-2 mb-0"><span class="badge badge-success">Unlimited Plan Active</span></p>
+                        <p class="mb-2"><strong>Total Credit Balance:</strong> ${{ total_credit|floatformat:2 }}</p>
+                        {% if plan_name == 'Unlimited Plan' %}
+                        <p class="mt-2 mb-0"><span class="badge badge-success">Unlimited Plan Activated!</span></p>
+                        {% elif plan_name == 'Pay Per Document' %}
+                        <p class="mt-2 mb-0"><span class="badge badge-primary">Pay-Per-Doc Purchase Complete</span></p>
                         {% endif %}
                     </div>
                     
                     <div class="alert alert-info">
                         <strong>What's Next?</strong><br>
-                        {% if is_unlimited %}
-                        You can now download any document as a PDF and receive $10 API credit every month.
+                        {% if plan_name == 'Unlimited Plan' %}
+                        You can now download any document as a PDF and receive $10 API credit every month!
+                        {% elif plan_name == 'Pay Per Document' %}
+                        You can now use your API credits for video extraction and download the document you purchased.
                         {% else %}
-                        You can now use your API credits for video extraction and download your purchased documents.
+                        You can now use your API credits for video extraction.
                         {% endif %}
                     </div>
                     

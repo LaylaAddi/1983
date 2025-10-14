@@ -1,7 +1,9 @@
 # accounts/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import UserProfile, Subscription, Payment, DiscountCode, ReferralReward
+from django.shortcuts import redirect
+from django.urls import reverse
+from .models import UserProfile, Subscription, Payment, DiscountCode, ReferralReward, ReferralSettings
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -303,3 +305,90 @@ class ReferralRewardAdmin(admin.ModelAdmin):
         else:
             return format_html('<span style="background-color: #ffc107; color: black; padding: 3px 8px; border-radius: 3px;">PENDING</span>')
     is_paid_badge.short_description = 'Status'
+
+
+# Add this at the BOTTOM of accounts/admin.py
+
+@admin.register(ReferralSettings)
+class ReferralSettingsAdmin(admin.ModelAdmin):
+    """
+    Admin interface for referral program settings.
+    Only allows editing the single settings record.
+    """
+    
+    fieldsets = (
+        ('💰 Percentage-Based Rewards (Recommended)', {
+            'fields': (
+                'use_percentage_rewards',
+                'pay_per_doc_reward_percentage',
+                'unlimited_reward_percentage',
+            ),
+            'description': (
+                '<strong>Current rewards at 20%:</strong><br>'
+                '• Pay-Per-Doc ($149): Referrer earns ~$30<br>'
+                '• Unlimited ($499): Referrer earns ~$100<br><br>'
+                'Rewards scale with the sale amount (fair for everyone!)'
+            )
+        }),
+        ('💵 Flat Rate Rewards (Alternative)', {
+            'fields': (
+                'flat_pay_per_doc_reward',
+                'flat_unlimited_reward',
+            ),
+            'description': (
+                'Fixed dollar amounts regardless of sale price. '
+                'Only used if "Use percentage rewards" is unchecked above.'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('🎟️ Discount Settings', {
+            'fields': (
+                'default_referral_discount_percentage',
+            ),
+            'description': 'Default discount % for new referral codes created by users'
+        }),
+        ('🎁 Promotional Period (Optional)', {
+            'fields': (
+                'is_promotional_period',
+                'promo_pay_per_doc_percentage',
+                'promo_unlimited_percentage',
+            ),
+            'description': (
+                '<strong style="color: red;">⚠️ WARNING:</strong> '
+                'Checking "is promotional period" will IMMEDIATELY increase rewards '
+                'for ALL new referrals. Use for Black Friday, holidays, etc.'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('📝 Metadata', {
+            'fields': ('updated_at', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    readonly_fields = ('updated_at', 'updated_by')
+    
+    def has_add_permission(self, request):
+        """Only allow one settings object"""
+        return not ReferralSettings.objects.exists()
+    
+    def has_delete_permission(self, request, obj=None):
+        """Don't allow deleting the settings"""
+        return False
+    
+    def save_model(self, request, obj, form, change):
+        """Track who updated the settings"""
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+    
+    def changelist_view(self, request, extra_context=None):
+        """Redirect directly to the settings edit page"""
+        if ReferralSettings.objects.exists():
+            obj = ReferralSettings.objects.first()
+            return redirect(reverse('admin:accounts_referralsettings_change', args=[obj.pk]))
+        return super().changelist_view(request, extra_context)
+    
+    class Media:
+        css = {
+            'all': ('admin/css/forms.css',)
+        }

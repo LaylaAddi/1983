@@ -304,3 +304,177 @@ class ReferralReward(models.Model):
     
     def __str__(self):
         return f"{self.referrer.username} referred {self.referred_user.username} - ${self.reward_amount}"
+    
+
+# Add this at the VERY BOTTOM of accounts/models.py
+# After the ReferralReward class
+
+class ReferralSettings(models.Model):
+    """
+    Global settings for the referral program.
+    Only ONE row should exist in the database.
+    Auto-creates with defaults on first access.
+    """
+    
+    # Percentage-based rewards (recommended)
+    pay_per_doc_reward_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=20.00,
+        help_text="Percentage of Pay-Per-Doc sale to give as reward (e.g., 20.00 = 20%)"
+    )
+    unlimited_reward_percentage = models.DecimalField(
+        max_digits=5, 
+        decimal_places=2, 
+        default=20.00,
+        help_text="Percentage of Unlimited sale to give as reward (e.g., 20.00 = 20%)"
+    )
+    
+    # Alternative: Flat rate (if you want fixed amounts instead)
+    use_percentage_rewards = models.BooleanField(
+        default=True,
+        help_text="If unchecked, uses flat rate rewards below instead of percentages"
+    )
+    flat_pay_per_doc_reward = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=25.00,
+        help_text="Flat dollar amount for Pay-Per-Doc referrals (if not using percentage)"
+    )
+    flat_unlimited_reward = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=25.00,
+        help_text="Flat dollar amount for Unlimited referrals (if not using percentage)"
+    )
+    
+    # Discount settings
+    default_referral_discount_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=25.00,
+        help_text="Default discount % for new referral codes (e.g., 25% off)"
+    )
+    
+    # Promotional boost (optional - for special events)
+    is_promotional_period = models.BooleanField(
+        default=False,
+        help_text="Enable promotional rewards (Black Friday, etc.)"
+    )
+    promo_pay_per_doc_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=30.00,
+        help_text="Promotional reward % for Pay-Per-Doc"
+    )
+    promo_unlimited_percentage = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=30.00,
+        help_text="Promotional reward % for Unlimited"
+    )
+    
+    # Metadata
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='referral_settings_updates',
+        help_text="Admin who last updated settings"
+    )
+    
+    class Meta:
+        verbose_name = "Referral Setting"
+        verbose_name_plural = "Referral Settings"
+    
+    def __str__(self):
+        return f"Referral Settings (Updated: {self.updated_at.strftime('%Y-%m-%d')})"
+    
+    def save(self, *args, **kwargs):
+        """Ensure only one settings object exists (singleton pattern)"""
+        self.pk = 1
+        super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of settings"""
+        pass
+    
+    @classmethod
+    def get_settings(cls):
+        """
+        Get or create the single settings instance with defaults.
+        This ensures settings always exist after database drops.
+        """
+        obj, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'pay_per_doc_reward_percentage': Decimal('20.00'),
+                'unlimited_reward_percentage': Decimal('20.00'),
+                'use_percentage_rewards': True,
+                'flat_pay_per_doc_reward': Decimal('25.00'),
+                'flat_unlimited_reward': Decimal('25.00'),
+                'default_referral_discount_percentage': Decimal('25.00'),
+                'is_promotional_period': False,
+                'promo_pay_per_doc_percentage': Decimal('30.00'),
+                'promo_unlimited_percentage': Decimal('30.00'),
+            }
+        )
+        return obj
+    
+    def calculate_reward(self, payment_type, payment_amount):
+        """
+        Calculate reward amount based on current settings.
+        
+        Args:
+            payment_type: 'pay_per_doc' or 'unlimited'
+            payment_amount: Decimal amount of the sale
+        
+        Returns:
+            Decimal reward amount
+        """
+        if isinstance(payment_amount, (int, float)):
+            payment_amount = Decimal(str(payment_amount))
+        
+        # Check if using flat rates
+        if not self.use_percentage_rewards:
+            if payment_type == 'pay_per_doc':
+                return self.flat_pay_per_doc_reward
+            elif payment_type == 'unlimited':
+                return self.flat_unlimited_reward
+            return Decimal('25.00')
+        
+        # Get percentage (check promo first)
+        if self.is_promotional_period:
+            if payment_type == 'pay_per_doc':
+                percentage = self.promo_pay_per_doc_percentage
+            elif payment_type == 'unlimited':
+                percentage = self.promo_unlimited_percentage
+            else:
+                percentage = Decimal('20.00')
+        else:
+            if payment_type == 'pay_per_doc':
+                percentage = self.pay_per_doc_reward_percentage
+            elif payment_type == 'unlimited':
+                percentage = self.unlimited_reward_percentage
+            else:
+                percentage = Decimal('20.00')
+        
+        # Calculate percentage-based reward
+        reward = (payment_amount * percentage) / Decimal('100')
+        return reward.quantize(Decimal('0.01'))
+
+
+# Signal to create Subscription when User is created (if not exists)
+@receiver(post_save, sender=User)
+def create_user_subscription(sender, instance, created, **kwargs):
+    """Ensure every user has a subscription"""
+    if created:
+        Subscription.objects.get_or_create(
+            user=instance,
+            defaults={
+                'plan_type': 'free',
+                'api_credit_balance': Decimal('0.50'),
+            }
+        )

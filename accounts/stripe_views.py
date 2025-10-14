@@ -88,7 +88,6 @@ def create_checkout_session(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
     
-
 @login_required
 def payment_success(request):
     """Handle successful payment"""
@@ -103,6 +102,9 @@ def payment_success(request):
         session = stripe.checkout.Session.retrieve(session_id)
         
         if session.payment_status == 'paid':
+            from decimal import Decimal
+            from accounts.models import ReferralSettings
+            
             plan_type = session.metadata.get('plan_type')
             document_id = session.metadata.get('document_id')
             discount_code = session.metadata.get('discount_code')
@@ -120,7 +122,6 @@ def payment_success(request):
             
             # Update subscription based on plan type
             if plan_type == 'pay_per_doc':
-                from decimal import Decimal
                 subscription.api_credit_balance += Decimal('5.00')
                 subscription.save()
                 credit_added = 5.00
@@ -142,7 +143,6 @@ def payment_success(request):
                     next_url = f'/documents/{document_id}/'
                 
             elif plan_type == 'unlimited':
-                from decimal import Decimal
                 subscription.plan_type = 'unlimited'
                 subscription.api_credit_balance += Decimal('10.00')
                 subscription.stripe_customer_id = session.customer
@@ -157,20 +157,48 @@ def payment_success(request):
                     code_obj.use_code()
                     
                     if code_obj.created_by:
-                        from decimal import Decimal
+                        # Get referral settings
+                        settings = ReferralSettings.get_settings()
+                        
+                        # Calculate actual payment amount (Stripe gives cents, convert to dollars)
+                        payment_amount = Decimal(str(session.amount_total)) / Decimal('100')
+                        
+                        # Calculate reward based on plan type and amount
+                        reward_amount = settings.calculate_reward(plan_type, payment_amount)
+                        
+                        # Add reward to referrer's balance
                         referrer_sub = Subscription.objects.get(user=code_obj.created_by)
-                        referrer_sub.api_credit_balance += Decimal('25.00')
+                        referrer_sub.api_credit_balance += reward_amount
                         referrer_sub.save()
                         
-                        # Create reward record
+                        # Create Payment record (for tracking)
+                        payment_record = Payment.objects.create(
+                            user=request.user,
+                            payment_type=plan_type,
+                            stripe_payment_intent_id=session.payment_intent,
+                            amount=payment_amount,
+                            discount_code=discount_code,
+                            discount_amount=Decimal('0.00'),  # Calculate if needed
+                            final_amount=payment_amount,
+                            status='completed',
+                            completed_at=timezone.now()
+                        )
+                        
+                        # Create reward record (linked to payment)
                         ReferralReward.objects.create(
                             referrer=code_obj.created_by,
                             referred_user=request.user,
                             discount_code_used=code_obj,
-                            reward_amount=25.00,
+                            payment=payment_record,
+                            reward_amount=reward_amount,
+                            reward_type='api_credit',
                             is_paid=True,
                             paid_at=timezone.now()
                         )
+                        
+                        # Optional: Log for debugging
+                        print(f"Referral reward: {code_obj.created_by.username} earned ${reward_amount} from {request.user.username}'s ${payment_amount} {plan_type} purchase")
+                        
                 except DiscountCode.DoesNotExist:
                     pass
             
@@ -189,7 +217,7 @@ def payment_success(request):
         
     except Exception as e:
         messages.error(request, f'Error processing payment: {str(e)}')
-        return redirect('pricing_page')    
+        return redirect('pricing_page')
 
 @csrf_exempt
 def stripe_webhook(request):
