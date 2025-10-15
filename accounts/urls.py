@@ -1,8 +1,8 @@
-# accounts/urls.py
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
 from . import stripe_views
+from . import referral_views
 
 urlpatterns = [
     path('register/', views.register_view, name='register'),
@@ -52,4 +52,12 @@ urlpatterns = [
     path('create-checkout-session/', stripe_views.create_checkout_session, name='create_checkout_session'),
     path('payment-success/', stripe_views.payment_success, name='payment_success'),
     path('stripe-webhook/', stripe_views.stripe_webhook, name='stripe_webhook'),
+
+
+
+
+    # Referral System
+    path('referrals/', referral_views.referral_dashboard, name='referral_dashboard'),
+    path('referrals/create/', referral_views.create_referral_code, name='create_referral_code'),
+    path('referrals/toggle/<int:code_id>/', referral_views.toggle_referral_code, name='toggle_referral_code'),
 ]

@@ -191,30 +191,35 @@
             </button>
 
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Home</a>
-                    </li>
-                                        <li class="nav-item">
-                        <a class="nav-link" href="{% url 'know_your_rights' %}">Know Your Rights</a>
-                    </li>
-                    {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{% url 'voice_recorder' %}" class="nav-link d-md-none">
-                            <i class="fas fa-microphone"></i> Voice Recorder
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'document_list' %}">My Documents</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'document_create' %}">New Document</a>
-                    </li>
-                    {% endif %}
-                </ul>
+    <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'home' %}">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'know_your_rights' %}">Know Your Rights</a>
+        </li>
+        {% if user.is_authenticated %}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'referral_dashboard' %}">
+                <i class="fas fa-gift"></i> Referrals
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="{% url 'voice_recorder' %}" class="nav-link d-md-none">
+                <i class="fas fa-microphone"></i> Voice Recorder
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'document_list' %}">My Documents</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'document_create' %}">New Document</a>
+        </li>
+        {% endif %}
+    </ul>
 
                 <ul class="navbar-nav">
                     <!-- Dark Mode Toggle -->
@@ -266,13 +271,18 @@
                             </li>
 
                             <!-- Menu items -->
+                            <li><a class="dropdown-item" href="{% url 'dashboard' %}">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                                </a></li>
+                            <li><a class="dropdown-item" href="{% url 'referral_dashboard' %}">
+                                    <i class="fas fa-gift text-success"></i> Referrals & Earnings
+                                </a></li>
                             <li><a class="dropdown-item" href="{% url 'profile' %}">
                                     <i class="fas fa-user-edit"></i> Profile Settings
                                 </a></li>
                             <li><a class="dropdown-item" href="{% url 'change_password_ajax' %}">
                                     <i class="fas fa-key"></i> Change Password
                                 </a></li>
-                            <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li><a class="dropdown-item text-danger" href="#" onclick="confirmLogout()">

@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create Referral Code{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="mb-3">
+                <a href="{% url 'referral_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-gift"></i> Create Your Referral Code</h3>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading"><i class="fas fa-info-circle"></i> How It Works</h5>
+                        <ul class="mb-0 pl-3">
+                            <li>Your code gives <strong>25% off</strong> to anyone who uses it</li>
+                            <li>You earn <strong>20-25% commission</strong> on each successful referral</li>
+                            <li>Earnings are added as <strong>API credit</strong> to your account</li>
+                            <li><strong>No limit</strong> on how many people you can refer!</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST" class="mt-4">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="custom_code" class="font-weight-bold">
+                                Choose Your Referral Code
+                            </label>
+                            <input 
+                                type="text" 
+                                name="custom_code" 
+                                id="custom_code"
+                                required
+                                maxlength="20"
+                                class="form-control form-control-lg text-uppercase"
+                                placeholder="YOURCODE25"
+                                style="font-family: monospace; letter-spacing: 1px;"
+                            />
+                            <small class="form-text text-muted">
+                                4-20 characters. Letters, numbers, dashes, and underscores only.
+                            </small>
+                        </div>
+
+                        {% if suggested_codes %}
+                        <div class="form-group">
+                            <label class="font-weight-bold">Suggested codes:</label>
+                            <div class="btn-group-toggle d-flex flex-wrap" data-toggle="buttons">
+                                {% for code in suggested_codes %}
+                                <button 
+                                    type="button" 
+                                    onclick="document.getElementById('custom_code').value = '{{ code }}'"
+                                    class="btn btn-outline-primary m-1"
+                                    style="font-family: monospace;"
+                                >
+                                    {{ code }}
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary btn-lg btn-block mt-4">
+                            <i class="fas fa-check"></i> Create Referral Code
+                        </button>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="row text-center">
+                        <div class="col-md-6 mb-3">
+    <div class="card border-primary">
+        <div class="card-body">
+            <h5 class="card-title">Pay-Per-Document</h5>
+            <p class="h4 text-primary mb-0">~$30</p>
+            <small class="text-muted">per referral</small>
+        </div>
+    </div>
+</div>
+<div class="col-md-6 mb-3">
+    <div class="card border-success">
+        <div class="card-body">
+            <h5 class="card-title">Unlimited Plan</h5>
+            <p class="h4 text-success mb-0">~$100</p>
+            <small class="text-muted">per referral</small>
+        </div>
+    </div>
+</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-uppercase and validate as user types
+document.getElementById('custom_code').addEventListener('input', function(e) {
+    this.value = this.value.toUpperCase();
+});
+</script>
+{% endblock %}
