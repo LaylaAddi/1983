@@ -122,10 +122,28 @@ class EmailUserCreationForm(UserCreationForm):
             'placeholder': 'Last name (optional)'
         })
     )
+    referral_code = forms.CharField(
+        max_length=50,
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter referral code (optional)',
+            'id': 'id_referral_code'
+        }),
+        help_text='Have a referral code? Enter it to get 25% off your first purchase!'
+    )
+    no_referral_code = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input',
+            'id': 'id_no_referral_code'
+        }),
+        label="I don't have a referral code"
+    )
     
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'password1', 'password2')
+        fields = ('email', 'first_name', 'last_name', 'referral_code', 'no_referral_code', 'password1', 'password2')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -143,14 +161,51 @@ class EmailUserCreationForm(UserCreationForm):
             raise forms.ValidationError("A user with this email already exists.")
         return email
     
+    def clean(self):
+        cleaned_data = super().clean()
+        referral_code = cleaned_data.get('referral_code', '').strip()
+        no_referral_code = cleaned_data.get('no_referral_code')
+        
+        # If they entered a code, validate it
+        if referral_code:
+            from accounts.models import DiscountCode
+            try:
+                code_obj = DiscountCode.objects.get(code__iexact=referral_code)
+                is_valid, message = code_obj.is_valid()
+                if not is_valid:
+                    raise forms.ValidationError({
+                        'referral_code': f'Invalid code: {message}'
+                    })
+            except DiscountCode.DoesNotExist:
+                raise forms.ValidationError({
+                    'referral_code': f'Code "{referral_code}" not found. Please check spelling or leave blank.'
+                })
+        
+        # If they didn't enter a code AND didn't check the box, show warning
+        # (This is just a soft reminder, not blocking)
+        elif not no_referral_code:
+            # Don't block registration, just validate the checkbox was considered
+            pass
+        
+        return cleaned_data
+    
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
         user.username = self.cleaned_data['email']  # Use email as username
         user.first_name = self.cleaned_data.get('first_name', '')
         user.last_name = self.cleaned_data.get('last_name', '')
+        
         if commit:
             user.save()
+            
+            # Save referral code to user profile
+            referral_code = self.cleaned_data.get('referral_code', '').strip()
+            if referral_code:
+                profile = user.profile
+                profile.referred_by_code = referral_code.upper()
+                profile.save()
+        
         return user
     
 

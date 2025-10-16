@@ -1,3 +1,4 @@
+# accounts\stripe_views.py
 import stripe
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
@@ -15,13 +16,100 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 def pricing_page(request):
     """Public pricing page"""
+    referred_by_code = ''
+    
+    # If user is logged in, check if they have a referral code
+    if request.user.is_authenticated:
+        try:
+            referred_by_code = request.user.profile.referred_by_code or ''
+        except:
+            pass
+    
     context = {
         'price_per_doc': settings.PRICE_PAY_PER_DOC,
         'price_unlimited': settings.PRICE_UNLIMITED,
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+        'referred_by_code': referred_by_code,
     }
     return render(request, 'accounts/pricing.html', context)
 
+
+def validate_discount_code(request):
+    """
+    AJAX endpoint to validate discount codes before checkout
+    Returns discount amount and validation status
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        discount_code = data.get('code', '').strip()
+        plan_type = data.get('plan_type', '')
+        
+        if not discount_code:
+            return JsonResponse({
+                'valid': False,
+                'message': 'Please enter a discount code'
+            })
+        
+        # Get base price
+        if plan_type == 'pay_per_doc':
+            price = settings.PRICE_PAY_PER_DOC
+            plan_name = 'Pay-Per-Document'
+        elif plan_type == 'unlimited':
+            price = settings.PRICE_UNLIMITED
+            plan_name = 'Unlimited Plan'
+        else:
+            return JsonResponse({
+                'valid': False,
+                'message': 'Invalid plan type'
+            })
+        
+        # Check if code exists
+        try:
+            discount_obj = DiscountCode.objects.get(code__iexact=discount_code)
+        except DiscountCode.DoesNotExist:
+            return JsonResponse({
+                'valid': False,
+                'message': f'Code "{discount_code}" not found. Please check spelling.'
+            })
+        
+        # Validate code
+        is_valid, message = discount_obj.is_valid()
+        
+        if not is_valid:
+            return JsonResponse({
+                'valid': False,
+                'message': message
+            })
+        
+        # Calculate discount
+        discount_amount = float(discount_obj.calculate_discount(price))
+        final_price = price - discount_amount
+        
+        # Get discount type for display
+        if discount_obj.discount_type == 'percentage':
+            discount_display = f"{discount_obj.discount_value}% off"
+        else:
+            discount_display = f"${discount_obj.discount_value} off"
+        
+        return JsonResponse({
+            'valid': True,
+            'message': f'✓ Code applied! {discount_display}',
+            'discount_amount': discount_amount,
+            'original_price': price,
+            'final_price': final_price,
+            'discount_display': discount_display,
+            'code': discount_obj.code
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'valid': False,
+            'message': f'Error validating code: {str(e)}'
+        }, status=400)
+    
 
 @login_required
 def create_checkout_session(request):
@@ -168,7 +256,7 @@ def payment_success(request):
                         
                         # Add reward to referrer's balance
                         referrer_sub = Subscription.objects.get(user=code_obj.created_by)
-                        referrer_sub.api_credit_balance += reward_amount
+                        referrer_sub.referral_cash_balance += reward_amount
                         referrer_sub.save()
                         
                         # Create Payment record (for tracking)

@@ -19,6 +19,13 @@ class UserProfile(models.Model):
     # Optional additional fields
     date_of_birth = models.DateField(null=True, blank=True)
     occupation = models.CharField(max_length=100, blank=True)
+    # Referral tracking
+    referred_by_code = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Referral code used during signup"
+    )
     
     # API Usage Tracking (ADMIN ONLY - hidden from users)
     total_api_cost = models.DecimalField(
@@ -135,7 +142,12 @@ class Subscription(models.Model):
     # API Credit tracking
     api_credit_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.50)
     last_credit_refill = models.DateTimeField(null=True, blank=True)
-    
+    referral_cash_balance = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=0.00,
+        help_text="Referral earnings available for cash withdrawal"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -478,3 +490,99 @@ def create_user_subscription(sender, instance, created, **kwargs):
                 'api_credit_balance': Decimal('0.50'),
             }
         )
+
+
+# Add this at the very bottom of accounts/models.py
+# After the ReferralSettings model
+
+class Payout(models.Model):
+    """
+    Track cash payouts to users for referral earnings
+    """
+    PAYOUT_METHOD_CHOICES = [
+        ('paypal', 'PayPal'),
+        ('venmo', 'Venmo'),
+        ('zelle', 'Zelle'),
+        ('check', 'Check'),
+        ('bank_transfer', 'Bank Transfer'),
+        ('api_credit', 'Convert to API Credit'),
+        ('other', 'Other'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('rejected', 'Rejected'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payouts')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Payout details
+    method = models.CharField(max_length=20, choices=PAYOUT_METHOD_CHOICES, default='paypal')
+    payment_email = models.EmailField(blank=True, help_text="PayPal/Venmo email")
+    payment_phone = models.CharField(max_length=20, blank=True, help_text="Zelle/phone number")
+    payment_address = models.TextField(blank=True, help_text="Mailing address for checks")
+    notes = models.TextField(blank=True, help_text="Additional notes or instructions")
+    
+    # Status tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    requested_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Admin tracking
+    processed_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='processed_payouts',
+        help_text="Admin who processed this payout"
+    )
+    transaction_id = models.CharField(
+        max_length=255, 
+        blank=True,
+        help_text="PayPal transaction ID, check number, etc."
+    )
+    admin_notes = models.TextField(blank=True, help_text="Internal admin notes")
+    
+    class Meta:
+        ordering = ['-requested_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - ${self.amount} ({self.get_status_display()})"
+    
+    def approve(self, admin_user=None):
+        """Approve the payout request"""
+        self.status = 'approved'
+        self.approved_at = timezone.now()
+        if admin_user:
+            self.processed_by = admin_user
+        self.save()
+    
+    def complete(self, transaction_id='', admin_user=None):
+        """Mark payout as completed and deduct from user balance"""
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.transaction_id = transaction_id
+        if admin_user:
+            self.processed_by = admin_user
+        
+        # Deduct from user's cash balance
+        subscription = Subscription.objects.get(user=self.user)
+        subscription.referral_cash_balance -= self.amount
+        subscription.save()
+        
+        self.save()
+    
+    def reject(self, reason='', admin_user=None):
+        """Reject the payout request"""
+        self.status = 'rejected'
+        self.admin_notes = reason
+        if admin_user:
+            self.processed_by = admin_user
+        self.save()

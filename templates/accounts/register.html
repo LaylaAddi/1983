@@ -5,6 +5,15 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-6 col-lg-5">
+        <!-- Referral Code Banner (if from referral link) -->
+        {% if url_code %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong><i class="fas fa-gift"></i> Referral Code Applied!</strong>
+            <p class="mb-0">You'll get <strong>25% off</strong> your first purchase using code: <code>{{ url_code }}</code></p>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+        
         <div class="card shadow">
             <div class="card-header text-center">
                 <h2 class="mb-0">Create Account</h2>
@@ -15,7 +24,7 @@
                     {% csrf_token %}
                     
                     <div class="mb-3">
-                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address *</label>
                         {{ form.email }}
                         {% if form.email.errors %}
                             <div class="text-danger">
@@ -37,8 +46,48 @@
                         </div>
                     </div>
 
+                    <!-- Referral Code Section -->
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label for="{{ form.referral_code.id_for_label }}" class="form-label">
+                                    <i class="fas fa-gift text-success"></i> Referral Code (Optional)
+                                </label>
+                                <div class="input-group">
+                                    {{ form.referral_code }}
+                                    <button 
+                                        class="btn btn-outline-secondary" 
+                                        type="button"
+                                        onclick="validateReferralCode()"
+                                        id="validate-btn"
+                                    >
+                                        Validate
+                                    </button>
+                                </div>
+                                {% if form.referral_code.help_text %}
+                                    <div class="form-text">{{ form.referral_code.help_text }}</div>
+                                {% endif %}
+                                {% if form.referral_code.errors %}
+                                    <div class="text-danger mt-2">
+                                        {% for error in form.referral_code.errors %}
+                                            <small><i class="fas fa-exclamation-circle"></i> {{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div id="code-feedback" class="mt-2"></div>
+                            </div>
+
+                            <div class="form-check">
+                                {{ form.no_referral_code }}
+                                <label class="form-check-label" for="{{ form.no_referral_code.id_for_label }}">
+                                    I don't have a referral code
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
-                        <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                        <label for="{{ form.password1.id_for_label }}" class="form-label">Password *</label>
                         {{ form.password1 }}
                         {% if form.password1.help_text %}
                             <div class="form-text">{{ form.password1.help_text }}</div>
@@ -53,7 +102,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                        <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password *</label>
                         {{ form.password2 }}
                         {% if form.password2.errors %}
                             <div class="text-danger">
@@ -63,6 +112,15 @@
                             </div>
                         {% endif %}
                     </div>
+                    
+                    <!-- Non-field errors (from clean method) -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                     
                     <div class="d-grid">
                         <button type="submit" class="btn btn-success">
@@ -94,4 +152,87 @@
         </div>
     </div>
 </div>
+
+<script>
+// Handle checkbox toggle
+document.getElementById('id_no_referral_code').addEventListener('change', function() {
+    const codeInput = document.getElementById('id_referral_code');
+    const validateBtn = document.getElementById('validate-btn');
+    const feedback = document.getElementById('code-feedback');
+    
+    if (this.checked) {
+        codeInput.disabled = true;
+        codeInput.value = '';
+        validateBtn.disabled = true;
+        feedback.innerHTML = '';
+    } else {
+        codeInput.disabled = false;
+        validateBtn.disabled = false;
+    }
+});
+
+// Validate referral code via AJAX
+async function validateReferralCode() {
+    const codeInput = document.getElementById('id_referral_code');
+    const feedback = document.getElementById('code-feedback');
+    const code = codeInput.value.trim().toUpperCase();
+    
+    if (!code) {
+        feedback.innerHTML = '';
+        return;
+    }
+    
+    feedback.innerHTML = '<small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Checking code...</small>';
+    
+    try {
+        const response = await fetch('/accounts/validate-discount-code/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                code: code,
+                plan_type: 'pay_per_doc'  // Just for validation
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.valid) {
+            feedback.innerHTML = `
+                <div class="alert alert-success py-2 mb-0">
+                    <small><i class="fas fa-check-circle"></i> Valid code! You'll get ${data.discount_display} on your first purchase.</small>
+                </div>
+            `;
+            codeInput.value = code;
+        } else {
+            feedback.innerHTML = `
+                <div class="alert alert-danger py-2 mb-0">
+                    <small><i class="fas fa-times-circle"></i> ${data.message}</small>
+                </div>
+            `;
+        }
+    } catch (error) {
+        feedback.innerHTML = `
+            <div class="alert alert-warning py-2 mb-0">
+                <small><i class="fas fa-exclamation-triangle"></i> Could not validate code. You can still register and use it later.</small>
+            </div>
+        `;
+    }
+}
+
+// Auto-uppercase code as user types
+document.getElementById('id_referral_code').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+});
+
+// Enter key validation
+document.getElementById('id_referral_code').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        validateReferralCode();
+    }
+});
+</script>
 {% endblock %}

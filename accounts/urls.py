@@ -60,4 +60,6 @@ urlpatterns = [
     path('referrals/', referral_views.referral_dashboard, name='referral_dashboard'),
     path('referrals/create/', referral_views.create_referral_code, name='create_referral_code'),
     path('referrals/toggle/<int:code_id>/', referral_views.toggle_referral_code, name='toggle_referral_code'),
+    path('referrals/payout/', referral_views.request_payout, name='request_payout'),
+    path('validate-discount-code/', stripe_views.validate_discount_code, name='validate_discount_code'),
 ]

@@ -1,169 +1,49 @@
-docker-compose down -v
-docker-compose up --build -d
-docker-compose logs db
-docker-compose exec web python manage.py makemigrations
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py seed_data --clear --users 5 --documents 15
+# Start services
+docker compose up -d
 
+# Stop services
+docker compose down
 
-# Django Court Lookup Project Handoff Document
+# Restart after code changes
+docker compose restart web
 
-## Project Overview
-Building a court lookup feature for a Django Section 1983 lawsuit generator. The user has a working Django app in Docker and wants to add automatic federal district court lookup based on incident location.
+# Full rebuild (after Dockerfile/requirements.txt changes)
+docker compose down
+docker compose build --no-cache
+docker compose up -d
 
-## Current Status
-- ✅ Working Django application running in Docker
-- ✅ Court lookup backend service fully functional and tested
-- ✅ State-based architecture implemented for NY and PA
-- ❌ UI integration causes 500 errors due to database constraints
+# View logs
+docker compose logs -f web
+docker compose logs --tail=100 web
 
-## Core Problem Solved
-**Original Issue**: Alfred, NY was incorrectly mapping to Southern District of New York instead of Western District.
-**Solution**: Built comprehensive state-based court lookup with city-to-county mappings.
+# Django shell
+docker compose exec web python manage.py shell
 
-## Working Backend Architecture
+# Run migrations
+docker compose exec web python manage.py makemigrations
+docker compose exec web python manage.py migrate
 
-### 1. Main Service
-File: `documents/services/court_lookup_service.py`
-- Delegates to state-specific services
-- Currently supports NY and PA
-- Returns formatted court names with confidence levels
+# Create superuser
+docker compose exec web python manage.py createsuperuser
 
-### 2. State Structure
-Directory: `documents/services/court_data/states/`
-```
-├── __init__.py
-├── base_state_lookup.py (robust base class)
-├── new_york_lookup.py (complete NY implementation)
-└── pennsylvania_lookup.py (complete PA implementation)
-```
+# Collect static files
+docker compose exec web python manage.py collectstatic --noinput
+Migration Workflow We Used
+powershell# 1. Made model changes in accounts/models.py
+# 2. Created migration
+docker compose exec web python manage.py makemigrations accounts
 
-### 3. Working Tests
-These commands work perfectly in Django shell:
-```python
-from documents.services.court_lookup_service import CourtLookupService
+# Expected output:
+# Migrations for 'accounts':
+#   accounts/migrations/0004_referralsettings.py
+#     - Create model ReferralSettings
 
-# Alfred, NY correctly maps to Western District (high confidence)
-result = CourtLookupService.lookup_court_by_location("Alfred", "NY")
+# 3. Applied migration
+docker compose exec web python manage.py migrate accounts
 
-# Clarion, PA maps to Western District (high confidence)  
-result = CourtLookupService.lookup_court_by_location("Clarion", "PA")
+# Expected output:
+# Running migrations:
+#   Applying accounts.0004_referralsettings... OK
 
-# County-based lookup works
-result = CourtLookupService.lookup_court_by_location("Unknown Town", "NY", "Allegany")
-
-# Geographic fallback works
-result = CourtLookupService.lookup_court_by_location("Somewhere West", "NY")
-```
-
-## Database Schema (Existing)
-Model: `LawsuitDocument` has these court-related fields:
-- `suggested_federal_district` (TextField, blank=True)
-- `user_confirmed_district` (TextField, blank=True) 
-- `district_lookup_confidence` (CharField, choices, blank=True)
-- `use_manual_court` (BooleanField, default=False) **← CONSTRAINT ISSUE**
-- `user_manual_court` (TextField, blank=True)
-
-## Current Integration Problem
-**Error**: `null value in column "use_manual_court" violates not-null constraint`
-
-**Root Cause**: The form doesn't include `use_manual_court` field, so it defaults to NULL, but database expects a value.
-
-**Simple Fix Needed**: Add `use_manual_court` to form fields with default False value.
-
-## File Locations & Key Info
-
-### Forms
-File: `documents/forms.py`
-- `LawsuitDocumentForm` needs `use_manual_court` added to fields list
-- Current fields list missing court-related fields
-
-### Views  
-File: `documents/views_main.py`
-- `document_create` function works but needs court field defaults
-- Form validates successfully, save fails on constraint
-
-### Models
-File: `documents/models.py` 
-- All court fields exist and are properly defined
-- `use_manual_court` has `default=False` in model but form doesn't provide value
-
-### URLs
-File: `documents/urls.py`
-- Basic CRUD URLs work
-- No court API endpoints added yet (not needed for basic integration)
-
-## Environment Setup
-- Django 4.2.7 running in Docker
-- PostgreSQL database
-- Bootstrap 5.3.2 for styling
-- Working document creation/editing system
-
-## Next Steps for New Claude
-
-### Immediate Priority (15 minutes)
-1. **Fix the constraint error** by adding court fields to the form:
-   ```python
-   # In documents/forms.py, add to fields list:
-   'use_manual_court', 'suggested_federal_district', 'district_lookup_confidence'
-   
-   # Add to widgets with defaults:
-   'use_manual_court': forms.HiddenInput(attrs={'value': False}),
-   ```
-
-2. **Test basic integration** by adding simple court lookup to form's clean method
-
-### Secondary Goals (30-60 minutes)
-1. Add court display to document detail template
-2. Create simple court lookup widget/interface
-3. Add manual court override functionality
-
-### Long-term Goals
-1. Expand to more states (currently only NY/PA work)
-2. Add ZIP code based lookup
-3. Create interactive court selection UI
-
-## Critical Commands
-
-### Docker Management
-```bash
-docker compose up          # Start application
-docker compose restart     # Restart after changes
-docker compose logs web    # View logs
-docker compose exec web python manage.py shell  # Django shell
-```
-
-### Testing Court Lookup
-```bash
-# In Django shell
-from documents.services.court_lookup_service import CourtLookupService
-result = CourtLookupService.lookup_court_by_location("Alfred", "NY")
-print(result)
-```
-
-### File Backup Strategy
-User has backups of all court lookup files and can restore them if needed.
-
-## Working vs Broken State
-- **Working**: Court lookup backend (tested and confirmed)
-- **Working**: Basic Django form submission (before court integration)
-- **Broken**: Form submission with court lookup (500 error on save)
-- **Working**: All other app functionality (document list, edit, etc.)
-
-## Key Success Metrics
-1. Alfred, NY → Western District of New York (not Southern)
-2. Form submission works without 500 errors
-3. Court information displays in document details
-4. Manual override functionality works
-
-## Development Approach
-- Test each small change immediately
-- Use Django shell to verify backend before UI changes
-- Keep changes minimal and incremental
-- Always ensure basic form submission works before adding features
-
-## Current User Skill Level
-- Comfortable with basic Docker commands
-- Can edit files with nano
-- Understands Django basics
-- Prefers step-by-step instructions with testing at each step
+# 4. Verified in shell
+docker compose exec web python manage.py shell

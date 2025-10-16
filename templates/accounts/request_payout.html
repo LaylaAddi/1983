@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Request Payout{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="mb-3">
+                <a href="{% url 'referral_dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"><i class="fas fa-money-bill-wave"></i> Request Cash Payout</h3>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <div class="alert alert-info mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-info-circle"></i> Available Balance</h5>
+                        <p class="h3 mb-0">${{ available_cash }}</p>
+                        <hr>
+                        <p class="mb-0 small">Payouts are processed within 3-5 business days.</p>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-group mb-3">
+                            <label for="amount" class="font-weight-bold">Amount to Withdraw *</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">$</span>
+                                </div>
+                                <input 
+                                    type="number" 
+                                    name="amount" 
+                                    id="amount"
+                                    step="0.01"
+                                    min="0.01"
+                                    max="{{ available_cash }}"
+                                    required
+                                    class="form-control form-control-lg"
+                                    placeholder="0.00"
+                                />
+                            </div>
+                            <small class="form-text text-muted">
+                                Maximum: ${{ available_cash }}
+                            </small>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label for="method" class="font-weight-bold">Payment Method *</label>
+                            <select name="method" id="method" class="form-control" required onchange="updatePaymentFields()">
+                                <option value="">-- Select Method --</option>
+                                <option value="paypal">PayPal</option>
+                                <option value="venmo">Venmo</option>
+                                <option value="zelle">Zelle</option>
+                                <option value="check">Check (Mail)</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- PayPal/Venmo Email -->
+                        <div class="form-group mb-3" id="email-field" style="display: none;">
+                            <label for="payment_email" class="font-weight-bold">PayPal/Venmo Email</label>
+                          <input 
+                                type="email" 
+                                name="payment_email" 
+                                id="payment_email"
+                                class="form-control"
+                                value="{{ user.email }}"
+                                placeholder="your@email.com"
+                            />
+                                                    </div>
+
+                        <!-- Zelle Phone -->
+                        <div class="form-group mb-3" id="phone-field" style="display: none;">
+                            <label for="payment_phone" class="font-weight-bold">Zelle Phone Number</label>
+                            <input 
+                                type="tel" 
+                                name="payment_phone" 
+                                id="payment_phone"
+                                class="form-control"
+                                placeholder="(555) 123-4567"
+                            />
+                        </div>
+
+                        <!-- Check Address -->
+                        <div class="form-group mb-3" id="address-field" style="display: none;">
+                            <label for="payment_address" class="font-weight-bold">Mailing Address</label>
+                            <textarea 
+                                name="payment_address" 
+                                id="payment_address"
+                                class="form-control"
+                                rows="3"
+                                placeholder="123 Main St&#10;City, State 12345"
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="notes" class="font-weight-bold">Additional Notes (Optional)</label>
+                            <textarea 
+                                name="notes" 
+                                id="notes"
+                                class="form-control"
+                                rows="2"
+                                placeholder="Any special instructions..."
+                            ></textarea>
+                        </div>
+
+                        <div class="alert alert-warning">
+                            <small>
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Note:</strong> Once submitted, this request will be reviewed by our team. 
+                                Make sure your payment details are correct.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg btn-block">
+                            <i class="fas fa-paper-plane"></i> Submit Payout Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updatePaymentFields() {
+    const method = document.getElementById('method').value;
+    const emailField = document.getElementById('email-field');
+    const phoneField = document.getElementById('phone-field');
+    const addressField = document.getElementById('address-field');
+    
+    // Hide all fields first
+    emailField.style.display = 'none';
+    phoneField.style.display = 'none';
+    addressField.style.display = 'none';
+    
+    // Show relevant field based on method
+    if (method === 'paypal' || method === 'venmo') {
+        emailField.style.display = 'block';
+        document.getElementById('payment_email').required = true;
+    } else if (method === 'zelle') {
+        phoneField.style.display = 'block';
+        document.getElementById('payment_phone').required = true;
+    } else if (method === 'check') {
+        addressField.style.display = 'block';
+        document.getElementById('payment_address').required = true;
+    }
+}
+</script>
+{% endblock %}

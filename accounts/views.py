@@ -37,17 +37,28 @@ def password_change_done_view(request):
     """Success page after password change"""
     return render(request, 'accounts/password_change_done.html')
 
-
 def register_view(request):
-    """User registration view with email"""
+    """User registration view with email and referral code"""
     if request.user.is_authenticated:
         return redirect('dashboard')
+    
+    # Check if there's a referral code in URL (e.g., ?code=ABC123)
+    url_code = request.GET.get('code', '').strip()
     
     if request.method == 'POST':
         form = EmailUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, f'Account created successfully! Welcome, {user.first_name or user.email}!')
+            
+            # Check if they used a referral code
+            referral_code = form.cleaned_data.get('referral_code', '').strip()
+            if referral_code:
+                messages.success(
+                    request, 
+                    f'Account created successfully! Referral code "{referral_code}" will be applied to your first purchase.'
+                )
+            else:
+                messages.success(request, f'Account created successfully! Welcome, {user.first_name or user.email}!')
             
             # Log the user in after registration
             login(request, user)
@@ -55,9 +66,19 @@ def register_view(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        form = EmailUserCreationForm()
+        # Pre-fill referral code from URL if provided
+        initial_data = {}
+        if url_code:
+            initial_data['referral_code'] = url_code.upper()
+        
+        form = EmailUserCreationForm(initial=initial_data)
     
-    return render(request, 'accounts/register.html', {'form': form})
+    context = {
+        'form': form,
+        'url_code': url_code  # Pass to template for display
+    }
+    
+    return render(request, 'accounts/register.html', context)
 
 
 def login_view(request):

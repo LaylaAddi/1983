@@ -43,7 +43,7 @@
             <div class="card h-100 border-primary">
                 <div class="card-header bg-primary text-white text-center">
                     <h3>Pay Per Document</h3>
-                    <h2 class="display-4">${{ price_per_doc|floatformat:0 }}</h2>
+                    <h2 class="display-4" id="price-ppd">${{ price_per_doc|floatformat:0 }}</h2>
                     <p class="mb-0">one-time</p>
                 </div>
                 <div class="card-body">
@@ -58,8 +58,27 @@
                     <!-- Discount Code Input -->
                     <div class="form-group mt-3">
                         <label for="discount-code-ppd">Have a referral code?</label>
-                        <input type="text" class="form-control" id="discount-code-ppd" placeholder="Enter code">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="discount-code-ppd" 
+                                placeholder="Enter code"
+                                value="{{ referred_by_code }}"
+                                onkeypress="if(event.key==='Enter') validateCode('pay_per_doc')"
+                            >
+                            <div class="input-group-append">
+                                <button 
+                                    class="btn btn-outline-secondary" 
+                                    type="button"
+                                    onclick="validateCode('pay_per_doc')"
+                                >
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
                         <small class="text-muted">Get 25% off with a referral code!</small>
+                        <div id="code-feedback-ppd" class="mt-2"></div>
                     </div>
                     
                     <div class="text-center mt-4">
@@ -78,7 +97,7 @@
             <div class="card h-100 border-success">
                 <div class="card-header bg-success text-white text-center">
                     <h3>Unlimited</h3>
-                    <h2 class="display-4">${{ price_unlimited|floatformat:0 }}</h2>
+                    <h2 class="display-4" id="price-unl">${{ price_unlimited|floatformat:0 }}</h2>
                     <p class="mb-0">lifetime</p>
                 </div>
                 <div class="card-body">
@@ -94,8 +113,27 @@
                     <!-- Discount Code Input -->
                     <div class="form-group mt-3">
                         <label for="discount-code-unl">Have a referral code?</label>
-                        <input type="text" class="form-control" id="discount-code-unl" placeholder="Enter code">
+                        <div class="input-group">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="discount-code-unl" 
+                                placeholder="Enter code"
+                                value="{{ referred_by_code }}"
+                                onkeypress="if(event.key==='Enter') validateCode('unlimited')"
+                            >
+                            <div class="input-group-append">
+                                <button 
+                                    class="btn btn-outline-secondary" 
+                                    type="button"
+                                    onclick="validateCode('unlimited')"
+                                >
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
                         <small class="text-muted">Get 25% off with a referral code!</small>
+                        <div id="code-feedback-unl" class="mt-2"></div>
                     </div>
                     
                     <div class="text-center mt-4">
@@ -172,14 +210,89 @@
 <script>
 const stripe = Stripe('{{ stripe_public_key }}');
 
-async function checkout(planType) {
-    // Get discount code if entered
-    let discountCode = '';
-    if (planType === 'pay_per_doc') {
-        discountCode = document.getElementById('discount-code-ppd').value.trim();
-    } else if (planType === 'unlimited') {
-        discountCode = document.getElementById('discount-code-unl').value.trim();
+// Store validated discount info
+const discountData = {
+    pay_per_doc: null,
+    unlimited: null
+};
+
+async function validateCode(planType) {
+    const inputId = planType === 'pay_per_doc' ? 'discount-code-ppd' : 'discount-code-unl';
+    const feedbackId = planType === 'pay_per_doc' ? 'code-feedback-ppd' : 'code-feedback-unl';
+    const priceId = planType === 'pay_per_doc' ? 'price-ppd' : 'price-unl';
+    
+    const codeInput = document.getElementById(inputId);
+    const feedback = document.getElementById(feedbackId);
+    const priceDisplay = document.getElementById(priceId);
+    
+    const code = codeInput.value.trim().toUpperCase();
+    
+    if (!code) {
+        feedback.innerHTML = '';
+        discountData[planType] = null;
+        priceDisplay.innerHTML = planType === 'pay_per_doc' ? '${{ price_per_doc|floatformat:0 }}' : '${{ price_unlimited|floatformat:0 }}';
+        return;
     }
+    
+    // Show loading
+    feedback.innerHTML = '<small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Validating...</small>';
+    
+    try {
+        const response = await fetch('/accounts/validate-discount-code/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                code: code,
+                plan_type: planType
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.valid) {
+            // Success
+            discountData[planType] = data;
+            feedback.innerHTML = `
+                <div class="alert alert-success py-2 px-3 mb-0">
+                    <small>
+                        <i class="fas fa-check-circle"></i> ${data.message}<br>
+                        <strong>Original:</strong> $${data.original_price.toFixed(2)} 
+                        <strong>Discount:</strong> -$${data.discount_amount.toFixed(2)} 
+                        <strong>Final:</strong> $${data.final_price.toFixed(2)}
+                    </small>
+                </div>
+            `;
+            priceDisplay.innerHTML = `
+                <span style="text-decoration: line-through; font-size: 0.6em; opacity: 0.7;">$${data.original_price.toFixed(0)}</span>
+                $${data.final_price.toFixed(0)}
+            `;
+        } else {
+            // Error
+            discountData[planType] = null;
+            feedback.innerHTML = `
+                <div class="alert alert-danger py-2 px-3 mb-0">
+                    <small><i class="fas fa-times-circle"></i> ${data.message}</small>
+                </div>
+            `;
+            priceDisplay.innerHTML = planType === 'pay_per_doc' ? '${{ price_per_doc|floatformat:0 }}' : '${{ price_unlimited|floatformat:0 }}';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        feedback.innerHTML = `
+            <div class="alert alert-danger py-2 px-3 mb-0">
+                <small><i class="fas fa-exclamation-triangle"></i> Error validating code. Please try again.</small>
+            </div>
+        `;
+        discountData[planType] = null;
+    }
+}
+
+async function checkout(planType) {
+    const inputId = planType === 'pay_per_doc' ? 'discount-code-ppd' : 'discount-code-unl';
+    const discountCode = document.getElementById(inputId).value.trim();
     
     try {
         const response = await fetch('/accounts/create-checkout-session/', {
@@ -197,7 +310,7 @@ async function checkout(planType) {
         const data = await response.json();
         
         if (data.error) {
-            alert(data.error);
+            alert('Error: ' + data.error);
             return;
         }
         

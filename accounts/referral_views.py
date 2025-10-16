@@ -28,16 +28,23 @@ def referral_dashboard(request):
         referrer=user
     ).select_related('referred_user', 'payment', 'discount_code_used').order_by('-created_at')
     
+    # Get user's subscription for cash balance
+    subscription = Subscription.objects.get(user=user)
+    
     # Calculate totals
     total_earned = rewards.aggregate(
         total=Sum('reward_amount')
     )['total'] or Decimal('0.00')
     
-    paid_rewards = rewards.filter(is_paid=True).aggregate(
-        total=Sum('reward_amount')
-    )['total'] or Decimal('0.00')
+    # Get actual cash balance (available to withdraw)
+    available_cash = subscription.referral_cash_balance
     
-    pending_rewards = total_earned - paid_rewards
+    # Calculate total paid out from Payout records
+    from accounts.models import Payout
+    total_paid_out = Payout.objects.filter(
+        user=user,
+        status='completed'
+    ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
     
     # Count referrals by type
     referral_stats = rewards.values('payment__payment_type').annotate(
@@ -47,6 +54,9 @@ def referral_dashboard(request):
     
     # Get recent referrals (last 10)
     recent_referrals = rewards[:10]
+    
+    # Get recent payouts (last 5)
+    recent_payouts = Payout.objects.filter(user=user).order_by('-requested_at')[:5]
     
     # Code usage stats
     code_stats = None
@@ -64,9 +74,10 @@ def referral_dashboard(request):
         'referral_code': referral_code,
         'code_stats': code_stats,
         'total_earned': total_earned,
-        'paid_rewards': paid_rewards,
-        'pending_rewards': pending_rewards,
+        'available_cash': available_cash,
+        'total_paid_out': total_paid_out,
         'recent_referrals': recent_referrals,
+        'recent_payouts': recent_payouts,
         'referral_count': rewards.count(),
         'referral_stats': referral_stats,
     }
@@ -168,3 +179,71 @@ def toggle_referral_code(request, code_id):
     messages.success(request, f'Your referral code has been {status}.')
     
     return redirect('referral_dashboard')
+
+@login_required
+def request_payout(request):
+    """
+    Request cash payout of referral earnings
+    """
+    user = request.user
+    subscription = Subscription.objects.get(user=user)
+    
+    # Check if user has money to withdraw
+    if subscription.referral_cash_balance <= 0:
+        messages.error(request, 'You have no available cash to withdraw.')
+        return redirect('referral_dashboard')
+    
+    if request.method == 'POST':
+        from accounts.models import Payout
+        
+        amount = request.POST.get('amount')
+        method = request.POST.get('method')
+        payment_email = request.POST.get('payment_email', '')
+        payment_phone = request.POST.get('payment_phone', '')
+        payment_address = request.POST.get('payment_address', '')
+        notes = request.POST.get('notes', '')
+        
+        # Validate amount
+        try:
+            amount = Decimal(amount)
+            if amount <= 0:
+                messages.error(request, 'Amount must be greater than $0.')
+                return render(request, 'accounts/request_payout.html', {
+                    'available_cash': subscription.referral_cash_balance
+                })
+            
+            if amount > subscription.referral_cash_balance:
+                messages.error(request, f'You only have ${subscription.referral_cash_balance} available.')
+                return render(request, 'accounts/request_payout.html', {
+                    'available_cash': subscription.referral_cash_balance
+                })
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid amount.')
+            return render(request, 'accounts/request_payout.html', {
+                'available_cash': subscription.referral_cash_balance
+            })
+        
+        # Create payout request
+        payout = Payout.objects.create(
+            user=user,
+            amount=amount,
+            method=method,
+            payment_email=payment_email,
+            payment_phone=payment_phone,
+            payment_address=payment_address,
+            notes=notes,
+            status='pending'
+        )
+        
+        messages.success(
+            request,
+            f'Payout request for ${amount} submitted! We will process it within 3-5 business days.'
+        )
+        return redirect('referral_dashboard')
+    
+    # GET request - show form
+    context = {
+        'available_cash': subscription.referral_cash_balance
+    }
+    
+    return render(request, 'accounts/request_payout.html', context)

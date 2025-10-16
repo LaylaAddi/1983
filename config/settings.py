@@ -10,7 +10,7 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 'yes']
 
 
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '1983ls.com', 'www.1983ls.com']
 
 # Database configuration
 if os.environ.get('DATABASE_URL'):
