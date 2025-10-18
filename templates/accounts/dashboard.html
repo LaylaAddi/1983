@@ -45,8 +45,8 @@
                     <h5>{{ document.title }}</h5>
                     <p class="text-muted">{{ document.description|truncatewords:20 }}</p>
                     <p>
-                        <span class="badge bg-secondary">{{ document.get_status_display }}</span>
-                        <small class="text-muted ms-2">Created: {{ document.created_at|date:"M d, Y" }}</small>
+                        
+                        <small class="text-muted">Created: {{ document.created_at|date:"M d, Y" }}</small>
                     </p>
                 </div>
             {% endfor %}
