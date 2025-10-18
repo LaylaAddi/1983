@@ -142,7 +142,7 @@ class SectionGenerationService:
 
     @staticmethod
     def create_all_default_sections(document):
-        """Create all 7 standard legal sections with default content"""
+        """Create all 7 standard legal sections with default content (only if they don't exist)"""
         
         # Get user's full state name from profile
         user_profile = getattr(document.user, 'profile', None)
@@ -170,7 +170,6 @@ class SectionGenerationService:
             }
             user_state = state_names.get(user_profile.state.upper(), user_profile.state)
 
-
         # Build the location string - prefer structured address over general location
         location_str = "[LOCATION]"  # fallback
         if document.incident_city and document.incident_state:
@@ -182,7 +181,6 @@ class SectionGenerationService:
         elif document.incident_location:
             # Use general location field
             location_str = document.incident_location
-
 
         # Default content templates for each section type
         default_content = {
@@ -203,12 +201,15 @@ class SectionGenerationService:
             title = SectionGenerationService._get_section_title(section_type)
             order = SectionGenerationService._get_standard_order(section_type)
             
-            section, created = SectionGenerationService.create_or_update_section(
+            # CHANGED: Only create if doesn't exist, never update existing sections
+            section, created = DocumentSection.objects.get_or_create(
                 document=document,
                 section_type=section_type,
-                title=title,
-                content=content,
-                order=order
+                defaults={
+                    'title': title,
+                    'content': content,
+                    'order': order
+                }
             )
             
             results.append({
@@ -228,7 +229,7 @@ class SectionGenerationService:
             'total_sections': len(results),
             'results': results,
             'document': document
-        }
+    }
 
     @staticmethod
     def _get_next_order(document):
