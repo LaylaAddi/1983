@@ -205,7 +205,7 @@ def document_status_update(request, pk):
 
 @login_required
 def auto_populate_legal_sections(request, pk):
-    """View to automatically populate document with legal templates using new orchestrator service"""
+    """View to automatically populate document with legal templates AND fill in missing sections"""
     document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
     
     # Validate required fields
@@ -218,38 +218,45 @@ def auto_populate_legal_sections(request, pk):
         messages.error(request, 'Please specify the incident location before generating legal sections.')
         return redirect('document_edit', pk=pk)
     
-    # Use the new orchestrator service
-    from documents.services import DocumentOrchestratorService
+    # STEP 1: Use orchestrator to create specialized sections from templates
+    from documents.services import DocumentOrchestratorService, SectionGenerationService
     orchestrator = DocumentOrchestratorService(document)
     result = orchestrator.auto_populate_document()
+    
+    # STEP 2: Fill in any missing sections with default content
+    default_result = SectionGenerationService.create_all_default_sections(document)
+    
+    # Combine the results
+    total_created = result['sections_created'] + default_result['sections_created']
+    total_updated = result['sections_updated'] + default_result['sections_updated']
     
     # Update document status
     if document.status == 'draft':
         document.status = 'in_progress'
         document.save()
     
-    # Enhanced success message with more detailed information
+    # Enhanced success message
     violation_desc = result.get('violation_description', result['violation_type'].replace("_", " "))
     location_desc = result.get('location_description', result['location_type'].replace("_", " "))
     
-    if result['sections_created'] > 0 or result['sections_updated'] > 0:
+    if total_created > 0 or total_updated > 0:
         message_parts = []
-        if result['sections_created'] > 0:
-            message_parts.append(f"created {result['sections_created']} new sections")
-        if result['sections_updated'] > 0:
-            message_parts.append(f"updated {result['sections_updated']} existing sections")
+        if total_created > 0:
+            message_parts.append(f"created {total_created} new sections")
+        if total_updated > 0:
+            message_parts.append(f"updated {total_updated} existing sections")
         
         action_text = " and ".join(message_parts)
         messages.success(
             request, 
-            f'Successfully {action_text} based on {violation_desc} in a {location_desc}. '
+            f'Successfully {action_text} for a complete legal document. '
+            f'Specialized sections based on {violation_desc} in a {location_desc}. '
             f'Found {result["templates_found"]} matching templates.'
         )
     else:
-        messages.warning(
+        messages.info(
             request,
-            f'No sections were generated. This might indicate missing templates for {violation_desc} '
-            f'in a {location_desc}. Contact support if this seems incorrect.'
+            f'All sections already exist. Use "Manage Legal Sections" to edit them.'
         )
     
     return redirect('document_detail', pk=pk)
