@@ -179,140 +179,195 @@
 
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <div class="container">
+<!-- Navigation -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">
+            <i class="fas fa-gavel"></i> Section 1983 Generator
+        </a>
 
-            <a class="navbar-brand" href="{% url 'home' %}">
-                <i class="fas fa-gavel"></i> Section 1983 Generator
-            </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'home' %}">Home</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'know_your_rights' %}">Know Your Rights</a>
-        </li>
-        {% if user.is_authenticated %}
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'referral_dashboard' %}">
-                <i class="fas fa-gift"></i> Referrals
-            </a>
-        </li>
-        <li class="nav-item">
-            <a href="{% url 'voice_recorder' %}" class="nav-link d-md-none">
-                <i class="fas fa-microphone"></i> Voice Recorder
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'document_list' %}">My Documents</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'document_create' %}">New Document</a>
-        </li>
-        {% endif %}
-    </ul>
-
-                <ul class="navbar-nav">
-                    <!-- Dark Mode Toggle -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
-                            <i class="bi bi-sun-fill" id="theme-icon"></i>
-                            <span class="d-none d-md-inline" id="theme-text">Light</span>
-                        </button>
+                        <a class="nav-link" href="{% url 'document_list' %}">
+                            <i class="fas fa-folder"></i> My Documents
+                        </a>
                     </li>
-
-                    {% if user.is_authenticated %}
-                    <li class="nav-item dropdown ms-2">
-                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user"></i> 
-                                {% if user.first_name %}
-                                    {{ user.first_name }}
-                                    {% if user.last_name %}{{ user.last_name }}{% endif %}
-                                {% else %}
-                                    {{ user.email|truncatechars:20 }}
-                                {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'document_create' %}">
+                            <i class="fas fa-plus-circle"></i> New Document
+                        </a>
+                    </li>
+                    <!-- Upgrade/Manage Link -->
+                    <li class="nav-item">
+                        {% if user.subscription.plan_type == 'free' %}
+                            <a class="nav-link text-warning fw-bold" href="{% url 'pricing_page' %}">
+                                <i class="fas fa-star"></i> Upgrade
                             </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <!-- User info header -->
-                            <li>
-                                <h6 class="dropdown-header">
-                                    {% if user.first_name %}
+                        {% else %}
+                            <a class="nav-link" href="{% url 'manage_subscription' %}">
+                                <i class="fas fa-cog"></i> Manage
+                            </a>
+                        {% endif %}
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'know_your_rights' %}">Know Your Rights</a>
+                    </li>
+                {% endif %}
+            </ul>
+
+            <ul class="navbar-nav">
+                <!-- Dark Mode Toggle -->
+                <li class="nav-item">
+                    <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
+                        <i class="bi bi-sun-fill" id="theme-icon"></i>
+                        <span class="d-none d-md-inline" id="theme-text">Light</span>
+                    </button>
+                </li>
+
+                {% if user.is_authenticated %}
+                <li class="nav-item dropdown ms-2">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user"></i> 
+                        {% if user.first_name %}
+                            {{ user.first_name }}
+                        {% else %}
+                            {{ user.email|truncatechars:20 }}
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <!-- User info header -->
+                        <li>
+                            <h6 class="dropdown-header">
+                                {% if user.first_name %}
                                     {{ user.first_name }} {{ user.last_name }}
-                                    {% else %}
+                                {% else %}
                                     Welcome!
+                                {% endif %}
+                            </h6>
+                        </li>
+                        <li><small class="dropdown-text text-muted px-3">{{ user.email }}</small></li>
+                        
+                        <!-- Subscription Status -->
+                        <li>
+                            <div class="dropdown-item-text">
+                                <small>
+                                    <strong>Plan:</strong> 
+                                    {% if user.subscription.plan_type == 'free' %}
+                                        <span class="badge bg-secondary">Free</span>
+                                    {% elif user.subscription.plan_type == 'pay_per_doc' %}
+                                        <span class="badge bg-info">Pay-Per-Doc</span>
+                                    {% elif user.subscription.plan_type == 'unlimited' %}
+                                        <span class="badge bg-success">Unlimited</span>
                                     {% endif %}
-                                </h6>
-                            </li>
-                            <li><small class="dropdown-text text-muted px-3">{{ user.email }}</small></li>
+                                </small>
+                                <br>
+                                <small>
+                                    <strong>Credits:</strong> ${{ user.subscription.api_credit_balance }}
+                                </small>
+                            </div>
+                        </li>
 
-                            <!-- Profile completion status -->
-                            {% if not user.profile.is_complete %}
-                            <li>
-                                <div class="dropdown-item-text">
-                                    <small class="text-warning">
-                                        <i class="fas fa-exclamation-triangle"></i> Profile incomplete
-                                    </small>
-                                </div>
-                            </li>
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- Main Menu Items -->
+                        <li>
+                            <a class="dropdown-item" href="{% url 'dashboard' %}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'referral_dashboard' %}">
+                                <i class="fas fa-gift text-success"></i> Referrals & Earnings
+                            </a>
+                        </li>
+                        
+                        <!-- Upgrade / Manage -->
+                        <li>
+                            {% if user.subscription.plan_type == 'free' %}
+                                <a class="dropdown-item text-warning fw-bold" href="{% url 'pricing_page' %}">
+                                    <i class="fas fa-star"></i> Upgrade Plan
+                                </a>
+                            {% else %}
+                                <a class="dropdown-item" href="{% url 'manage_subscription' %}">
+                                    <i class="fas fa-cog"></i> Manage Subscription
+                                </a>
                             {% endif %}
+                        </li>
 
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
+                        <li><hr class="dropdown-divider"></li>
 
-                            <!-- Menu items -->
-                            <li><a class="dropdown-item" href="{% url 'dashboard' %}">
-                                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                                </a></li>
-                            <li><a class="dropdown-item" href="{% url 'referral_dashboard' %}">
-                                    <i class="fas fa-gift text-success"></i> Referrals & Earnings
-                                </a></li>
-                            <li><a class="dropdown-item" href="{% url 'profile' %}">
-                                    <i class="fas fa-user-edit"></i> Profile Settings
-                                </a></li>
-                            <li><a class="dropdown-item" href="{% url 'change_password_ajax' %}">
-                                    <i class="fas fa-key"></i> Change Password
-                                </a></li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li><a class="dropdown-item text-danger" href="#" onclick="confirmLogout()">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </a></li>
-                        </ul>
-                    </li>
-                    {% else %}
-                    <li class="nav-item ms-2">
-                        <a class="nav-link" href="{% url 'login' %}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link btn btn-primary text-white ms-2" href="{% url 'register' %}">Register</a>
-                    </li>
-                    {% endif %}
-                    {% if user.is_superuser %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/admin/" target="_blank"><i class="fas fa-cog"></i> Admin</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </div>
+                        <!-- Secondary Items -->
+                        <li>
+                            <a class="dropdown-item" href="{% url 'know_your_rights' %}">
+                                <i class="fas fa-balance-scale"></i> Know Your Rights
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'voice_recorder' %}">
+                                <i class="fas fa-microphone"></i> Voice Recorder
+                            </a>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- Settings -->
+                        <li>
+                            <a class="dropdown-item" href="{% url 'profile' %}">
+                                <i class="fas fa-user-edit"></i> Profile Settings
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'change_password_ajax' %}">
+                                <i class="fas fa-key"></i> Change Password
+                            </a>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <a class="dropdown-item text-danger" href="#" onclick="confirmLogout()">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                {% else %}
+                <li class="nav-item ms-2">
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn btn-primary text-white ms-2" href="{% url 'register' %}">Register</a>
+                </li>
+                {% endif %}
+
+                {% if user.is_superuser %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/" target="_blank">
+                        <i class="fas fa-cog"></i> Admin
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
         </div>
-    </nav>
-
+    </div>
+</nav>
     <!-- Messages -->
     {% if messages %}
     <div class="container mt-3">
         {% for message in messages %}
-        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show"
+            role="alert">
             {% if message.tags == 'error' %}
             <i class="fas fa-exclamation-triangle"></i>
             {% elif message.tags == 'success' %}

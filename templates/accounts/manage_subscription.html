@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Subscription{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2><i class="fas fa-cog"></i> Manage Subscription</h2>
+            <hr>
+
+            <!-- Current Plan Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-crown"></i> Current Plan</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Plan Type:</strong></p>
+                            <h4>
+                                {% if subscription.plan_type == 'free' %}
+                                    <span class="badge bg-secondary">Free</span>
+                                {% elif subscription.plan_type == 'pay_per_doc' %}
+                                    <span class="badge bg-info">Pay-Per-Document</span>
+                                {% elif subscription.plan_type == 'unlimited' %}
+                                    <span class="badge bg-success">Unlimited</span>
+                                {% endif %}
+                            </h4>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>API Credit Balance:</strong></p>
+                            <h4>
+                                <span class="badge bg-warning text-dark">
+                                    ${{ subscription.api_credit_balance }}
+                                </span>
+                            </h4>
+                            <small class="text-muted">
+                                {% if subscription.plan_type == 'free' %}
+                                    Approximately {{ subscription.api_credit_balance|floatformat:2|cut:"0."|cut:"."|add:"0"|floatformat:0|default:"0" }} video extractions remaining
+                                {% elif subscription.plan_type == 'unlimited' %}
+                                    Refills with $10 every month
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+
+                    {% if subscription.plan_type == 'free' %}
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Free Plan:</strong> You have limited API credits. Upgrade for more features!
+                    </div>
+                    <a href="{% url 'pricing_page' %}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-star"></i> Upgrade Now
+                    </a>
+                    {% endif %}
+
+                    {% if subscription.plan_type == 'pay_per_doc' %}
+                    <div class="alert alert-success mt-3">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>Pay-Per-Doc:</strong> You can download purchased documents as PDFs.
+                    </div>
+                    <a href="{% url 'pricing_page' %}" class="btn btn-success">
+                        <i class="fas fa-arrow-up"></i> Upgrade to Unlimited
+                    </a>
+                    {% endif %}
+
+                    {% if subscription.plan_type == 'unlimited' %}
+                    <div class="alert alert-success mt-3">
+                        <i class="fas fa-check-circle"></i> 
+                        <strong>Unlimited Plan:</strong> Download any document as PDF! You get $10 API credit every month.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Payment History -->
+            {% if payments %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Payment History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                <tr>
+                                    <td>{{ payment.completed_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if payment.payment_type == 'pay_per_doc' %}
+                                            Pay-Per-Document
+                                        {% elif payment.payment_type == 'unlimited' %}
+                                            Unlimited Plan
+                                        {% else %}
+                                            {{ payment.payment_type|title }}
+                                        {% endif %}
+                                    </td>
+                                    <td>${{ payment.final_amount }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ payment.status|title }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Cancel Subscription -->
+            {% if subscription.plan_type != 'free' %}
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Cancel Subscription</h5>
+                </div>
+                <div class="card-body">
+                    <p>Cancelling your subscription will:</p>
+                    <ul>
+                        <li>Downgrade you to the <strong>Free plan</strong></li>
+                        <li>Remove PDF download access (except purchased documents)</li>
+                        <li>Stop monthly API credit refills (for Unlimited users)</li>
+                        <li>Keep your current API credit balance</li>
+                    </ul>
+                    <p class="text-muted">
+                        <small><i class="fas fa-info-circle"></i> You can always upgrade again later.</small>
+                    </p>
+                    
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
+                        <i class="fas fa-times-circle"></i> Cancel My Subscription
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mt-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Confirm Cancellation</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Are you sure you want to cancel your subscription?</strong></p>
+                <p>You will be downgraded to the Free plan immediately.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    No, Keep My Subscription
+                </button>
+                <form method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" name="cancel_subscription" class="btn btn-danger">
+                        Yes, Cancel Subscription
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

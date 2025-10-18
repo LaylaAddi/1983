@@ -10,6 +10,9 @@ from .models import UserProfile
 from .forms import UserProfileForm, EmailUserCreationForm
 from .forms import CustomPasswordChangeForm
 import json
+from accounts.models import Subscription  
+from decimal import Decimal 
+from accounts.models import Payment
 
 
 @login_required
@@ -37,28 +40,29 @@ def password_change_done_view(request):
     """Success page after password change"""
     return render(request, 'accounts/password_change_done.html')
 
+
+
 def register_view(request):
-    """User registration view with email and referral code"""
+    """User registration view"""
     if request.user.is_authenticated:
         return redirect('dashboard')
-    
-    # Check if there's a referral code in URL (e.g., ?code=ABC123)
-    url_code = request.GET.get('code', '').strip()
     
     if request.method == 'POST':
         form = EmailUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             
-            # Check if they used a referral code
-            referral_code = form.cleaned_data.get('referral_code', '').strip()
-            if referral_code:
-                messages.success(
-                    request, 
-                    f'Account created successfully! Referral code "{referral_code}" will be applied to your first purchase.'
-                )
-            else:
-                messages.success(request, f'Account created successfully! Welcome, {user.first_name or user.email}!')
+            # Create free subscription with starting credit
+            Subscription.objects.get_or_create(
+                user=user,
+                defaults={
+                    'plan_type': 'free',
+                    'api_credit_balance': Decimal('0.50'),
+                    'is_active': True
+                }
+            )
+            
+            messages.success(request, f'Account created successfully! Welcome, {user.first_name or user.email}!')
             
             # Log the user in after registration
             login(request, user)
@@ -66,20 +70,13 @@ def register_view(request):
         else:
             messages.error(request, 'Please correct the errors below.')
     else:
-        # Pre-fill referral code from URL if provided
-        initial_data = {}
-        if url_code:
-            initial_data['referral_code'] = url_code.upper()
-        
-        form = EmailUserCreationForm(initial=initial_data)
+        form = EmailUserCreationForm()
     
     context = {
         'form': form,
-        'url_code': url_code  # Pass to template for display
     }
     
     return render(request, 'accounts/register.html', context)
-
 
 def login_view(request):
     """User login view with email"""
@@ -202,3 +199,33 @@ def change_password_ajax(request):
         return JsonResponse({'success': False, 'error': 'An error occurred. Please try again.'})
 
 
+
+
+@login_required
+def manage_subscription(request):
+    """Page where users can view and manage their subscription"""
+    subscription = request.user.subscription
+    
+    # Get payment history
+    payments = Payment.objects.filter(
+        user=request.user,
+        status='completed'
+    ).order_by('-completed_at')
+    
+    # Handle cancellation
+    if request.method == 'POST' and 'cancel_subscription' in request.POST:
+        if subscription.plan_type in ['pay_per_doc', 'unlimited']:
+            # Downgrade to free
+            subscription.plan_type = 'free'
+            subscription.save()
+            messages.success(request, 'Your subscription has been cancelled. You now have a free account.')
+            return redirect('manage_subscription')
+        else:
+            messages.info(request, 'You are already on the free plan.')
+    
+    context = {
+        'subscription': subscription,
+        'payments': payments,
+    }
+    
+    return render(request, 'accounts/manage_subscription.html', context)

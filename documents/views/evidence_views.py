@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import json
-
+from accounts.models import Subscription
 from ..models import LawsuitDocument, VideoEvidence
 from ..services.whisper_transcript_service import WhisperTranscriptService
 
@@ -89,13 +89,14 @@ def extract_evidence_segment(request, pk):
             })
         
         # Get user's subscription and check API credit
-        from accounts.models import Subscription
+        
         try:
             subscription = Subscription.objects.get(user=request.user)
+ 
         except Subscription.DoesNotExist:
             return JsonResponse({
                 'success': False,
-                'error': 'No subscription found. Please contact support.',
+                'error': 'No subscription found. Please <a href="/accounts/manage-subscription/"><strong>contact support</strong></a>.',
                 'requires_payment': True
             })
         
@@ -104,12 +105,22 @@ def extract_evidence_segment(request, pk):
         
         # Check if user has sufficient credit
         if not subscription.has_sufficient_credit(estimated_cost):
+            if subscription.plan_type == 'free':
+                error_msg = (
+                    f'Insufficient API credit. You need ${estimated_cost:.2f} but have ${subscription.api_credit_balance:.2f}. '
+                    f'<a href="/accounts/pricing/" class="text-warning"><strong>Upgrade your plan</strong></a> to get more credits.'
+                )
+            else:
+                error_msg = (
+                    f'Insufficient API credit. You need ${estimated_cost:.2f} but have ${subscription.api_credit_balance:.2f}. '
+                    f'<a href="/accounts/manage-subscription/" class="text-info"><strong>View your account</strong></a> for details.'
+                )
+            
             return JsonResponse({
                 'success': False,
-                'error': f'Insufficient API credit. You need approximately ${estimated_cost:.2f} but have ${subscription.api_credit_balance:.2f}. Please upgrade your plan or purchase more credit.',
+                'error': error_msg,
                 'requires_payment': True,
-                'current_balance': float(subscription.api_credit_balance),
-                'estimated_cost': estimated_cost
+                'balance': float(subscription.api_credit_balance)
             })
         
         # Extract transcript using Whisper
