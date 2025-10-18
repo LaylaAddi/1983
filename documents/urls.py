@@ -37,3 +37,5 @@ urlpatterns = [
     path('<int:pk>/evidence/generate-facts/', evidence_views.generate_facts_from_evidence, name='generate_facts_from_evidence'),
     path('<int:pk>/evidence/preview-facts/', evidence_views.preview_facts_from_evidence, name='preview_facts_from_evidence'),
 ]
+
+

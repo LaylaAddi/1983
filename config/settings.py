@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from django.core.mail import send_mail
+
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -7,12 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = os.environ.get('SECRET_KEY', 'your-fallback-secret-key')
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ['true', '1', 'yes']
-
-
-
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', '1983ls.com', 'www.1983ls.com']
 
 # Database configuration
+
+
 if os.environ.get('DATABASE_URL'):
     # Production (Render) database settings
     import dj_database_url
@@ -123,27 +124,22 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Email settings based on DEBUG setting
-if DEBUG:
-    # Development email settings
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    EMAIL_HOST_USER = 'noreply@section1983generator.com'
-    DEFAULT_FROM_EMAIL = 'Section 1983 Generator <noreply@section1983generator.com>'
-else:
-    # Production email settings
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    PASSWORD_RESET_TIMEOUT = 3600  # Token valid for 1 hour
-    # Only set DEFAULT_FROM_EMAIL if EMAIL_HOST_USER is provided
-    if EMAIL_HOST_USER:
-        DEFAULT_FROM_EMAIL = f'Section 1983 Generator <{EMAIL_HOST_USER}>'
-    else:
-        DEFAULT_FROM_EMAIL = 'Section 1983 Generator <noreply@section1983generator.com>'
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'mail.privateemail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'info@1983ls.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Section 1983 Generator <info@1983ls.com>')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_TIMEOUT = 10
+PASSWORD_RESET_TIMEOUT = 3600  # Token valid for 1 hour
 
+# Optional: Use console backend in development if you prefer
+if DEBUG and os.environ.get('USE_CONSOLE_EMAIL', 'False').lower() == 'true':
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Additional production settings
 if not DEBUG:
     # Security settings for production
