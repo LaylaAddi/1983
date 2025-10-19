@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al Brooks Setups - Chart Examples</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 0;
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .chart-card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .chart-container {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        
+        .setup-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .setup-info h4 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .entry-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .stop-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .target-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .bull-candle { background: #26a69a; }
+        .bear-candle { background: #ef5350; }
+        .ema-line { background: #ffa726; height: 3px; }
+        .entry-arrow { background: #4caf50; }
+        .stop-line { background: #f44336; height: 3px; }
+        .target-line { background: #ffeb3b; height: 3px; }
+        
+        .page-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .alert-custom {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-left: 5px solid #e17055;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1 class="page-title">📊 Al Brooks Price Action Setups - Visual Guide</h1>
+        
+        <div class="alert-custom">
+            <h4 style="margin: 0 0 10px 0; color: #d63031;">📌 How to Read These Charts:</h4>
+            <ul style="margin-bottom: 0;">
+                <li><strong>Green Candles</strong> = Bull bars (close higher than open)</li>
+                <li><strong>Red Candles</strong> = Bear bars (close lower than open)</li>
+                <li><strong>Orange Line</strong> = 20 EMA (moving average)</li>
+                <li><strong>Green Arrow ⬆</strong> = BUY entry point</li>
+                <li><strong>Red Arrow ⬇</strong> = SELL entry point</li>
+                <li><strong>Red Line</strong> = Stop Loss placement</li>
+                <li><strong>Yellow Line</strong> = Profit Target</li>
+            </ul>
+        </div>
+        
+        <!-- Setup 1: Two-Legged Pullback -->
+        <div class="chart-card">
+            <h2>Setup 1: Two-Legged Pullback (Highest Probability)</h2>
+            <div class="chart-container">
+                <canvas id="chart1" width="1200" height="400"></canvas>
+            </div>
+            <div class="setup-info">
+                <h4>📈 What You're Looking For:</h4>
+                <p>In a <strong>strong uptrend</strong>, price pulls back in TWO distinct legs down to the 20 EMA, then shows strength to resume upward.</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="entry-box">
+                            <strong>✅ ENTRY:</strong><br>
+                            1 tick above high of signal bar (green arrow)<br>
+                            Signal bar = strong bull bar after 2nd pullback leg
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stop-box">
+                            <strong>🛑 STOP LOSS:</strong><br>
+                            1 tick below low of pullback<br>
+                            Or below 20 EMA<br>
+                            MNQ: ~15-20 pts | MES: ~8-12 pts
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="target-box">
+                            <strong>🎯 TARGET:</strong><br>
+                            Minimum 2x risk (2R)<br>
+                            Or prior swing high<br>
+                            MNQ: 30-40+ pts | MES: 15-25+ pts
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>Why It Works:</strong> Market has proven it wants to go up (trend). The pullback gives you a low-risk entry. Always In Long direction confirmed by price staying above EMA.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Setup 2: Failed Breakout -->
+        <div class="chart-card">
+            <h2>Setup 2: Failed Breakout / Bull Trap</h2>
+            <div class="chart-container">
+                <canvas id="chart2" width="1200" height="400"></canvas>
+            </div>
+            <div class="setup-info">
+                <h4>📉 What You're Looking For:</h4>
+                <p>Price breaks above resistance (or below support), but <strong>fails within 5 bars</strong> and reverses hard. Traps breakout traders.</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="entry-box">
+                            <strong>✅ ENTRY:</strong><br>
+                            1 tick below low of strong reversal bar (red arrow)<br>
+                            Wait for clear rejection and momentum shift
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stop-box">
+                            <strong>🛑 STOP LOSS:</strong><br>
+                            1 tick above failed breakout high<br>
+                            This is your "wrong" level<br>
+                            MNQ: ~12-18 pts | MES: ~6-10 pts
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="target-box">
+                            <strong>🎯 TARGET:</strong><br>
+                            Bottom of range (where breakout started)<br>
+                            Or measured move (range height)<br>
+                            MNQ: 25-40 pts | MES: 12-20 pts
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <strong>Key Signal:</strong> Look for strong bear bars that close below the breakout point. Weak follow-through after breakout = likely trap. Volume often drops on failed breakouts.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Setup 3: High 2 -->
+        <div class="chart-card">
+            <h2>Setup 3: High 2 (Second Signal) - Trending Market</h2>
+            <div class="chart-container">
+                <canvas id="chart3" width="1200" height="400"></canvas>
+            </div>
+            <div class="setup-info">
+                <h4>📈 What You're Looking For:</h4>
+                <p>In an uptrend, price makes a high, pulls back, then makes a <strong>second attempt</strong> at the high. Enter on the pullback to EMA after first attempt.</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="entry-box">
+                            <strong>✅ ENTRY:</strong><br>
+                            On pullback to EMA after 1st high attempt<br>
+                            Enter 1 tick above signal bar<br>
+                            Look for strong bull bar at EMA
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stop-box">
+                            <strong>🛑 STOP LOSS:</strong><br>
+                            Below EMA or prior swing low<br>
+                            Tight stop possible in strong trends<br>
+                            MNQ: ~10-15 pts | MES: ~5-8 pts
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="target-box">
+                            <strong>🎯 TARGET:</strong><br>
+                            New swing high (breakout)<br>
+                            Then measured move beyond<br>
+                            MNQ: 20-35 pts | MES: 10-18 pts
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success mt-3">
+                    <strong>Al Brooks Says:</strong> "The second signal is often more reliable than the first." Market has tested resistance, pulled back, and is ready for a stronger push. Very high probability in strong trends.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Setup 4: Wedge Reversal -->
+        <div class="chart-card">
+            <h2>Setup 4: Wedge Reversal (3 Pushes Up)</h2>
+            <div class="chart-container">
+                <canvas id="chart4" width="1200" height="400"></canvas>
+            </div>
+            <div class="setup-info">
+                <h4>📉 What You're Looking For:</h4>
+                <p>Three pushes in the same direction forming a <strong>wedge pattern</strong>. Third push shows weakness (smaller bars, less momentum). Exhaustion pattern.</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="entry-box">
+                            <strong>✅ ENTRY:</strong><br>
+                            After 3rd push fails to extend<br>
+                            Enter on strong reversal bar (red arrow)<br>
+                            Wait for momentum shift
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stop-box">
+                            <strong>🛑 STOP LOSS:</strong><br>
+                            1 tick above wedge top (3rd push high)<br>
+                            If it goes higher, wedge invalidated<br>
+                            MNQ: ~15-20 pts | MES: ~8-12 pts
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="target-box">
+                            <strong>🎯 TARGET:</strong><br>
+                            Start of wedge (bottom)<br>
+                            Or measured move down<br>
+                            MNQ: 30-50 pts | MES: 15-25 pts
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <strong>Pattern Recognition:</strong> Each push makes a slightly higher high but with decreasing momentum. Third push often has small bars, dojis, or closes near lows. Classic exhaustion.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Setup 5: Opening Reversal -->
+        <div class="chart-card">
+            <h2>Setup 5: Opening Reversal (9:30-10:30 AM)</h2>
+            <div class="chart-container">
+                <canvas id="chart5" width="1200" height="400"></canvas>
+            </div>
+            <div class="setup-info">
+                <h4>🔄 What You're Looking For:</h4>
+                <p>Strong move in first 30 minutes (9:30-10:00), then <strong>reversal around 10:00-10:30 AM</strong> as initial momentum fades. Very common pattern.</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="entry-box">
+                            <strong>✅ ENTRY:</strong><br>
+                            Around 10:00-10:30 AM ET<br>
+                            After strong reversal bar appears<br>
+                            Enter against opening direction
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stop-box">
+                            <strong>🛑 STOP LOSS:</strong><br>
+                            Beyond opening extreme<br>
+                            Or recent swing high/low<br>
+                            MNQ: ~18-25 pts | MES: ~10-15 pts
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="target-box">
+                            <strong>🎯 TARGET:</strong><br>
+                            VWAP or opening price<br>
+                            Often retraces 50-100% of opening move<br>
+                            MNQ: 25-40 pts | MES: 12-20 pts
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <strong>Time-Based Setup:</strong> This only works in the first hour. After 10:30 AM, if no reversal happens, the opening direction is likely the day's trend. Don't force this setup after 11 AM.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Setup 6: Spike and Channel -->
+        <div class="chart-card">
+            <h2>Setup 6: Spike & Channel (Continuation Pattern)</h2>
+            <div class="chart-container">
+                <canvas id="chart6" width="1200" height="400"></canvas>
+            </div>
+            <div class="setup-info">
+                <h4>📈 What You're Looking For:</h4>
+                <p>Strong <strong>spike</strong> (large bars, momentum), followed by <strong>tight channel</strong> in same direction. Buy pullbacks to channel bottom in bull spike.</p>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="entry-box">
+                            <strong>✅ ENTRY:</strong><br>
+                            On pullback to bottom of channel<br>
+                            Or to EMA within channel<br>
+                            Multiple entries possible
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stop-box">
+                            <strong>🛑 STOP LOSS:</strong><br>
+                            Below channel or below EMA<br>
+                            Tight stops work in channels<br>
+                            MNQ: ~10-15 pts | MES: ~5-10 pts
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="target-box">
+                            <strong>🎯 TARGET:</strong><br>
+                            Channel top<br>
+                            Or measured move (spike height)<br>
+                            MNQ: 20-40+ pts | MES: 10-20+ pts
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success mt-3">
+                    <strong>Best Continuation Setup:</strong> Spike & Channel is one of the strongest trending patterns. After a spike, expect at least a measured move. Channel phase can last for hours. Multiple entry opportunities at channel lows.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="chart-card">
+            <h2>📌 Chart Legend & Symbols</h2>
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color bull-candle"></div>
+                    <span>Bull Candle (Green)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color bear-candle"></div>
+                    <span>Bear Candle (Red)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color ema-line"></div>
+                    <span>20 EMA (Orange)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color entry-arrow"></div>
+                    <span>Entry Point</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color stop-line"></div>
+                    <span>Stop Loss (Red Line)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color target-line"></div>
+                    <span>Profit Target (Yellow Line)</span>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // Utility function to draw a candlestick
+        function drawCandle(ctx, x, y, open, high, low, close, width, isBull) {
+            const color = isBull ? '#26a69a' : '#ef5350';
+            const bodyHeight = Math.abs(close - open);
+            const bodyTop = Math.max(open, close);
+            
+            // Draw wick
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y - high);
+            ctx.lineTo(x, y - low);
+            ctx.stroke();
+            
+            // Draw body
+            ctx.fillStyle = color;
+            ctx.fillRect(x - width/2, y - bodyTop, width, bodyHeight);
+        }
+        
+        // Draw EMA line
+        function drawEMA(ctx, points, color = '#ffa726', lineWidth = 2) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.stroke();
+        }
+        
+        // Draw arrow
+        function drawArrow(ctx, x, y, direction, label) {
+            const isUp = direction === 'up';
+            ctx.fillStyle = isUp ? '#4caf50' : '#f44336';
+            
+            // Arrow
+            ctx.beginPath();
+            if (isUp) {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - 10, y + 15);
+                ctx.lineTo(x + 10, y + 15);
+            } else {
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - 10, y - 15);
+                ctx.lineTo(x + 10, y - 15);
+            }
+            ctx.closePath();
+            ctx.fill();
+            
+            // Label
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y + (isUp ? 35 : -25));
+        }
+        
+        // Draw horizontal line
+        function drawHorizontalLine(ctx, y, width, color, label, dashPattern = []) {
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.setLineDash(dashPattern);
+            ctx.beginPath();
+            ctx.moveTo(50, y);
+            ctx.lineTo(width - 50, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Label
+            ctx.fillStyle = color;
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText(label, width - 60, y - 5);
+        }
+        
+        // Draw text annotation
+        function drawLabel(ctx, x, y, text, color = 'white') {
+            ctx.fillStyle = color;
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, x, y);
+        }
+        
+        // Setup 1: Two-Legged Pullback
+        function drawSetup1() {
+            const canvas = document.getElementById('chart1');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            const candleWidth = 20;
+            const spacing = 35;
+            let x = 100;
+            const baseY = height - 100;
+            const scale = 3;
+            
+            // Uptrend bars before pullback
+            const trendBars = [
+                {o: 20, h: 35, l: 18, c: 33},
+                {o: 33, h: 40, l: 32, c: 38},
+                {o: 38, h: 48, l: 37, c: 45},
+                {o: 45, h: 52, l: 44, c: 50},
+                // First pullback leg
+                {o: 50, h: 52, l: 42, c: 44},
+                {o: 44, h: 46, l: 38, c: 40},
+                // Small bounce
+                {o: 40, h: 46, l: 39, c: 44},
+                // Second pullback leg
+                {o: 44, h: 45, l: 36, c: 38},
+                {o: 38, h: 42, l: 36, c: 39},
+                // SIGNAL BAR - strong bull
+                {o: 39, h: 52, l: 38, c: 50},
+                // Continuation
+                {o: 50, h: 58, l: 49, c: 56},
+                {o: 56, h: 62, l: 55, c: 60},
+            ];
+            
+            const emaPoints = [];
+            
+            // Draw candles and collect EMA points
+            trendBars.forEach((bar, i) => {
+                const isBull = bar.c > bar.o;
+                drawCandle(ctx, x, baseY, bar.o * scale, bar.h * scale, bar.l * scale, bar.c * scale, candleWidth, isBull);
+                
+                // EMA approximation
+                const emaValue = (bar.o + bar.c) / 2 - 5;
+                emaPoints.push({x: x, y: baseY - (emaValue * scale)});
+                
+                // Label pullback legs
+                if (i === 5) drawLabel(ctx, x, baseY - 270, 'Leg 1', '#ffd700');
+                if (i === 8) drawLabel(ctx, x, baseY - 270, 'Leg 2', '#ffd700');
+                if (i === 9) drawLabel(ctx, x, baseY - 300, 'SIGNAL', '#4caf50');
+                
+                x += spacing;
+            });
+            
+            // Draw EMA
+            drawEMA(ctx, emaPoints);
+            
+            // Draw entry arrow
+            drawArrow(ctx, 100 + (9 * spacing), baseY - (52 * scale), 'up', 'BUY');
+            
+            // Draw stop loss line
+            drawHorizontalLine(ctx, baseY - (36 * scale), width, '#f44336', 'STOP', [5, 5]);
+            
+            // Draw target line
+            drawHorizontalLine(ctx, baseY - (65 * scale), width, '#ffeb3b', 'TARGET', [5, 5]);
+        }
+        
+        // Setup 2: Failed Breakout
+        function drawSetup2() {
+            const canvas = document.getElementById('chart2');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            const candleWidth = 20;
+            const spacing = 35;
+            let x = 100;
+            const baseY = height - 100;
+            const scale = 3;
+            
+            // Range then failed breakout
+            const bars = [
+                {o: 40, h: 48, l: 38, c: 46},
+                {o: 46, h: 50, l: 44, c: 48},
+                {o: 48, h: 52, l: 46, c: 50}, // Resistance ~50
+                {o: 50, h: 52, l: 45, c: 47},
+                {o: 47, h: 48, l: 42, c: 44},
+                {o: 44, h: 47, l: 42, c: 45},
+                // Breakout attempt
+                {o: 45, h: 56, l: 44, c: 54}, // Breaks above 50!
+                {o: 54, h: 57, l: 53, c: 55}, // Weak follow through
+                {o: 55, h: 56, l: 51, c: 52}, // Fails
+                // SIGNAL - strong reversal
+                {o: 52, h: 53, l: 42, c: 43},
+                {o: 43, h: 45, l: 35, c: 36},
+                {o: 36, h: 38, l: 30, c: 32},
+            ];
+            
+            const emaPoints = [];
+            
+            bars.forEach((bar, i) => {
+                const isBull = bar.c > bar.o;
+                drawCandle(ctx, x, baseY, bar.o * scale, bar.h * scale, bar.l * scale, bar.c * scale, candleWidth, isBull);
+                
+                const emaValue = 45;
+                emaPoints.push({x: x, y: baseY - (emaValue * scale)});
+                
+                if (i === 6) drawLabel(ctx, x, baseY - 250, 'Breakout', '#ffd700');
+                if (i === 8) drawLabel(ctx, x, baseY - 250, 'Fails!', '#ff6b6b');
+                if (i === 9) drawLabel(ctx, x, baseY - 250, 'SIGNAL', '#f44336');
+                
+                x += spacing;
+            });
+            
+            drawEMA(ctx, emaPoints);
+            
+            // Resistance line
+            drawHorizontalLine(ctx, baseY - (50 * scale), width, '#888', 'Resistance', [10, 5]);
+            
+            // Entry arrow
+            drawArrow(ctx, 100 + (9 * spacing), baseY - (42 * scale), 'down', 'SELL');
+            
+            // Stop loss
+            drawHorizontalLine(ctx, baseY - (57 * scale), width, '#f44336', 'STOP', [5, 5]);
+            
+            // Target
+            drawHorizontalLine(ctx, baseY - (28 * scale), width, '#ffeb3b', 'TARGET', [5, 5]);
+        }
+        
+        // Setup 3: High 2
+        function drawSetup3() {
+            const canvas = document.getElementById('chart3');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            const candleWidth = 20;
+            const spacing = 35;
+            let x = 100;
+            const baseY = height - 100;
+            const scale = 3;
+            
+            const bars = [
+                {o: 20, h: 30, l: 18, c: 28},
+                {o: 28, h: 38, l: 27, c: 35},
+                {o: 35, h: 45, l: 34, c: 43},
+                {o: 43, h: 52, l: 42, c: 50}, // High 1
+                // Pullback
+                {o: 50, h: 51, l: 44, c: 46},
+                {o: 46, h: 48, l: 41, c: 43},
+                {o: 43, h: 45, l: 40, c: 42}, // At EMA
+                // SIGNAL BAR
+                {o: 42, h: 48, l: 41, c: 46},
+                // High 2 attempt
+                {o: 46, h: 54, l: 45, c: 52},
+                {o: 52, h: 58, l: 51, c: 56}, // Breaks High 1!
+                {o: 56, h: 62, l: 55, c: 60},
+            ];
+            
+            const emaPoints = [];
+            
+            bars.forEach((bar, i) => {
+                const isBull = bar.c > bar.o;
+                drawCandle(ctx, x, baseY, bar.o * scale, bar.h * scale, bar.l * scale, bar.c * scale, candleWidth, isBull);
+                
+                const emaValue = 20 + (i * 2);
+                emaPoints.push({x: x, y: baseY - (emaValue * scale)});
+                
+                if (i === 3) drawLabel(ctx, x, baseY - 250, 'High 1', '#ffd700');
+                if (i === 7) drawLabel(ctx, x, baseY - 260, 'SIGNAL', '#4caf50');
+                if (i === 9) drawLabel(ctx, x, baseY - 250, 'High 2', '#4caf50');
+                
+                x += spacing;
+            });
+            
+            drawEMA(ctx, emaPoints);
+            
+            // Entry
+            drawArrow(ctx, 100 + (7 * spacing), baseY - (48 * scale), 'up', 'BUY');
+            
+            // Stop
+            drawHorizontalLine(ctx, baseY - (40 * scale), width, '#f44336', 'STOP', [5, 5]);
+            
+            // Target
+            drawHorizontalLine(ctx, baseY - (65 * scale), width, '#ffeb3b', 'TARGET', [5, 5]);
+        }
+        
+        // Setup 4: Wedge
+        function drawSetup4() {
+            const canvas = document.getElementById('chart4');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            const candleWidth = 20;
+            const spacing = 35;
+            let x = 100;
+            const baseY = height - 100;
+            const scale = 3;
+            
+            const bars = [
+                // Push 1
+                {o: 25, h: 38, l: 24, c: 36},
+                {o: 36, h: 45, l: 35, c: 43},
+                {o: 43, h: 48, l: 41, c: 46},
+                // Pullback
+                {o: 46, h: 47, l: 40, c: 42},
+                // Push 2
+                {o: 42, h: 50, l: 41, c: 48},
+                {o: 48, h: 52, l: 47, c: 50},
+                // Pullback
+                {o: 50, h: 51, l: 45, c: 46},
+                // Push 3 (weaker)
+                {o: 46, h: 52, l: 45, c: 51},
+                {o: 51, h: 53, l: 50, c: 52}, // Weak
+                // SIGNAL - Reversal
+                {o: 52, h: 53, l: 42, c: 44},
+                {o: 44, h: 46, l: 36, c: 38},
+                {o: 38, h: 40, l: 30, c: 32},
+            ];
+            
+            const emaPoints = [];
+            
+            bars.forEach((bar, i) => {
+                const isBull = bar.c > bar.o;
+                drawCandle(ctx, x, baseY, bar.o * scale, bar.h * scale, bar.l * scale, bar.c * scale, candleWidth, isBull);
+                
+                const emaValue = 38;
+                emaPoints.push({x: x, y: baseY - (emaValue * scale)});
+                
+                if (i === 2) drawLabel(ctx, x, baseY - 240, 'Push 1', '#ffd700');
+                if (i === 5) drawLabel(ctx, x, baseY - 240, 'Push 2', '#ffd700');
+                if (i === 8) drawLabel(ctx, x, baseY - 240, 'Push 3', '#ff6b6b');
+                if (i === 9) drawLabel(ctx, x, baseY - 260, 'SIGNAL', '#f44336');
+                
+                x += spacing;
+            });
+            
+            drawEMA(ctx, emaPoints);
+            
+            // Draw wedge lines
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(100 + (2 * spacing), baseY - (46 * scale));
+            ctx.lineTo(100 + (8 * spacing), baseY - (52 * scale));
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Entry
+            drawArrow(ctx, 100 + (9 * spacing), baseY - (42 * scale), 'down', 'SELL');
+            
+            // Stop
+            drawHorizontalLine(ctx, baseY - (53 * scale), width, '#f44336', 'STOP', [5, 5]);
+            
+            // Target
+            drawHorizontalLine(ctx, baseY - (25 * scale), width, '#ffeb3b', 'TARGET', [5, 5]);
+        }
+        
+        // Setup 5: Opening Reversal
+        function drawSetup5() {
+            const canvas = document.getElementById('chart5');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            const candleWidth = 20;
+            const spacing = 35;
+            let x = 100;
+            const baseY = height - 100;
+            const scale = 3;
+            
+            const bars = [
+                // 9:30 - Strong open up
+                {o: 30, h: 42, l: 29, c: 40},
+                {o: 40, h: 48, l: 39, c: 46},
+                {o: 46, h: 52, l: 45, c: 50},
+                {o: 50, h: 54, l: 49, c: 53},
+                // 10:00 - Losing steam
+                {o: 53, h: 55, l: 51, c: 52},
+                {o: 52, h: 53, l: 49, c: 50},
+                // 10:15 - REVERSAL
+                {o: 50, h: 51, l: 42, c: 44},
+                {o: 44, h: 46, l: 38, c: 40},
+                // Back to VWAP/open
+                {o: 40, h: 42, l: 34, c: 36},
+                {o: 36, h: 38, l: 31, c: 33},
+            ];
+            
+            const emaPoints = [];
+            
+            bars.forEach((bar, i) => {
+                const isBull = bar.c > bar.o;
+                drawCandle(ctx, x, baseY, bar.o * scale, bar.h * scale, bar.l * scale, bar.c * scale, candleWidth, isBull);
+                
+                const emaValue = 42;
+                emaPoints.push({x: x, y: baseY - (emaValue * scale)});
+                
+                if (i === 0) drawLabel(ctx, x, baseY + 30, '9:30', '#888');
+                if (i === 4) drawLabel(ctx, x, baseY + 30, '10:00', '#888');
+                if (i === 6) {
+                    drawLabel(ctx, x, baseY + 30, '10:15', '#888');
+                    drawLabel(ctx, x, baseY - 260, 'SIGNAL', '#f44336');
+                }
+                
+                x += spacing;
+            });
+            
+            drawEMA(ctx, emaPoints);
+            
+            // VWAP line
+            drawHorizontalLine(ctx, baseY - (35 * scale), width, '#2196f3', 'VWAP/Open', [10, 5]);
+            
+            // Entry
+            drawArrow(ctx, 100 + (6 * spacing), baseY - (42 * scale), 'down', 'SELL');
+            
+            // Stop
+            drawHorizontalLine(ctx, baseY - (55 * scale), width, '#f44336', 'STOP', [5, 5]);
+            
+            // Target
+            drawHorizontalLine(ctx, baseY - (30 * scale), width, '#ffeb3b', 'TARGET', [5, 5]);
+        }
+        
+        // Setup 6: Spike and Channel
+        function drawSetup6() {
+            const canvas = document.getElementById('chart6');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            const candleWidth = 20;
+            const spacing = 35;
+            let x = 100;
+            const baseY = height - 100;
+            const scale = 3;
+            
+            const bars = [
+                // SPIKE
+                {o: 20, h: 35, l: 19, c: 33},
+                {o: 33, h: 45, l: 32, c: 43},
+                {o: 43, h: 52, l: 42, c: 50},
+                // Channel
+                {o: 50, h: 54, l: 48, c: 52},
+                {o: 52, h: 56, l: 49, c: 51}, // Pullback
+                {o: 51, h: 56, l: 50, c: 54}, // ENTRY 1
+                {o: 54, h: 58, l: 52, c: 57},
+                {o: 57, h: 60, l: 53, c: 54}, // Pullback
+                {o: 54, h: 58, l: 53, c: 56}, // ENTRY 2
+                {o: 56, h: 62, l: 55, c: 60},
+                {o: 60, h: 65, l: 59, c: 63},
+            ];
+            
+            const emaPoints = [];
+            
+            bars.forEach((bar, i) => {
+                const isBull = bar.c > bar.o;
+                drawCandle(ctx, x, baseY, bar.o * scale, bar.h * scale, bar.l * scale, bar.c * scale, candleWidth, isBull);
+                
+                const emaValue = 20 + (i * 3.5);
+                emaPoints.push({x: x, y: baseY - (emaValue * scale)});
+                
+                if (i === 2) drawLabel(ctx, x, baseY - 260, 'SPIKE', '#ffd700');
+                if (i === 5) drawLabel(ctx, x, baseY - 280, 'BUY 1', '#4caf50');
+                if (i === 8) drawLabel(ctx, x, baseY - 280, 'BUY 2', '#4caf50');
+                
+                x += spacing;
+            });
+            
+            drawEMA(ctx, emaPoints);
+            
+            // Channel lines
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            // Top
+            ctx.beginPath();
+            ctx.moveTo(100 + (3 * spacing), baseY - (54 * scale));
+            ctx.lineTo(100 + (10 * spacing), baseY - (65 * scale));
+            ctx.stroke();
+            // Bottom
+            ctx.beginPath();
+            ctx.moveTo(100 + (3 * spacing), baseY - (48 * scale));
+            ctx.lineTo(100 + (10 * spacing), baseY - (53 * scale));
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Entries
+            drawArrow(ctx, 100 + (5 * spacing), baseY - (56 * scale), 'up', 'BUY');
+            drawArrow(ctx, 100 + (8 * spacing), baseY - (58 * scale), 'up', 'BUY');
+            
+            // Stop
+            drawHorizontalLine(ctx, baseY - (48 * scale), width, '#f44336', 'STOP', [5, 5]);
+            
+            // Target
+            drawHorizontalLine(ctx, baseY - (70 * scale), width, '#ffeb3b', 'TARGET', [5, 5]);
+        }
+        
+        // Draw all charts
+        drawSetup1();
+        drawSetup2();
+        drawSetup3();
+        drawSetup4();
+        drawSetup5();
+        drawSetup6();
+    </script>
+</body>
+</html>

@@ -9,13 +9,22 @@ from django.utils import timezone
 from decimal import Decimal
 from accounts.models import DiscountCode, ReferralReward, Subscription, Payment
 
-
 @login_required
 def referral_dashboard(request):
     """
     Dashboard showing user's referral code performance and earnings
     """
     user = request.user
+    
+    # Get or create user's subscription
+    subscription, created = Subscription.objects.get_or_create(
+        user=user,
+        defaults={
+            'plan_type': 'free',
+            'api_credit_balance': Decimal('0.50'),
+            'is_active': True
+        }
+    )
     
     # Get user's referral code (if they have one)
     referral_code = DiscountCode.objects.filter(
@@ -27,9 +36,6 @@ def referral_dashboard(request):
     rewards = ReferralReward.objects.filter(
         referrer=user
     ).select_related('referred_user', 'payment', 'discount_code_used').order_by('-created_at')
-    
-    # Get user's subscription for cash balance
-    subscription = Subscription.objects.get(user=user)
     
     # Calculate totals
     total_earned = rewards.aggregate(

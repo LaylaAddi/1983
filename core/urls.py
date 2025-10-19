@@ -7,4 +7,6 @@ urlpatterns = [
     path('know-your-rights/', views.know_your_rights, name='know_your_rights'),
     path('uptrend/', views.uptrend, name='uptrend'),
     path('downtrend/', views.downtrend, name='downtrend'), 
+    path('albrooks/', views.albrooks, name='albrooks'), 
+    path('setups/', views.setups, name='setups'), 
 ]

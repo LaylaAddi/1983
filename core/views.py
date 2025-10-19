@@ -18,4 +18,9 @@ def downtrend(request):
     """Uptrend page view"""
     return render(request, 'core/downtrend.html')
 
+def albrooks(request):
+    return render(request, 'core/albrooks.html')
+
+def setups(request):
+    return render(request, 'core/setups.html')
 

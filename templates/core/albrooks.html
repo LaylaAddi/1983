@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al Brooks Price Action Strategy - MNQ/MES</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .card h3 {
+            color: #764ba2;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .always-in {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .always-in-box {
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid;
+        }
+        
+        .always-in-long {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .always-in-short {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .always-in-box h4 {
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .always-in-long h4 {
+            color: #28a745;
+        }
+        
+        .always-in-short h4 {
+            color: #dc3545;
+        }
+        
+        .always-in-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .always-in-box li {
+            padding: 5px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .always-in-box li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .strategy-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .strategy-box h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .entry-rules {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .exit-rules {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #ff9800;
+        }
+        
+        .stop-rules {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #f44336;
+        }
+        
+        .chart-example {
+            background: #1a1a2e;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 20px 0;
+            position: relative;
+            height: 300px;
+        }
+        
+        .price-action-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .pa-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .pa-item h5 {
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .pa-item p {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .decision-tree {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .decision-step {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 5px solid #667eea;
+            position: relative;
+        }
+        
+        .decision-step:after {
+            content: '↓';
+            display: block;
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin-top: 10px;
+        }
+        
+        .decision-step:last-child:after {
+            display: none;
+        }
+        
+        .decision-step strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 5px solid #e17055;
+        }
+        
+        .highlight-box h3 {
+            color: #d63031;
+            margin-top: 0;
+        }
+        
+        .setup-examples {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .setup-card {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            transition: transform 0.3s;
+        }
+        
+        .setup-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        
+        .setup-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .setup-card .quality {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .quality-high {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .quality-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .quality-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        @media (max-width: 968px) {
+            .always-in, .strategy-grid, .price-action-list, .setup-examples {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Al Brooks Price Action - MNQ/MES Intraday Strategy</h1>
+        
+        <!-- ALWAYS IN DIRECTION -->
+        <div class="card">
+            <h2>🎯 Step 1: Determine "Always In" Direction</h2>
+            <p><strong>The market is ALWAYS either "Always In Long" or "Always In Short"</strong> - this tells you which side to trade from.</p>
+            
+            <div class="always-in">
+                <div class="always-in-box always-in-long">
+                    <h4>📈 ALWAYS IN LONG</h4>
+                    <ul>
+                        <li>Price above 20 EMA</li>
+                        <li>Making higher highs and higher lows</li>
+                        <li>Strong bull bars closing near highs</li>
+                        <li>Pullbacks hold above prior lows</li>
+                        <li>Buy signals work, sell signals fail</li>
+                        <li><strong>ONLY LOOK FOR LONGS</strong></li>
+                    </ul>
+                </div>
+                
+                <div class="always-in-box always-in-short">
+                    <h4>📉 ALWAYS IN SHORT</h4>
+                    <ul>
+                        <li>Price below 20 EMA</li>
+                        <li>Making lower highs and lower lows</li>
+                        <li>Strong bear bars closing near lows</li>
+                        <li>Rallies fail at prior highs</li>
+                        <li>Sell signals work, buy signals fail</li>
+                        <li><strong>ONLY LOOK FOR SHORTS</strong></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <h3>⚡ Critical Rule: NEVER Fade the Always In Direction</h3>
+                <p>If market is Always In Long, don't take shorts (even if "looks overbought"). If Always In Short, don't take longs (even if "looks oversold"). This is the #1 cause of losses.</p>
+            </div>
+        </div>
+        
+        <!-- MARKET CONTEXT -->
+        <div class="card">
+            <h2>📍 Step 2: Identify Market Context</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Context</th>
+                        <th>Characteristics</th>
+                        <th>What To Do</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Strong Trend</strong></td>
+                        <td>Large bars, small pullbacks, mostly closes near extremes</td>
+                        <td>Trade WITH trend, enter on pullbacks, let runners run</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Weak Trend / Broad Channel</strong></td>
+                        <td>Two-sided, deeper pullbacks, mix of bull/bear bars</td>
+                        <td>Trade both WITH trend (higher probability) and counter-trend scalps</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Trading Range</strong></td>
+                        <td>Repeated failures at top/bottom, mix of bar types</td>
+                        <td>Fade extremes, scalp both directions, tight stops</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Breakout</strong></td>
+                        <td>Large bars, gap, strong momentum, closes far from EMA</td>
+                        <td>Wait for pullback or 2nd entry, don't chase</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Climax</strong></td>
+                        <td>Parabolic move, extremely large bars, exhaustion</td>
+                        <td>Wait for range to form, don't try to pick tops/bottoms</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- KEY SETUPS -->
+        <div class="card">
+            <h2>🎯 Step 3: High Probability Setups for MNQ/MES</h2>
+            
+            <div class="setup-examples">
+                <div class="setup-card">
+                    <h4>Two-Legged Pullback</h4>
+                    <span class="quality quality-high">HIGH PROBABILITY</span>
+                    <p><strong>Setup:</strong> In trend, price pulls back in two legs to 20 EMA or prior breakout point</p>
+                    <p><strong>Entry:</strong> 1 tick above high of signal bar (bull) or 1 tick below low (bear)</p>
+                    <p><strong>Stop:</strong> Below pullback low (bull) or above high (bear)</p>
+                    <p><strong>Target:</strong> 2x risk minimum, measured move, or swing target</p>
+                </div>
+                
+                <div class="setup-card">
+                    <h4>Failed Breakout (Trap)</h4>
+                    <span class="quality quality-high">HIGH PROBABILITY</span>
+                    <p><strong>Setup:</strong> Breakout of range/swing fails within 5 bars, reverses hard</p>
+                    <p><strong>Entry:</strong> Enter on strong reversal bar in opposite direction</p>
+                    <p><strong>Stop:</strong> Beyond failed breakout extreme</p>
+                    <p><strong>Target:</strong> Opposite side of range or measured move</p>
+                </div>
+                
+                <div class="setup-card">
+                    <h4>High/Low 2 (H2/L2)</h4>
+                    <span class="quality quality-high">HIGH PROBABILITY</span>
+                    <p><strong>Setup:</strong> Second attempt at prior high/low in trend</p>
+                    <p><strong>Entry:</strong> Pullback to EMA after first attempt fails, enter on 2nd signal</p>
+                    <p><strong>Stop:</strong> Below EMA or prior swing</p>
+                    <p><strong>Target:</strong> New swing high/low or measured move</p>
+                </div>
+                
+                <div class="setup-card">
+                    <h4>Wedge Reversal</h4>
+                    <span class="quality quality-medium">MEDIUM PROBABILITY</span>
+                    <p><strong>Setup:</strong> 3 pushes in same direction (wedge), final push shows weakness</p>
+                    <p><strong>Entry:</strong> After final push fails, enter reversal on strong bar</p>
+                    <p><strong>Stop:</strong> Beyond wedge extreme</p>
+                    <p><strong>Target:</strong> Start of wedge or measured move</p>
+                </div>
+                
+                <div class="setup-card">
+                    <h4>Opening Reversal</h4>
+                    <span class="quality quality-medium">MEDIUM PROBABILITY</span>
+                    <p><strong>Setup:</strong> Strong move in first 30 min, reverses at 10:00-10:30 ET</p>
+                    <p><strong>Entry:</strong> After momentum shift on strong reversal bar</p>
+                    <p><strong>Stop:</strong> Beyond opening extreme</p>
+                    <p><strong>Target:</strong> VWAP or opening price</p>
+                </div>
+                
+                <div class="setup-card">
+                    <h4>Spike & Channel</h4>
+                    <span class="quality quality-high">HIGH PROBABILITY</span>
+                    <p><strong>Setup:</strong> Strong spike, then tight channel in same direction</p>
+                    <p><strong>Entry:</strong> Buy pullbacks to bottom of channel (if bull)</p>
+                    <p><strong>Stop:</strong> Below channel or below EMA</p>
+                    <p><strong>Target:</strong> Channel top, measured move, or let it run</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PRICE ACTION SIGNALS -->
+        <div class="card">
+            <h2>📊 Key Price Action Signals</h2>
+            
+            <div class="price-action-list">
+                <div class="pa-item">
+                    <h5>Strong Bull Bar</h5>
+                    <p>Large body, closes near high, little/no tail at top. Momentum.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Strong Bear Bar</h5>
+                    <p>Large body, closes near low, little/no tail at bottom. Momentum.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Doji / Inside Bar</h5>
+                    <p>Small body, indecision. Often precedes breakout or reversal.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Bull Reversal Bar</h5>
+                    <p>Large tail below, closes near high after selloff. Rejection of lows.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Bear Reversal Bar</h5>
+                    <p>Large tail above, closes near low after rally. Rejection of highs.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Outside Bar</h5>
+                    <p>Engulfs prior bar. Direction of close matters - strong signal if with trend.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Consecutive Bars</h5>
+                    <p>3+ bull/bear bars in row = strong momentum. Don't fade it.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Two Bar Reversal</h5>
+                    <p>Large bar followed by opposite bar that engulfs or exceeds it.</p>
+                </div>
+                
+                <div class="pa-item">
+                    <h5>Breakout Bar</h5>
+                    <p>Closes far from prior range/swing. Wait for pullback to enter.</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DECISION TREE -->
+        <div class="card">
+            <h2>🔄 Real-Time Decision Process (Every 5 Minutes)</h2>
+            
+            <div class="decision-tree">
+                <div class="decision-step">
+                    <strong>STEP 1: What is Always In Direction?</strong>
+                    Price above 20 EMA + higher lows = Always In Long (only look for longs)<br>
+                    Price below 20 EMA + lower highs = Always In Short (only look for shorts)<br>
+                    Crossing EMA back and forth = Range (trade both ways, scalp mode)
+                </div>
+                
+                <div class="decision-step">
+                    <strong>STEP 2: Is this a strong trend or weak trend/range?</strong>
+                    Strong = large bars, small pullbacks, consecutive closes (trade WITH only)<br>
+                    Weak = two-sided, deeper pullbacks (can trade both directions)<br>
+                    Range = repeated failures at levels (fade extremes)
+                </div>
+                
+                <div class="decision-step">
+                    <strong>STEP 3: Where is price relative to structure?</strong>
+                    At prior high/low? → Likely reversal or consolidation<br>
+                    At EMA after pullback? → Likely continuation entry<br>
+                    Far from EMA after big move? → Wait for pullback, don't chase
+                </div>
+                
+                <div class="decision-step">
+                    <strong>STEP 4: What is the last signal bar telling me?</strong>
+                    Strong bar WITH trend + closes near extreme = momentum continuing<br>
+                    Weak bar / doji after move = exhaustion, wait<br>
+                    Strong reversal bar AGAINST trend = possible reversal IF at key level
+                </div>
+                
+                <div class="decision-step">
+                    <strong>STEP 5: Is there a setup?</strong>
+                    Two-legged pullback complete? → Enter<br>
+                    Failed breakout? → Enter opposite direction<br>
+                    High/Low 2 setup? → Enter on signal bar<br>
+                    Nothing clear? → DO NOTHING (hardest rule to follow!)
+                </div>
+            </div>
+        </div>
+        
+        <!-- ENTRY RULES -->
+        <div class="card">
+            <h2>✅ Entry, Stop, and Exit Rules</h2>
+            
+            <div class="strategy-grid">
+                <div class="strategy-box">
+                    <h4>Entry Methods</h4>
+                    <div class="entry-rules">
+                        <strong>1. Stop Order (Preferred for MNQ/MES):</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Long: 1 tick above signal bar high</li>
+                            <li>Short: 1 tick below signal bar low</li>
+                            <li>Ensures breakout of signal bar (confirmation)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="entry-rules">
+                        <strong>2. Limit Order (Aggressive):</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Enter during formation of signal bar</li>
+                            <li>Risky - bar could fail</li>
+                            <li>Only in very strong trends</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="strategy-box">
+                    <h4>Position Sizing</h4>
+                    <div class="entry-rules">
+                        <strong>Al Brooks Method:</strong>
+                        <ul style="margin-left: 20px; margin-top: 5px;">
+                            <li>Risk 1-2% of account per trade</li>
+                            <li>MNQ: $5/point, adjust contracts to risk</li>
+                            <li>MES: $2.50/point, adjust contracts to risk</li>
+                            <li>Always know your dollar risk BEFORE entering</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stop-rules">
+                <h4>🛑 Stop Loss Placement</h4>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Trending Market:</strong> 1 tick below pullback low (long) or 1 tick above pullback high (short)</li>
+                    <li><strong>Range Market:</strong> 1 tick beyond opposite extreme of range</li>
+                    <li><strong>Signal Bar Stop:</strong> 1 tick beyond signal bar extreme (tighter but riskier)</li>
+                    <li><strong>Max Risk:</strong> For MNQ max 20 points, MES max 10 points (adjust for volatility)</li>
+                    <li><strong>Never move stop against you!</strong></li>
+                </ul>
+            </div>
+            
+            <div class="exit-rules">
+                <h4>🎯 Profit Targets & Exits</h4>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Scalp (50% position):</strong> Take at 1:1 or 1.5:1 risk/reward</li>
+                    <li><strong>Runner (50% position):</strong> Trail stop or target measured move</li>
+                    <li><strong>Measured Move:</strong> Height of breakout pattern projected from breakout point</li>
+                    <li><strong>Swing Target:</strong> Prior high/low or significant resistance/support</li>
+                    <li><strong>Strong Trend:</strong> Trail below bars, exit on first reversal bar</li>
+                    <li><strong>Range:</strong> Exit at opposite extreme or if range breaks against you</li>
+                    <li><strong>Time Stop:</strong> Exit before major news or if trade not moving after 30-60 min</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- MNQMES SPECIFIC -->
+        <div class="card">
+            <h2>⚡ MNQ/MES Specific Adjustments</h2>
+            
+            <div class="strategy-grid">
+                <div class="strategy-box">
+                    <h4>MNQ (Micro Nasdaq)</h4>
+                    <p><strong>Characteristics:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>More volatile than MES</li>
+                        <li>Wider stops needed (15-20 points typical)</li>
+                        <li>Bigger point targets (20-40+ points in trends)</li>
+                        <li>Best times: 9:30-11:30 AM, 2-4 PM ET</li>
+                        <li>Watch tech sector news</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Typical Targets:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Scalp: 10-15 points</li>
+                        <li>Swing: 25-50 points</li>
+                        <li>Runner: 50+ points in strong trends</li>
+                    </ul>
+                </div>
+                
+                <div class="strategy-box">
+                    <h4>MES (Micro S&P)</h4>
+                    <p><strong>Characteristics:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>More stable than MNQ</li>
+                        <li>Tighter stops work (8-12 points typical)</li>
+                        <li>Smaller point targets (10-25 points)</li>
+                        <li>Follows institutional flow better</li>
+                        <li>Good for beginners</li>
+                    </ul>
+                    <p style="margin-top: 15px;"><strong>Typical Targets:</strong></p>
+                    <ul style="margin-left: 20px;">
+                        <li>Scalp: 5-8 points</li>
+                        <li>Swing: 12-25 points</li>
+                        <li>Runner: 25+ points in strong trends</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- COMMON MISTAKES -->
+        <div class="card">
+            <h2>🚫 Common Mistakes (Al Brooks Warnings)</h2>
+            
+            <div class="highlight-box">
+                <h3>Mistakes That Kill Accounts:</h3>
+                <ol style="margin-left: 20px; margin-top: 10px; line-height: 1.8;">
+                    <li><strong>Fading strong trends</strong> - "It's too high to buy" is NOT a reason to short in Always In Long</li>
+                    <li><strong>Taking every setup</strong> - Wait for high probability (context + setup + good signal bar)</li>
+                    <li><strong>Revenge trading</strong> - After loss, traders force trades. Take a break instead.</li>
+                    <li><strong>Moving stops against you</strong> - If wrong, get out. Don't give market more room.</li>
+                    <li><strong>Not taking profits</strong> - Scale out. Don't be greedy. Protect winners.</li>
+                    <li><strong>Trading chop</strong> - If market is unclear, DO NOTHING. Most important skill.</li>
+                    <li><strong>Ignoring context</strong> - Same pattern works differently in trend vs range</li>
+                    <li><strong>Tight stops in ranges</strong> - Ranges are choppy. Give more room or don't trade.</li>
+                    <li><strong>Wide stops in trends</strong> - Trends allow tight stops at structure. Use them.</li>
+                    <li><strong>Trading against institutional bias</strong> - If market wants to go up, it will. Don't fight it.</li>
+                </ol>
+            </div>
+        </div>
+        
+        <!-- DAILY ROUTINE -->
+        <div class="card">
+            <h2>📅 Daily Trading Routine (Al Brooks Style)</h2>
+            
+            <div class="decision-tree">
+                <div class="decision-step">
+                    <strong>Pre-Market (8:00-9:30 AM ET):</strong>
+                    Check overnight range, key news, yesterday's high/low, VWAP level<br>
+                    Identify key support/resistance levels<br>
+                    What's the higher timeframe trend? (Daily/60-min chart)
+                </div>
+                
+                <div class="decision-step">
+                    <strong>9:30-10:00 AM (Open):</strong>
+                    WATCH. Don't trade yet. Let market show its hand.<br>
+                    Is it breaking out? Reversing? Ranging?<br>
+                    What is Always In Direction forming?
+                </div>
+                
+                <div class="decision-step">
+                    <strong>10:00 AM-12:00 PM (Main Session):</strong>
+                    Trade the setups when they appear<br>
+                    Follow the Always In Direction<br>
+                    Take high probability setups only<br>
+                    If 2 losses in a row, stop trading for 30 minutes
+                </div>
+                
+                <div class="decision-step">
+                    <strong>12:00-1:30 PM (Lunch):</strong>
+                    STOP TRADING (or trade very carefully)<br>
+                    Volume dies, ranges form, chop increases<br>
+                    Review morning trades, adjust if needed
+                </div>
+                
+                <div class="decision-step">
+                    <strong>1:30-4:00 PM (Afternoon Session):</strong>
+                    If morning was profitable, consider trading afternoon<br>
+                    If morning had losses, STOP for the day<br>
+                    Afternoon can trend again (2-3 PM typical)<br>
+                    Close all positions by 3:45 PM unless very strong trend
+                </div>
+                
+                <div class="decision-step">
+                    <strong>After Market Close:</strong>
+                    Review ALL trades - what worked, what didn't<br>
+                    Did you follow your rules?<br>
+                    Journal the key price action lessons learned<br>
+                    Plan for tomorrow
+                </div>
+            </div>
+        </div>
+        
+        <!-- QUICK REFERENCE -->
+        <div class="card">
+            <h2>📋 Quick Reference Checklist</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Before Every Trade Ask:</th>
+                        <th>Yes/No</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Do I know the Always In Direction?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Am I trading WITH the Always In Direction?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Is this a recognized high probability setup?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Is the signal bar strong and clear?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Do I have a logical stop placement?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Is my risk 1-2% or less of account?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Do I have a profit target / exit plan?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Is the market clear (not choppy)?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Am I trading during good hours (not lunch)?</td>
+                        <td>☐</td>
+                    </tr>
+                    <tr>
+                        <td>Have I had fewer than 2 losses in a row today?</td>
+                        <td>☐</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="highlight-box" style="margin-top: 20px;">
+                <h3>⚡ Golden Rule</h3>
+                <p style="font-size: 1.2em; margin: 0;">If you answered NO to ANY of these questions, <strong>DO NOT TAKE THE TRADE.</strong></p>
+                <p style="margin-top: 10px;">The best trade is often the one you DON'T take. Patience and discipline are more important than any setup.</p>
+            </div>
+        </div>
+        
+    </div>
+</body>
+</html>
