@@ -3,7 +3,10 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.shortcuts import redirect
 from django.urls import reverse
+from .emails import EmailService
 from .models import UserProfile, Subscription, Payment, DiscountCode, ReferralReward, ReferralSettings, Payout
+
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = [
@@ -478,6 +481,13 @@ class PayoutAdmin(admin.ModelAdmin):
         count = 0
         for payout in queryset.filter(status='pending'):
             payout.approve(admin_user=request.user)
+            
+            # Send approval email
+            EmailService.send_payout_approved(
+                user=payout.user,
+                payout=payout
+            )
+            
             count += 1
         
         self.message_user(request, f'{count} payout(s) approved.')
@@ -489,6 +499,13 @@ class PayoutAdmin(admin.ModelAdmin):
         for payout in queryset.filter(status__in=['pending', 'approved', 'processing']):
             try:
                 payout.complete(admin_user=request.user)
+                
+                # Send completion email
+                EmailService.send_payout_completed(
+                    user=payout.user,
+                    payout=payout
+                )
+                
                 count += 1
             except Exception as e:
                 self.message_user(request, f'Error completing payout {payout.id}: {str(e)}', level='error')

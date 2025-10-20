@@ -160,3 +160,11 @@ STRIPE_PRICE_UNLIMITED = 'price_1SHX7PIesUVMoyj1iUVOKsWN'
 # Pricing
 PRICE_PAY_PER_DOC = 149.00
 PRICE_UNLIMITED = 499.00
+
+
+# Site Configuration
+SITE_NAME = 'Section 1983 Lawsuit Generator'
+SUPPORT_EMAIL = 'info@1983ls.com'
+
+# Site URL - can be overridden by environment variable
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000' if DEBUG else 'https://1983ls.com')

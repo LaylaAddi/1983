@@ -13,6 +13,7 @@ import json
 from accounts.models import Subscription  
 from decimal import Decimal 
 from accounts.models import Payment
+from .emails import EmailService
 
 
 @login_required
@@ -62,8 +63,14 @@ def register_view(request):
                 }
             )
             
+            
+            # Success message
             messages.success(request, f'Account created successfully! Welcome, {user.first_name or user.email}!')
             
+            # Send welcome email
+            EmailService.send_welcome_email(user)
+
+
             # Log the user in after registration
             login(request, user)
             return redirect('dashboard')

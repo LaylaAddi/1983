@@ -1,0 +1,36 @@
+⚠️ LOW API CREDIT BALANCE
+================================================================================
+
+Hi {{ user.first_name|default:user.email }},
+
+Your API credit balance is running low. You may not be able to extract video evidence if you run out of credits.
+
+CURRENT BALANCE: ${{ balance }}
+This is below the recommended minimum of ${{ threshold }}.
+
+
+WHAT ARE API CREDITS?
+--------------------------------------------------------------------------------
+API credits are used to extract and transcribe video evidence from YouTube videos. Each minute of video costs approximately $0.006 to process.
+
+
+HOW TO GET MORE CREDITS
+--------------------------------------------------------------------------------
+{% if subscription.plan_type == 'free' %}
+- Upgrade to Unlimited: Get $10 credit every month (forever) + download unlimited PDFs
+- Pay-Per-Document: Add $5 credit + unlock PDF download for one document
+{% elif subscription.plan_type == 'pay_per_doc' %}
+- Upgrade to Unlimited: Get $10 credit every month (forever) + download all PDFs
+- Your monthly credits will never run out with the Unlimited plan!
+{% else %}
+You're on the Unlimited plan - you'll receive $10 credit automatically next month. If you need more credits now, please contact support.
+{% endif %}
+
+View plans: {{ site_url }}/accounts/pricing/
+
+
+SUPPORT
+--------------------------------------------------------------------------------
+Questions? Contact us at {{ support_email }}
+
+© 2025 {{ site_name }}. All rights reserved.

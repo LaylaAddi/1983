@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.utils import timezone
 import json
+from .emails import EmailService
 
 # Initialize Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -238,6 +239,22 @@ def payment_success(request):
                 credit_added = 10.00
                 plan_name = 'Unlimited Plan'
             
+            # Calculate payment amount (Stripe gives cents, convert to dollars)
+            payment_amount = Decimal(str(session.amount_total)) / Decimal('100')
+            
+            # Create Payment record for tracking (always create, not just for referrals)
+            payment_record = Payment.objects.create(
+                user=request.user,
+                payment_type=plan_type,
+                stripe_payment_intent_id=session.payment_intent,
+                amount=payment_amount,
+                discount_code=discount_code if discount_code else None,
+                discount_amount=Decimal('0.00'),  # Calculate if needed
+                final_amount=payment_amount,
+                status='completed',
+                completed_at=timezone.now()
+            )
+            
             # Process referral reward if discount code used
             if discount_code:
                 try:
@@ -248,9 +265,6 @@ def payment_success(request):
                         # Get referral settings
                         settings = ReferralSettings.get_settings()
                         
-                        # Calculate actual payment amount (Stripe gives cents, convert to dollars)
-                        payment_amount = Decimal(str(session.amount_total)) / Decimal('100')
-                        
                         # Calculate reward based on plan type and amount
                         reward_amount = settings.calculate_reward(plan_type, payment_amount)
                         
@@ -259,25 +273,12 @@ def payment_success(request):
                         referrer_sub.referral_cash_balance += reward_amount
                         referrer_sub.save()
                         
-                        # Create Payment record (for tracking)
-                        payment_record = Payment.objects.create(
-                            user=request.user,
-                            payment_type=plan_type,
-                            stripe_payment_intent_id=session.payment_intent,
-                            amount=payment_amount,
-                            discount_code=discount_code,
-                            discount_amount=Decimal('0.00'),  # Calculate if needed
-                            final_amount=payment_amount,
-                            status='completed',
-                            completed_at=timezone.now()
-                        )
-                        
                         # Create reward record (linked to payment)
                         ReferralReward.objects.create(
                             referrer=code_obj.created_by,
                             referred_user=request.user,
                             discount_code_used=code_obj,
-                            payment=payment_record,
+                            payment=payment_record,  # Now links to payment created above
                             reward_amount=reward_amount,
                             reward_type='api_credit',
                             is_paid=True,
@@ -289,6 +290,13 @@ def payment_success(request):
                         
                 except DiscountCode.DoesNotExist:
                     pass
+            
+            # Send payment confirmation email
+            EmailService.send_payment_confirmation(
+                user=request.user,
+                payment=payment_record,
+                subscription=subscription
+            )
             
             # Render success page with context
             context = {

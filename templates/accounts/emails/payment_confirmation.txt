@@ -1,0 +1,38 @@
+PAYMENT CONFIRMED!
+================================================================================
+
+Hi {{ user.first_name|default:user.email }},
+
+Thank you for your purchase! Your payment has been successfully processed and your account has been upgraded.
+
+{{ plan_name|upper }} PLAN - ${{ payment.final_amount }}
+--------------------------------------------------------------------------------
+
+What's included:
+{% for feature in features %}
+✓ {{ feature }}
+{% endfor %}
+
+Current API Credit Balance: ${{ subscription.api_credit_balance }}
+
+
+TRANSACTION DETAILS
+--------------------------------------------------------------------------------
+Payment ID: {{ payment.stripe_payment_intent_id }}
+Date: {{ payment.created_at|date:"F d, Y" }} at {{ payment.created_at|time:"g:i A" }}
+{% if payment.discount_code %}Discount Code Used: {{ payment.discount_code }} (-${{ payment.discount_amount }}){% endif %}
+
+
+GET STARTED
+--------------------------------------------------------------------------------
+You can now access all the features of your {{ plan_name }} plan!
+
+Visit your documents: {{ site_url }}/documents/
+Manage subscription: {{ site_url }}/accounts/manage-subscription/
+
+
+SUPPORT
+--------------------------------------------------------------------------------
+Questions? Contact us at {{ support_email }}
+
+© 2025 {{ site_name }}. All rights reserved.

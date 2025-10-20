@@ -11,6 +11,8 @@ import json
 from accounts.models import Subscription
 from ..models import LawsuitDocument, VideoEvidence
 from ..services.whisper_transcript_service import WhisperTranscriptService
+from accounts.emails import EmailService
+from decimal import Decimal
 
 
 @login_required
@@ -89,7 +91,6 @@ def extract_evidence_segment(request, pk):
             })
         
         # Get user's subscription and check API credit
-        
         try:
             subscription = Subscription.objects.get(user=request.user)
  
@@ -150,6 +151,15 @@ def extract_evidence_segment(request, pk):
         actual_cost = result.get('cost_estimate', estimated_cost)
         subscription.deduct_api_cost(actual_cost)
         
+        # Check if balance is low and send warning email
+        LOW_CREDIT_THRESHOLD = Decimal('0.50')
+        if subscription.api_credit_balance <= LOW_CREDIT_THRESHOLD:
+            EmailService.send_low_credit_warning(
+                user=request.user,
+                subscription=subscription,
+                threshold=LOW_CREDIT_THRESHOLD
+            )
+        
         return JsonResponse({
             'success': True,
             'segment_id': evidence.id,
@@ -164,6 +174,7 @@ def extract_evidence_segment(request, pk):
             'success': False,
             'error': f'Server error: {str(e)}'
         })
+    
 
 @login_required
 @require_POST

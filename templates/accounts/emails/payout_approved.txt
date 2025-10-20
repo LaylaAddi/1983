@@ -1,0 +1,23 @@
+
+
+✓ PAYOUT REQUEST APPROVED
+================================================================================
+
+Hi {{ user.first_name|default:user.email }},
+
+Great news! Your payout request has been approved.
+
+PAYOUT DETAILS
+--------------------------------------------------------------------------------
+Amount: ${{ payout.amount }}
+Payment Method: {{ payout.get_method_display }}
+{% if payout.payment_email %}Payment Email: {{ payout.payment_email }}{% endif %}
+{% if payout.payment_phone %}Payment Phone: {{ payout.payment_phone }}{% endif %}
+Approved Date: {{ payout.approved_at|date:"F d, Y" }}
+
+Your payment is now being processed. You'll receive another email once the money has been sent.
+
+Expected processing time: 2-5 business days
+
+Questions? Contact us at {{ support_email }}
+© 2025 {{ site_name }}. All rights reserved.

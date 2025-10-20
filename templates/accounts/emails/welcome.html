@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ site_name }}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #2563eb;
+            margin: 10px 0;
+            font-size: 32px;
+        }
+        .welcome-icon {
+            font-size: 64px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .feature-box {
+            background-color: #f8fafc;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .feature-box h3 {
+            color: #2563eb;
+            margin-top: 0;
+        }
+        .free-credit-highlight {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .free-credit-highlight .amount {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .steps {
+            counter-reset: step-counter;
+            list-style: none;
+            padding: 0;
+        }
+        .steps li {
+            counter-increment: step-counter;
+            padding: 15px 0;
+            padding-left: 50px;
+            position: relative;
+        }
+        .steps li:before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 15px;
+            background-color: #2563eb;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="welcome-icon">👋</div>
+            <h1>Welcome to {{ site_name }}!</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{ user.first_name|default:user.email }},</p>
+            
+            <p>Thank you for joining {{ site_name }}! We're excited to help you create professional civil rights lawsuit documents with AI assistance.</p>
+            
+            <div class="free-credit-highlight">
+                <p style="margin: 0;">🎉 Your Free Starter Credit</p>
+                <div class="amount">$0.50</div>
+                <p style="margin: 0;">Ready to use for video evidence extraction!</p>
+            </div>
+            
+            <div class="feature-box">
+                <h3>What You Can Do (Free Account)</h3>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Create unlimited lawsuit documents</li>
+                    <li>Use Smart Auto Populate with legal templates</li>
+                    <li>Extract video evidence from YouTube (~6 extractions)</li>
+                    <li>Edit and preview your documents</li>
+                </ul>
+            </div>
+            
+            <p><strong>🚀 Get Started in 3 Easy Steps:</strong></p>
+            
+            <ol class="steps">
+                <li><strong>Create Your First Document</strong><br>Click "New Document" and enter your case details</li>
+                <li><strong>Use Smart Auto Populate</strong><br>Let AI generate legal sections based on your case</li>
+                <li><strong>Add Video Evidence</strong><br>Extract transcripts from YouTube videos as evidence</li>
+            </ol>
+            
+            <center>
+                <a href="{{ site_url }}/documents/new/" class="cta-button">Create Your First Document</a>
+            </center>
+            
+            <div class="feature-box">
+                <h3>💡 Need More Features?</h3>
+                <p>Upgrade anytime to unlock PDF downloads and get more API credits:</p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li><strong>Pay-Per-Document ($149):</strong> Download one document + $5 credit</li>
+                    <li><strong>Unlimited ($499):</strong> Download all documents + $10/month forever</li>
+                </ul>
+                <p><a href="{{ site_url }}/accounts/pricing/" style="color: #2563eb;">View pricing plans →</a></p>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Questions? We're here to help at <a href="mailto:{{ support_email }}" style="color: #2563eb;">{{ support_email }}</a></p>
+            <p>&copy; 2025 {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

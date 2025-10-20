@@ -1,0 +1,28 @@
+
+
+💰 PAYOUT COMPLETED!
+================================================================================
+
+Hi {{ user.first_name|default:user.email }},
+
+Your payout has been completed and the money has been sent!
+
+AMOUNT: ${{ payout.amount }}
+
+TRANSACTION DETAILS
+--------------------------------------------------------------------------------
+Payment Method: {{ payout.get_method_display }}
+{% if payout.payment_email %}Sent to: {{ payout.payment_email }}{% endif %}
+{% if payout.payment_phone %}Sent to: {{ payout.payment_phone }}{% endif %}
+{% if payout.transaction_id %}Transaction ID: {{ payout.transaction_id }}{% endif %}
+Completed Date: {{ payout.completed_at|date:"F d, Y at g:i A" }}
+
+The money should appear in your account within 1-3 business days, depending on your payment method.
+
+KEEP EARNING
+--------------------------------------------------------------------------------
+Share your referral code to earn more cash rewards!
+View referral dashboard: {{ site_url }}/accounts/referrals/
+
+Questions? Contact us at {{ support_email }}
+© 2025 {{ site_name }}. All rights reserved.

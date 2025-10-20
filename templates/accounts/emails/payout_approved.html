@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payout Request Approved</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #059669;
+        }
+        .header h1 {
+            color: #059669;
+            margin: 0;
+            font-size: 28px;
+        }
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .amount {
+            font-size: 36px;
+            font-weight: bold;
+            color: #059669;
+            margin: 15px 0;
+        }
+        .info-box {
+            background-color: #f0fdf4;
+            border-left: 4px solid #059669;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #059669;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="success-icon">✓</div>
+            <h1>Payout Request Approved</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{ user.first_name|default:user.email }},</p>
+            
+            <p>Great news! Your payout request has been approved.</p>
+            
+            <div class="info-box">
+                <p><strong>Payout Amount:</strong></p>
+                <div class="amount">${{ payout.amount }}</div>
+                
+                <p><strong>Payment Method:</strong> {{ payout.get_method_display }}</p>
+                {% if payout.payment_email %}
+                <p><strong>Payment Email:</strong> {{ payout.payment_email }}</p>
+                {% endif %}
+                {% if payout.payment_phone %}
+                <p><strong>Payment Phone:</strong> {{ payout.payment_phone }}</p>
+                {% endif %}
+                <p><strong>Approved Date:</strong> {{ payout.approved_at|date:"F d, Y" }}</p>
+            </div>
+            
+            <p>Your payment is now being processed. You'll receive another email once the money has been sent.</p>
+            
+            <p><strong>Expected processing time:</strong> 2-5 business days</p>
+        </div>
+        
+        <div class="footer">
+            <p>Questions? Contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a></p>
+            <p>&copy; 2025 {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

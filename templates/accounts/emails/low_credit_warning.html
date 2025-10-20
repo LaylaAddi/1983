@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low API Credit Warning</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f59e0b;
+        }
+        .header h1 {
+            color: #f59e0b;
+            margin: 0;
+            font-size: 28px;
+        }
+        .warning-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .balance-warning {
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .balance-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #dc2626;
+            margin: 10px 0;
+        }
+        .info-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <div class="warning-icon">⚠️</div>
+            <h1>Low API Credit Balance</h1>
+        </div>
+        
+        <div class="content">
+            <p>Hi {{ user.first_name|default:user.email }},</p>
+            
+            <p>Your API credit balance is running low. You may not be able to extract video evidence if you run out of credits.</p>
+            
+            <div class="balance-warning">
+                <p><strong>Current Balance:</strong></p>
+                <div class="balance-amount">${{ balance }}</div>
+                <p style="margin: 0;">This is below the recommended minimum of ${{ threshold }}.</p>
+            </div>
+            
+            <div class="info-box">
+                <p><strong>💡 What are API credits used for?</strong></p>
+                <p>API credits are used to extract and transcribe video evidence from YouTube videos. Each minute of video costs approximately $0.006 to process.</p>
+            </div>
+            
+            <p><strong>How to get more credits:</strong></p>
+            
+            {% if subscription.plan_type == 'free' %}
+            <ul>
+                <li><strong>Upgrade to Unlimited:</strong> Get $10 credit every month (forever) + download unlimited PDFs</li>
+                <li><strong>Pay-Per-Document:</strong> Add $5 credit + unlock PDF download for one document</li>
+            </ul>
+            {% elif subscription.plan_type == 'pay_per_doc' %}
+            <ul>
+                <li><strong>Upgrade to Unlimited:</strong> Get $10 credit every month (forever) + download all PDFs</li>
+                <li>Your monthly credits will never run out with the Unlimited plan!</li>
+            </ul>
+            {% else %}
+            <p>You're on the Unlimited plan - you'll receive $10 credit automatically next month. If you need more credits now, please contact support.</p>
+            {% endif %}
+            
+            <center>
+                <a href="{{ site_url }}/accounts/pricing/" class="cta-button">View Plans & Upgrade</a>
+            </center>
+        </div>
+        
+        <div class="footer">
+            <p>Questions? Contact us at <a href="mailto:{{ support_email }}" style="color: #2563eb;">{{ support_email }}</a></p>
+            <p>&copy; 2025 {{ site_name }}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

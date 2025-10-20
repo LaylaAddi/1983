@@ -1,0 +1,53 @@
+
+
+👋 WELCOME TO {{ site_name|upper }}!
+================================================================================
+
+Hi {{ user.first_name|default:user.email }},
+
+Thank you for joining {{ site_name }}! We're excited to help you create professional civil rights lawsuit documents with AI assistance.
+
+
+🎉 YOUR FREE STARTER CREDIT: $0.50
+Ready to use for video evidence extraction!
+
+
+WHAT YOU CAN DO (FREE ACCOUNT)
+--------------------------------------------------------------------------------
+✓ Create unlimited lawsuit documents
+✓ Use Smart Auto Populate with legal templates
+✓ Extract video evidence from YouTube (~6 extractions)
+✓ Edit and preview your documents
+
+
+GET STARTED IN 3 EASY STEPS
+--------------------------------------------------------------------------------
+
+1. CREATE YOUR FIRST DOCUMENT
+   Click "New Document" and enter your case details
+
+2. USE SMART AUTO POPULATE
+   Let AI generate legal sections based on your case
+
+3. ADD VIDEO EVIDENCE
+   Extract transcripts from YouTube videos as evidence
+
+
+Create your first document: {{ site_url }}/documents/new/
+
+
+NEED MORE FEATURES?
+--------------------------------------------------------------------------------
+Upgrade anytime to unlock PDF downloads and get more API credits:
+
+- Pay-Per-Document ($149): Download one document + $5 credit
+- Unlimited ($499): Download all documents + $10/month forever
+
+View pricing: {{ site_url }}/accounts/pricing/
+
+
+SUPPORT
+--------------------------------------------------------------------------------
+Questions? We're here to help at {{ support_email }}
+
+© 2025 {{ site_name }}. All rights reserved.
