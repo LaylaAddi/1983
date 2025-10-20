@@ -1,0 +1,467 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}PWA Demo - Mobile App Features{% endblock %}
+
+{% block extra_css %}
+<style>
+    .demo-card {
+        margin-bottom: 2rem;
+    }
+
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #007bff;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: bold;
+        margin: 0.5rem;
+    }
+
+    .status-success {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .status-error {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .status-info {
+        background-color: #17a2b8;
+        color: white;
+    }
+
+    #pwa-install-banner {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        max-width: 90%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        display: none;
+    }
+
+    .demo-section {
+        padding: 2rem 0;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .demo-section:last-child {
+        border-bottom: none;
+    }
+
+    .code-block {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        overflow-x: auto;
+    }
+
+    [data-bs-theme="dark"] .code-block {
+        background-color: #2d3436;
+        color: #dfe6e9;
+    }
+
+    .screenshot-placeholder {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 400px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        margin: 1rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">PWA Demo - Mobile App Features</h1>
+            <p class="lead">Your Django app is now a Progressive Web App! Here's what that means and how to test it.</p>
+        </div>
+    </div>
+
+    <!-- PWA Status Check -->
+    <div class="demo-section">
+        <h2><i class="bi bi-check-circle"></i> PWA Status Check</h2>
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card demo-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-gear-fill feature-icon"></i>
+                        <h5>Service Worker</h5>
+                        <div id="sw-status" class="status-badge status-info">Checking...</div>
+                        <p class="mt-2 small text-muted">Enables offline functionality</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card demo-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-code feature-icon"></i>
+                        <h5>Web Manifest</h5>
+                        <div id="manifest-status" class="status-badge status-info">Checking...</div>
+                        <p class="mt-2 small text-muted">Defines app metadata</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card demo-card">
+                    <div class="card-body text-center">
+                        <i class="bi bi-phone feature-icon"></i>
+                        <h5>Installable</h5>
+                        <div id="install-status" class="status-badge status-info">Checking...</div>
+                        <p class="mt-2 small text-muted">Can be added to home screen</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to Install -->
+    <div class="demo-section">
+        <h2><i class="bi bi-download"></i> How to Install as Mobile App</h2>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h4>On Android (Chrome)</h4>
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item">Open this site in Chrome browser</li>
+                    <li class="list-group-item">Tap the menu (three dots) in the top right</li>
+                    <li class="list-group-item">Tap "Add to Home screen"</li>
+                    <li class="list-group-item">Confirm the installation</li>
+                    <li class="list-group-item">App icon appears on your home screen!</li>
+                </ol>
+
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle"></i> You can also click the button below if it appears:
+                </div>
+                <button class="btn btn-primary btn-lg w-100" onclick="installPWA()">
+                    <i class="bi bi-download"></i> Install App Now
+                </button>
+            </div>
+
+            <div class="col-md-6">
+                <h4>On iPhone (Safari)</h4>
+                <ol class="list-group list-group-numbered">
+                    <li class="list-group-item">Open this site in Safari browser</li>
+                    <li class="list-group-item">Tap the Share button (square with arrow)</li>
+                    <li class="list-group-item">Scroll down and tap "Add to Home Screen"</li>
+                    <li class="list-group-item">Edit the name if desired</li>
+                    <li class="list-group-item">Tap "Add" in the top right</li>
+                </ol>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Note:</strong> iOS requires Safari browser for PWA installation.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Demo -->
+    <div class="demo-section">
+        <h2><i class="bi bi-stars"></i> PWA Features</h2>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-wifi-off feature-icon"></i>
+                        <h5>Offline Support</h5>
+                        <p>Works even without internet connection. Core pages are cached.</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="testOffline()">Test Offline</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-app feature-icon"></i>
+                        <h5>Full Screen</h5>
+                        <p>Runs in standalone mode without browser UI when installed.</p>
+                        <div class="status-badge" id="standalone-status">Browser Mode</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-lightning-charge feature-icon"></i>
+                        <h5>Fast Loading</h5>
+                        <p>Instant loading from cache. Better performance than traditional web apps.</p>
+                        <div class="status-badge status-success">Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-bell feature-icon"></i>
+                        <h5>Push Notifications</h5>
+                        <p>Receive updates even when app is closed (requires permission).</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="requestNotificationPermission()">Enable</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-camera feature-icon"></i>
+                        <h5>Native Features</h5>
+                        <p>Access camera, microphone, location, and more.</p>
+                        <a href="{% url 'voice_recorder' %}" class="btn btn-sm btn-outline-primary">Try Voice Recorder</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <i class="bi bi-phone-landscape feature-icon"></i>
+                        <h5>Responsive Design</h5>
+                        <p>Optimized for all screen sizes from phones to desktops.</p>
+                        <div class="status-badge status-success">Active</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Store vs PWA -->
+    <div class="demo-section">
+        <h2><i class="bi bi-shop"></i> Next Steps: App Store Distribution</h2>
+
+        <div class="alert alert-success">
+            <h5><i class="bi bi-check-circle"></i> Current Status: PWA Ready!</h5>
+            <p>Your app now works as a PWA and can be installed on phones directly from the browser.</p>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-google-play"></i> Google Play Store</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Status:</strong> <span class="badge bg-success">Ready with TWA</span></p>
+                        <p>Use Trusted Web Activities (TWA) to wrap your PWA:</p>
+                        <ul>
+                            <li>No code changes needed</li>
+                            <li>Instant updates (changes deploy to everyone)</li>
+                            <li>Same codebase as website</li>
+                        </ul>
+                        <p class="small text-muted"><strong>Tool:</strong> Bubblewrap CLI</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-apple"></i> Apple App Store</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Status:</strong> <span class="badge bg-warning">Needs Capacitor</span></p>
+                        <p>Use Capacitor to wrap your PWA:</p>
+                        <ul>
+                            <li>One command to wrap your PWA</li>
+                            <li>Access to all native iOS features</li>
+                            <li>Still use your Django backend</li>
+                        </ul>
+                        <p class="small text-muted"><strong>Tool:</strong> Capacitor by Ionic</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Details -->
+    <div class="demo-section">
+        <h2><i class="bi bi-code-square"></i> Technical Details</h2>
+
+        <div class="accordion" id="technicalAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#manifest">
+                        Manifest.json
+                    </button>
+                </h2>
+                <div id="manifest" class="accordion-collapse collapse show" data-bs-parent="#technicalAccordion">
+                    <div class="accordion-body">
+                        <p>Location: <code>/static/manifest.json</code></p>
+                        <p>Defines app name, icons, colors, and behavior when installed.</p>
+                        <div class="code-block">
+{
+  "name": "Section 1983 Legal Document Generator",
+  "short_name": "1983 Generator",
+  "display": "standalone",
+  "start_url": "/",
+  "theme_color": "#007bff"
+}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#serviceWorker">
+                        Service Worker
+                    </button>
+                </h2>
+                <div id="serviceWorker" class="accordion-collapse collapse" data-bs-parent="#technicalAccordion">
+                    <div class="accordion-body">
+                        <p>Location: <code>/static/service-worker.js</code></p>
+                        <p>Handles offline caching, background sync, and push notifications.</p>
+                        <div class="code-block">
+// Caches important resources
+// Serves content when offline
+// Enables background sync
+// Handles push notifications
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#baseTemplate">
+                        Base Template Updates
+                    </button>
+                </h2>
+                <div id="baseTemplate" class="accordion-collapse collapse" data-bs-parent="#technicalAccordion">
+                    <div class="accordion-body">
+                        <p>Location: <code>/templates/base.html</code></p>
+                        <p>Added PWA meta tags and service worker registration.</p>
+                        <ul>
+                            <li>Apple touch icons</li>
+                            <li>Theme color</li>
+                            <li>Manifest link</li>
+                            <li>Service worker registration script</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Install Banner (shown when PWA is installable) -->
+<div id="pwa-install-banner" class="alert alert-primary alert-dismissible">
+    <h5><i class="bi bi-download"></i> Install App</h5>
+    <p>Add this app to your home screen for quick access and offline use!</p>
+    <button class="btn btn-light btn-sm" onclick="installPWA()">Install Now</button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check Service Worker Status
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(registration => {
+            const swStatus = document.getElementById('sw-status');
+            if (registration) {
+                swStatus.textContent = 'Active';
+                swStatus.className = 'status-badge status-success';
+            } else {
+                swStatus.textContent = 'Not Active';
+                swStatus.className = 'status-badge status-error';
+            }
+        });
+    } else {
+        document.getElementById('sw-status').textContent = 'Not Supported';
+        document.getElementById('sw-status').className = 'status-badge status-error';
+    }
+
+    // Check Manifest
+    fetch('/static/manifest.json')
+        .then(response => {
+            const manifestStatus = document.getElementById('manifest-status');
+            if (response.ok) {
+                manifestStatus.textContent = 'Found';
+                manifestStatus.className = 'status-badge status-success';
+            } else {
+                manifestStatus.textContent = 'Not Found';
+                manifestStatus.className = 'status-badge status-error';
+            }
+        })
+        .catch(() => {
+            document.getElementById('manifest-status').textContent = 'Error';
+            document.getElementById('manifest-status').className = 'status-badge status-error';
+        });
+
+    // Check if installable
+    window.addEventListener('beforeinstallprompt', (e) => {
+        document.getElementById('install-status').textContent = 'Yes';
+        document.getElementById('install-status').className = 'status-badge status-success';
+    });
+
+    // Check if running as PWA
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+        document.getElementById('standalone-status').textContent = 'Standalone Mode';
+        document.getElementById('standalone-status').className = 'status-badge status-success';
+        document.getElementById('install-status').textContent = 'Already Installed';
+        document.getElementById('install-status').className = 'status-badge status-success';
+    }
+
+    // Set initial install status after a delay
+    setTimeout(() => {
+        const installStatus = document.getElementById('install-status');
+        if (installStatus.textContent === 'Checking...') {
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                installStatus.textContent = 'Already Installed';
+                installStatus.className = 'status-badge status-success';
+            } else {
+                installStatus.textContent = 'Available';
+                installStatus.className = 'status-badge status-info';
+            }
+        }
+    }, 1000);
+});
+
+// Test offline functionality
+function testOffline() {
+    alert('To test offline:\n\n1. Open DevTools (F12)\n2. Go to Network tab\n3. Check "Offline" checkbox\n4. Navigate around the site\n\nCached pages will still work!');
+}
+
+// Request notification permission
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                new Notification('Section 1983 Generator', {
+                    body: 'Notifications enabled! You\'ll receive updates.',
+                    icon: '/static/images/icon-192.png'
+                });
+            } else {
+                alert('Notification permission denied. You can enable it in browser settings.');
+            }
+        });
+    } else {
+        alert('Notifications not supported in this browser.');
+    }
+}
+</script>
+{% endblock %}

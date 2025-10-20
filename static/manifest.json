@@ -1,0 +1,71 @@
+{
+  "name": "Section 1983 Legal Document Generator",
+  "short_name": "1983 Generator",
+  "description": "Generate civil rights violation lawsuits under Section 1983",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#007bff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["legal", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "/static/images/screenshot-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Document",
+      "short_name": "New",
+      "description": "Create a new Section 1983 document",
+      "url": "/documents/create/",
+      "icons": [
+        {
+          "src": "/static/images/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "My Documents",
+      "short_name": "Documents",
+      "description": "View all your documents",
+      "url": "/documents/",
+      "icons": [
+        {
+          "src": "/static/images/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Voice Recorder",
+      "short_name": "Record",
+      "description": "Record case details via voice",
+      "url": "/documents/voice-recorder/",
+      "icons": [
+        {
+          "src": "/static/images/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

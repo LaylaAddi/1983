@@ -24,3 +24,7 @@ def albrooks(request):
 def setups(request):
     return render(request, 'core/setups.html')
 
+def pwa_demo(request):
+    """PWA Demo and Installation Guide"""
+    return render(request, 'core/pwa_demo.html')
+
