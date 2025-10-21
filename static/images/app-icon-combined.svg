@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background Circle -->
+  <circle cx="100" cy="100" r="95" fill="#007bff" opacity="0.1"/>
+
+  <!-- Main Circle Border -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="#007bff" stroke-width="3"/>
+
+  <!-- Camera Icon (Left Side) -->
+  <g transform="translate(40, 80)">
+    <!-- Camera Body -->
+    <rect x="0" y="10" width="50" height="35" rx="5" fill="#007bff"/>
+    <rect x="5" y="15" width="40" height="25" rx="3" fill="#fff" opacity="0.3"/>
+
+    <!-- Camera Lens -->
+    <circle cx="25" cy="27.5" r="12" fill="#fff" opacity="0.8"/>
+    <circle cx="25" cy="27.5" r="8" fill="#007bff" opacity="0.5"/>
+
+    <!-- Camera Flash -->
+    <rect x="5" y="5" width="12" height="8" rx="2" fill="#ffc107"/>
+
+    <!-- Camera Viewfinder -->
+    <rect x="40" y="5" width="8" height="8" rx="1" fill="#007bff"/>
+  </g>
+
+  <!-- Gavel/Hammer Icon (Right Side) -->
+  <g transform="translate(110, 70)">
+    <!-- Gavel Handle -->
+    <rect x="15" y="20" width="8" height="50" rx="2" fill="#6c757d" transform="rotate(-45 19 45)"/>
+
+    <!-- Gavel Head -->
+    <rect x="5" y="5" width="30" height="15" rx="3" fill="#007bff" transform="rotate(-45 20 12.5)"/>
+
+    <!-- Gavel Strike Block -->
+    <rect x="35" y="55" width="25" height="8" rx="2" fill="#6c757d"/>
+
+    <!-- Impact Lines (showing action) -->
+    <line x1="45" y1="50" x2="50" y2="45" stroke="#ffc107" stroke-width="2" stroke-linecap="round"/>
+    <line x1="50" y1="52" x2="55" y2="47" stroke="#ffc107" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Connecting Element - Document/Evidence -->
+  <g transform="translate(85, 135)">
+    <!-- Document -->
+    <rect x="0" y="0" width="30" height="35" rx="2" fill="#fff" stroke="#007bff" stroke-width="2"/>
+
+    <!-- Document Lines -->
+    <line x1="5" y1="8" x2="25" y2="8" stroke="#007bff" stroke-width="2" opacity="0.5"/>
+    <line x1="5" y1="15" x2="25" y2="15" stroke="#007bff" stroke-width="2" opacity="0.5"/>
+    <line x1="5" y1="22" x2="20" y2="22" stroke="#007bff" stroke-width="2" opacity="0.5"/>
+  </g>
+
+  <!-- Shield Outline (Protection/Rights) -->
+  <path d="M 100 20 L 120 30 L 120 50 Q 120 70 100 80 Q 80 70 80 50 L 80 30 Z"
+        fill="none" stroke="#28a745" stroke-width="2.5" opacity="0.7"/>
+</svg>
