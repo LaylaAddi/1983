@@ -10,4 +10,5 @@ urlpatterns = [
     path('albrooks/', views.albrooks, name='albrooks'),
     path('setups/', views.setups, name='setups'),
     path('pwa-demo/', views.pwa_demo, name='pwa_demo'),
+    path('install/', views.install, name='install'),
 ]

@@ -28,3 +28,7 @@ def pwa_demo(request):
     """PWA Demo and Installation Guide"""
     return render(request, 'core/pwa_demo.html')
 
+def install(request):
+    """Installation instructions for PWA"""
+    return render(request, 'core/install.html')
+
