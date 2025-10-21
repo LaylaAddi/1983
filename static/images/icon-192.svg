@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <!-- Blue background -->
+  <rect width="192" height="192" fill="#007bff"/>
+
+  <!-- White text "1983" -->
+  <text x="96" y="85" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">1983</text>
+
+  <!-- Legal scale icon -->
+  <g transform="translate(96, 125)">
+    <!-- Balance beam -->
+    <rect x="-38" y="0" width="76" height="4" fill="white" rx="2"/>
+
+    <!-- Center pillar -->
+    <rect x="-3" y="0" width="6" height="20" fill="white" rx="1"/>
+
+    <!-- Left scale pan -->
+    <line x1="-30" y1="0" x2="-30" y2="10" stroke="white" stroke-width="2"/>
+    <rect x="-38" y="10" width="16" height="3" fill="white" rx="1"/>
+
+    <!-- Right scale pan -->
+    <line x1="30" y1="0" x2="30" y2="10" stroke="white" stroke-width="2"/>
+    <rect x="22" y="10" width="16" height="3" fill="white" rx="1"/>
+  </g>
+</svg>

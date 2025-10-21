@@ -1,0 +1,525 @@
+/* Mobile Optimization CSS for Section 1983 App */
+
+/* ========================================
+   TOUCH-FRIENDLY IMPROVEMENTS
+   ======================================== */
+
+/* Larger tap targets for mobile */
+@media (max-width: 768px) {
+    /* Minimum tap target size 44x44px (Apple HIG recommendation) */
+    .btn, button, a.btn {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+
+    .btn-sm {
+        min-height: 38px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    /* Card buttons - make them bigger on mobile */
+    .card-footer .btn-group .btn {
+        padding: 0.65rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    /* Form inputs - easier to tap */
+    .form-control, .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        padding: 0.75rem;
+    }
+
+    textarea.form-control {
+        min-height: 100px;
+    }
+
+    /* Checkboxes and radios */
+    .form-check-input {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-top: 0.125rem;
+    }
+
+    .form-check-label {
+        padding-left: 0.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* ========================================
+   MOBILE NAVIGATION
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Navbar improvements */
+    .navbar-brand {
+        font-size: 1rem;
+    }
+
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+    }
+
+    /* Dropdown menu - full width on mobile */
+    .dropdown-menu {
+        width: 100%;
+        border-radius: 0;
+    }
+
+    /* User dropdown */
+    .navbar-nav .dropdown-menu {
+        position: absolute;
+        right: 0;
+        left: auto;
+        min-width: 280px;
+    }
+}
+
+/* ========================================
+   CARD LAYOUTS
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Full width cards on mobile */
+    .col-lg-6, .col-xl-4 {
+        margin-bottom: 1rem;
+    }
+
+    /* Card spacing */
+    .card {
+        margin-bottom: 1rem;
+        border-radius: 0.75rem;
+    }
+
+    .card-header {
+        padding: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .card-footer {
+        padding: 0.75rem;
+    }
+
+    /* Card buttons - stack vertically on small screens */
+    .card-footer .btn-group {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .card-footer .btn-group .btn {
+        flex: 1;
+        border-radius: 0.25rem !important;
+        margin: 0 0.125rem;
+    }
+}
+
+/* ========================================
+   FORMS
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Stack form fields on mobile */
+    .row.g-3 > [class*='col-'] {
+        margin-bottom: 1rem;
+    }
+
+    /* Full width form controls */
+    .col-md-2, .col-md-3, .col-md-4, .col-md-6 {
+        width: 100%;
+    }
+
+    /* Form labels - bigger on mobile */
+    .form-label {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Search and filter forms */
+    .card-body form .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .d-flex.align-items-end {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .d-flex.align-items-end .btn {
+        margin: 0.25rem 0;
+    }
+}
+
+/* ========================================
+   DOCUMENT LIST PAGE
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Header section */
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .d-flex.justify-content-between h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .d-flex.justify-content-between .btn {
+        width: 100%;
+    }
+
+    /* Document cards - optimize for mobile */
+    .card .text-truncate {
+        white-space: normal;
+        overflow: visible;
+    }
+
+    /* Hide text on icon-only buttons */
+    .btn i + span {
+        display: none;
+    }
+
+    /* Pagination - smaller on mobile */
+    .pagination {
+        font-size: 0.9rem;
+    }
+
+    .pagination .page-link {
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* ========================================
+   MODALS
+   ======================================== */
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .modal-content {
+        border-radius: 0.75rem;
+    }
+
+    .modal-header {
+        padding: 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .modal-footer .btn {
+        flex: 1;
+        min-width: 120px;
+    }
+}
+
+/* ========================================
+   VOICE RECORDER PAGE
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Voice recorder button */
+    #recordButton {
+        width: 150px;
+        height: 150px;
+        font-size: 3rem;
+        border-radius: 50%;
+        margin: 2rem auto;
+    }
+
+    /* Transcript display */
+    #transcript {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        padding: 1.5rem;
+    }
+}
+
+/* ========================================
+   PWA SPECIFIC IMPROVEMENTS
+   ======================================== */
+
+/* Add safe area padding for notched devices (iPhone X, etc.) */
+@supports (padding: env(safe-area-inset-top)) {
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .navbar.sticky-top {
+        padding-top: calc(0.5rem + env(safe-area-inset-top));
+    }
+
+    footer {
+        padding-bottom: calc(2rem + env(safe-area-inset-bottom));
+    }
+}
+
+/* Standalone mode improvements */
+@media (display-mode: standalone) {
+    /* Hide elements that are browser-specific */
+    .browser-only {
+        display: none;
+    }
+
+    /* Add more padding at top for status bar */
+    .navbar {
+        padding-top: 1rem;
+    }
+
+    /* Prevent pull-to-refresh overscroll */
+    body {
+        overscroll-behavior-y: contain;
+    }
+}
+
+/* ========================================
+   SWIPE GESTURES (Visual Feedback)
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Add subtle transition for touch interactions */
+    .card, .btn, .list-group-item {
+        transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    .card:active {
+        transform: scale(0.98);
+    }
+
+    .btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Ripple effect on tap (visual feedback) */
+    .btn, .card {
+        position: relative;
+        overflow: hidden;
+    }
+}
+
+/* ========================================
+   LANDSCAPE MODE
+   ======================================== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    /* Reduce vertical spacing in landscape */
+    .main-content {
+        padding: 0.5rem 0;
+    }
+
+    .card {
+        margin-bottom: 0.5rem;
+    }
+
+    h1, .h1 {
+        font-size: 1.5rem;
+    }
+
+    h2, .h2 {
+        font-size: 1.25rem;
+    }
+}
+
+/* ========================================
+   ACCESSIBILITY - DARK MODE SUPPORT
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+    /* Ensure good contrast in dark mode */
+    [data-bs-theme="dark"] .form-control:focus {
+        border-color: #4dabf7;
+        box-shadow: 0 0 0 0.25rem rgba(77, 171, 247, 0.25);
+    }
+
+    [data-bs-theme="dark"] .btn-primary {
+        background-color: #4dabf7;
+        border-color: #4dabf7;
+    }
+
+    [data-bs-theme="dark"] .btn-primary:hover {
+        background-color: #339af0;
+        border-color: #339af0;
+    }
+}
+
+/* ========================================
+   LOADING STATES
+   ======================================== */
+
+/* Loading spinner for mobile */
+.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+.loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #007bff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   PERFORMANCE OPTIMIZATIONS
+   ======================================== */
+
+/* Reduce animations on mobile for better performance */
+@media (max-width: 768px) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    /* But keep important transitions */
+    .btn, .card, .modal, .navbar, .form-control {
+        animation-duration: inherit !important;
+        transition-duration: 0.15s !important;
+    }
+}
+
+/* ========================================
+   UTILITY CLASSES FOR MOBILE
+   ======================================== */
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+}
+
+/* Show only on mobile */
+.show-mobile {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    .show-mobile {
+        display: block !important;
+    }
+
+    .show-mobile-inline {
+        display: inline !important;
+    }
+
+    .show-mobile-flex {
+        display: flex !important;
+    }
+}
+
+/* Full width on mobile */
+@media (max-width: 768px) {
+    .mobile-full-width {
+        width: 100% !important;
+    }
+}
+
+/* Stack on mobile */
+@media (max-width: 768px) {
+    .mobile-stack {
+        flex-direction: column !important;
+    }
+
+    .mobile-stack > * {
+        width: 100% !important;
+        margin: 0.25rem 0 !important;
+    }
+}
+
+/* ========================================
+   SCROLL IMPROVEMENTS
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Smooth scrolling */
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Better scroll on touch devices */
+    * {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent horizontal scroll */
+    body {
+        overflow-x: hidden;
+    }
+
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+/* ========================================
+   TEXT IMPROVEMENTS FOR MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Readable text sizes */
+    body {
+        font-size: 16px; /* Prevents auto-zoom on iOS */
+        line-height: 1.6;
+    }
+
+    p {
+        font-size: 1rem;
+    }
+
+    .small, small {
+        font-size: 0.875rem;
+    }
+
+    /* Better text truncation */
+    .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Mobile-friendly links */
+    a {
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+}
