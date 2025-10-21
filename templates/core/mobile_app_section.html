@@ -1,0 +1,241 @@
+<!-- Mobile App Section - Smart QR Code -->
+<section class="mobile-app-section py-5" id="mobile-app-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h2 class="mb-4">Work Smarter: Desktop + Mobile</h2>
+                <p class="lead mb-4">Get the best of both worlds for your civil rights documentation.</p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="use-case-card desktop-card">
+                            <div class="use-case-icon">
+                                <i class="bi bi-laptop"></i>
+                            </div>
+                            <h5>Desktop: Manage & Create</h5>
+                            <ul class="use-case-list">
+                                <li>Create detailed documents</li>
+                                <li>Edit and review sections</li>
+                                <li>Manage all your cases</li>
+                                <li>Generate final PDFs</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="use-case-card mobile-card">
+                            <div class="use-case-icon">
+                                <i class="bi bi-phone"></i>
+                            </div>
+                            <h5>Mobile: Capture in the Field</h5>
+                            <ul class="use-case-list">
+                                <li>Use voice commands on-site</li>
+                                <li>Record details immediately</li>
+                                <li>Quick documentation</li>
+                                <li>Works offline</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-lightbulb"></i> <strong>Pro Tip:</strong> Install the mobile app on your phone for instant access when you're out in the field auditing. Use voice commands to capture details on the spot!
+                </div>
+            </div>
+
+            <!-- QR Code Column (shows on desktop only if not installed) -->
+            <div class="col-lg-5 text-center" id="qr-code-container">
+                <div class="qr-code-box">
+                    <h4 class="mb-3">Install on Your Phone</h4>
+                    <p class="text-muted mb-4">Scan this QR code with your phone camera to install the mobile app</p>
+
+                    <!-- QR Code -->
+                    <div class="qr-code-wrapper mb-3">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://www.1983ls.com/install"
+                             alt="QR Code to install mobile app"
+                             class="qr-code-image">
+                    </div>
+
+                    <p class="small text-muted">
+                        <i class="bi bi-camera"></i> Point your camera at the code<br>
+                        No app needed to scan!
+                    </p>
+
+                    <div class="mt-3">
+                        <a href="https://www.1983ls.com/install" class="btn btn-outline-primary">
+                            <i class="bi bi-box-arrow-up-right"></i> Or visit install page
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Install Button (shows on mobile only if not installed) -->
+            <div class="col-12 text-center" id="mobile-install-container" style="display: none;">
+                <div class="mobile-install-box">
+                    <h4 class="mb-3">Install the Mobile App</h4>
+                    <p class="text-muted mb-4">Get instant access to voice commands and field documentation</p>
+                    <a href="https://www.1983ls.com/install" class="btn btn-primary btn-lg">
+                        <i class="bi bi-download"></i> Install Mobile App Now
+                    </a>
+                </div>
+            </div>
+
+            <!-- Already Installed Message (shows if PWA is installed) -->
+            <div class="col-12 text-center" id="already-installed-container" style="display: none;">
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle-fill"></i> <strong>Great!</strong> You already have the mobile app installed. Open it from your home screen!
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.mobile-app-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+[data-bs-theme="dark"] .mobile-app-section {
+    background: linear-gradient(135deg, #2d3436 0%, #1e272e 100%);
+}
+
+.use-case-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s;
+}
+
+.use-case-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+[data-bs-theme="dark"] .use-case-card {
+    background: #343a40;
+    border-color: #495057;
+}
+
+.desktop-card {
+    border-left: 4px solid #007bff;
+}
+
+.mobile-card {
+    border-left: 4px solid #28a745;
+}
+
+.use-case-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #007bff;
+}
+
+.mobile-card .use-case-icon {
+    color: #28a745;
+}
+
+.use-case-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.use-case-list li {
+    padding: 0.5rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.use-case-list li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #28a745;
+    font-weight: bold;
+}
+
+.qr-code-box {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+[data-bs-theme="dark"] .qr-code-box {
+    background: #343a40;
+}
+
+.qr-code-wrapper {
+    display: inline-block;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.qr-code-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.mobile-install-box {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+[data-bs-theme="dark"] .mobile-install-box {
+    background: #343a40;
+}
+
+/* Hide QR code on mobile by default */
+@media (max-width: 991px) {
+    #qr-code-container {
+        display: none;
+    }
+}
+</style>
+
+<script>
+// Smart detection: Show QR code on desktop, install button on mobile, or "already installed" message
+document.addEventListener('DOMContentLoaded', function() {
+    const qrContainer = document.getElementById('qr-code-container');
+    const mobileContainer = document.getElementById('mobile-install-container');
+    const installedContainer = document.getElementById('already-installed-container');
+    const mobileSection = document.getElementById('mobile-app-section');
+
+    // Check if running as installed PWA
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+                       window.navigator.standalone === true;
+
+    // Check if mobile
+    const isMobile = window.innerWidth <= 991 ||
+                    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isInstalled) {
+        // Already installed - show success message (or hide entire section)
+        if (qrContainer) qrContainer.style.display = 'none';
+        if (mobileContainer) mobileContainer.style.display = 'none';
+        // Optionally hide the entire section if already installed
+        // if (mobileSection) mobileSection.style.display = 'none';
+
+        // Or show a subtle "already installed" message
+        if (installedContainer) installedContainer.style.display = 'block';
+    } else if (isMobile) {
+        // Mobile, not installed - show install button
+        if (qrContainer) qrContainer.style.display = 'none';
+        if (mobileContainer) mobileContainer.style.display = 'block';
+        if (installedContainer) installedContainer.style.display = 'none';
+    } else {
+        // Desktop - show QR code
+        if (qrContainer) qrContainer.style.display = 'block';
+        if (mobileContainer) mobileContainer.style.display = 'none';
+        if (installedContainer) installedContainer.style.display = 'none';
+    }
+});
+</script>
