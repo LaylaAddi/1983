@@ -11,17 +11,48 @@
         line-height: 1.6;
         min-height: 200px;
     }
-    
+
     /* Keep this - custom button color for legal theme */
     .btn-legal {
         background: #1a472a;
         color: white;
         border: none;
     }
-    
+
     .btn-legal:hover {
         background: #0f2818;
         color: white;
+    }
+
+    /* Make delete checkbox visible and styled */
+    .form-check-input[type="checkbox"] {
+        width: 1.5em;
+        height: 1.5em;
+        cursor: pointer;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        margin-left: 0.5em;
+    }
+
+    .section-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        background: white;
+        transition: opacity 0.3s ease;
+    }
+
+    .section-header {
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .section-body {
+        padding: 10px 0;
     }
 </style>
 {% endblock %}
@@ -165,9 +196,12 @@
                                     </div>
                                     <div class="col-md-4 text-end">
                                         {% if form.DELETE %}
-                                            <label class="form-label text-danger">
-                                                {{ form.DELETE }} Delete Section
-                                            </label>
+                                            <div class="form-check form-switch d-inline-block">
+                                                {{ form.DELETE }}
+                                                <label class="form-check-label text-danger fw-bold" for="{{ form.DELETE.id_for_label }}">
+                                                    <i class="fas fa-trash-alt"></i> Delete Section
+                                                </label>
+                                            </div>
                                         {% endif %}
                                     </div>
                                 </div>
