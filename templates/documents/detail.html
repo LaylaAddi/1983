@@ -114,14 +114,21 @@
 
                                 <!-- Sections -->
                                 <div class="d-flex align-items-center mb-2">
-                                    {% if document.total_sections > 0 %}
+                                    {% if document.total_sections == 7 %}
                                         {% if document.is_document_complete %}
                                             <i class="fas fa-check-circle text-success me-2"></i>
+                                            <strong>Legal Sections:</strong>
+                                            <span class="ms-2">{{ document.completed_sections }}/7 complete</span>
                                         {% else %}
                                             <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                            <strong>Legal Sections:</strong>
+                                            <span class="ms-2">{{ document.completed_sections }}/7 complete</span>
                                         {% endif %}
+                                    {% elif document.total_sections > 0 %}
+                                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
                                         <strong>Legal Sections:</strong>
-                                        <span class="ms-2">{{ document.completed_sections }}/{{ document.total_sections }} complete</span>
+                                        <span class="ms-2 text-warning">{{ document.total_sections }}/7 sections (missing {{ missing_sections|length }})</span>
+                                        <a href="{% url 'generate_default_sections' document.pk %}" class="ms-2 badge bg-warning text-dark">Add Missing</a>
                                     {% else %}
                                         <i class="fas fa-exclamation-circle text-warning me-2"></i>
                                         <strong>Legal Sections:</strong>
