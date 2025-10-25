@@ -348,12 +348,7 @@ class DocumentSectionForm(forms.ModelForm):
                 'placeholder': 'Section content...',
                 'style': 'font-family: "Times New Roman", serif; line-height: 1.6;'
             }),
-            'order': forms.NumberInput(attrs={
-                'class': 'form-control form-control-sm',
-                'style': 'width: 80px;',
-                'min': '0',
-                'step': '1'
-            })
+            'order': forms.HiddenInput()  # Changed to HiddenInput - order is auto-managed by JavaScript
         }
 
     def __init__(self, *args, **kwargs):
