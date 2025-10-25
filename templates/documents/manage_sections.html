@@ -51,11 +51,17 @@
         background: rgba(220, 53, 69, 0.1);
     }
 
-    .section-card.marked-for-deletion .section-body input:not([name$="-DELETE"]),
+    .section-card.marked-for-deletion .section-body input[type="text"]:not([name$="-DELETE"]),
     .section-card.marked-for-deletion .section-body textarea {
         pointer-events: none;
         background-color: var(--bs-secondary-bg);
         opacity: 0.6;
+    }
+
+    /* Make sure hidden fields are never affected */
+    input[type="hidden"] {
+        pointer-events: auto !important;
+        opacity: 1 !important;
     }
 
     .section-header {
