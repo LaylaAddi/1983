@@ -53,15 +53,9 @@
 
     .section-card.marked-for-deletion .section-body input[type="text"]:not([name$="-DELETE"]),
     .section-card.marked-for-deletion .section-body textarea {
-        pointer-events: none;
         background-color: var(--bs-secondary-bg);
         opacity: 0.6;
-    }
-
-    /* Make sure hidden fields are never affected */
-    input[type="hidden"] {
-        pointer-events: auto !important;
-        opacity: 1 !important;
+        cursor: not-allowed;
     }
 
     .section-header {
@@ -444,9 +438,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!confirm('Mark "' + sectionName + '" for deletion?\n\nClick "Save All Changes" at the bottom to permanently delete.')) {
                     this.checked = false;
                 } else {
-                    // Mark the section visually (but don't disable inputs - use CSS instead)
+                    // Mark the section visually and make inputs readonly
                     if (sectionCard) {
                         sectionCard.classList.add('marked-for-deletion');
+
+                        // Make visible inputs readonly (not disabled)
+                        const textInputs = sectionCard.querySelectorAll('input[type="text"], textarea');
+                        textInputs.forEach(input => {
+                            input.setAttribute('readonly', 'readonly');
+                            input.style.cursor = 'not-allowed';
+                        });
                     }
                     enforceStandardOrdering();
                     updateDeletionNotice();
@@ -456,6 +457,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sectionCard = this.closest('.section-card');
                 if (sectionCard) {
                     sectionCard.classList.remove('marked-for-deletion');
+
+                    // Remove readonly from inputs
+                    const textInputs = sectionCard.querySelectorAll('input[type="text"], textarea');
+                    textInputs.forEach(input => {
+                        input.removeAttribute('readonly');
+                        input.style.cursor = '';
+                    });
                 }
                 enforceStandardOrdering();
                 updateDeletionNotice();
