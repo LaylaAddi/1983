@@ -22,20 +22,37 @@ def manage_document_sections(request, pk):
         formset = DocumentSectionFormSet(request.POST, queryset=sections)
         if formset.is_valid():
             instances = formset.save(commit=False)
-            
+
             # Set the document for any new instances
             for instance in instances:
                 instance.document = document
                 instance.save()
-            
+
             # Handle deletions
+            deleted_count = 0
             for obj in formset.deleted_objects:
                 obj.delete()
-            
-            messages.success(request, 'Document sections updated successfully!')
+                deleted_count += 1
+
+            if deleted_count > 0:
+                messages.success(request, f'Successfully deleted {deleted_count} section(s)!')
+            else:
+                messages.success(request, 'Document sections updated successfully!')
             return redirect('manage_document_sections', pk=document.pk)
         else:
-            messages.error(request, 'Please correct the errors below.')
+            # Add detailed error messages for debugging
+            error_details = []
+            for i, form in enumerate(formset):
+                if form.errors:
+                    error_details.append(f"Section {i+1}: {form.errors}")
+            if formset.non_form_errors():
+                error_details.append(f"General errors: {formset.non_form_errors()}")
+
+            error_msg = 'Please correct the errors below.'
+            if error_details:
+                error_msg += ' Details: ' + ' | '.join(error_details)
+
+            messages.error(request, error_msg)
     else:
         formset = DocumentSectionFormSet(queryset=sections)
     

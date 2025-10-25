@@ -51,6 +51,13 @@
         background: rgba(220, 53, 69, 0.1);
     }
 
+    .section-card.marked-for-deletion .section-body input:not([name$="-DELETE"]),
+    .section-card.marked-for-deletion .section-body textarea {
+        pointer-events: none;
+        background-color: var(--bs-secondary-bg);
+        opacity: 0.6;
+    }
+
     .section-header {
         margin-bottom: 20px;
         padding-bottom: 15px;
@@ -431,13 +438,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!confirm('Mark "' + sectionName + '" for deletion?\n\nClick "Save All Changes" at the bottom to permanently delete.')) {
                     this.checked = false;
                 } else {
-                    // Mark the section visually
+                    // Mark the section visually (but don't disable inputs - use CSS instead)
                     if (sectionCard) {
                         sectionCard.classList.add('marked-for-deletion');
-
-                        // Disable inputs in marked section
-                        const inputs = sectionCard.querySelectorAll('input:not([name$="-DELETE"]), textarea');
-                        inputs.forEach(input => input.disabled = true);
                     }
                     enforceStandardOrdering();
                     updateDeletionNotice();
@@ -447,10 +450,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sectionCard = this.closest('.section-card');
                 if (sectionCard) {
                     sectionCard.classList.remove('marked-for-deletion');
-
-                    // Re-enable inputs
-                    const inputs = sectionCard.querySelectorAll('input, textarea');
-                    inputs.forEach(input => input.disabled = false);
                 }
                 enforceStandardOrdering();
                 updateDeletionNotice();
@@ -460,25 +459,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial check for any pre-checked delete boxes
     updateDeletionNotice();
-
-    // Before form submission, re-enable all disabled inputs so they submit properly
-    const sectionForm = document.getElementById('sectionManagementForm');
-    if (sectionForm) {
-        sectionForm.addEventListener('submit', function(e) {
-            // Re-enable all inputs in marked-for-deletion sections
-            // Django needs them enabled to process the deletion
-            const markedSections = document.querySelectorAll('.section-card.marked-for-deletion');
-            markedSections.forEach(function(section) {
-                const inputs = section.querySelectorAll('input:disabled, textarea:disabled');
-                inputs.forEach(input => {
-                    // Don't re-enable the delete checkbox itself
-                    if (!input.name.endsWith('-DELETE')) {
-                        input.disabled = false;
-                    }
-                });
-            });
-        });
-    }
     
     // Remove order input change handlers since we're enforcing standard order
     const orderInputs = document.querySelectorAll('input[name$="-order"]');
