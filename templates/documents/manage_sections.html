@@ -95,40 +95,46 @@
     <!-- Help Card -->
     <div class="card mb-4 border-info">
         <div class="card-header bg-info text-white">
-            <h5 class="mb-0"><i class="fas fa-info-circle"></i> How to Add Legal Sections</h5>
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Understanding Legal Document Sections</h5>
         </div>
         <div class="card-body">
+            <div class="alert alert-primary">
+                <h6 class="mb-2"><i class="fas fa-gavel"></i> Why Are These 7 Sections Required?</h6>
+                <p class="mb-2">Federal courts require Section 1983 civil rights complaints to follow a specific format. These 7 sections are the standard legal structure that judges expect to see:</p>
+                <ol class="mb-0">
+                    <li><strong>Introduction</strong> - Tells the court this is a civil rights case</li>
+                    <li><strong>Jurisdiction</strong> - Explains why this federal court can hear your case</li>
+                    <li><strong>Parties</strong> - Identifies you (plaintiff) and who violated your rights (defendants)</li>
+                    <li><strong>Statement of Facts</strong> - Describes exactly what happened</li>
+                    <li><strong>Claims for Relief</strong> - Explains which constitutional rights were violated</li>
+                    <li><strong>Prayer for Relief</strong> - States what you want the court to award you</li>
+                    <li><strong>Jury Demand</strong> - Requests your right to a jury trial</li>
+                </ol>
+                <p class="mt-2 mb-0"><small><strong>Important:</strong> Even if a section appears "empty" or basic, it serves a legal purpose. Courts can dismiss cases that don't include these required sections.</small></p>
+            </div>
+
             <div class="row">
                 <div class="col-md-6">
-                    <h6 class="text-primary">Violation Types:</h6>
+                    <h6 class="text-primary">How to Fill Sections:</h6>
                     <ul class="small">
-                        <li><strong>Threatened Arrest in Public:</strong> Officer threatened to arrest you for lawful activities</li>
-                        <li><strong>Interference with Recording:</strong> Officials blocked, stopped, or interfered with your recording</li>
-                        <li><strong>Forced to Leave Public Area:</strong> You were unlawfully removed from public property</li>
-                    </ul>
-                    
-                    <h6 class="text-primary mt-3">Location Types:</h6>
-                    <ul class="small">
-                        <li><strong>Traditional Public Forum:</strong> Sidewalks, streets, parks, courthouse steps</li>
-                        <li><strong>Designated Public Forum:</strong> Government buildings opened for public access</li>
-                        <li><strong>Limited Public Forum:</strong> Restricted areas like building lobbies, waiting rooms</li>
+                        <li><strong>Use "Smart Auto-Populate"</strong> (from document detail page) - Analyzes your case and writes customized legal language</li>
+                        <li><strong>Insert Legal Template</strong> (below) - Choose specific templates based on your violation type and location</li>
+                        <li><strong>Add Blank Section</strong> (below) - Create empty section to write yourself</li>
+                        <li><strong>Edit Directly</strong> - Click in any section below to customize the text</li>
                     </ul>
                 </div>
                 <div class="col-md-6">
-                    <h6 class="text-primary">Section Types:</h6>
+                    <h6 class="text-primary">Violation & Location Types:</h6>
                     <ul class="small">
-                        <li><strong>Introduction:</strong> Overview of your civil rights claim</li>
-                        <li><strong>Jurisdiction:</strong> Why this court has authority to hear your case</li>
-                        <li><strong>Parties:</strong> Information about you and the defendants</li>
-                        <li><strong>Facts:</strong> Detailed description of what happened</li>
-                        <li><strong>Claims:</strong> Legal theories and constitutional violations</li>
-                        <li><strong>Prayer:</strong> What you're asking the court to award you</li>
-                        <li><strong>Jury Demand:</strong> Request for jury trial</li>
+                        <li><strong>Threatened Arrest in Public:</strong> Officer threatened to arrest you for lawful activities</li>
+                        <li><strong>Interference with Recording:</strong> Officials blocked or stopped your recording</li>
+                        <li><strong>Forced to Leave Public Area:</strong> You were unlawfully removed from public property</li>
                     </ul>
-                    
-                    <div class="alert alert-warning alert-sm mt-3">
-                        <small><strong>Note:</strong> Each document can only have one section of each type. Inserting a template will update existing sections of that type.</small>
-                    </div>
+                    <ul class="small">
+                        <li><strong>Traditional Public Forum:</strong> Sidewalks, streets, parks</li>
+                        <li><strong>Designated Public Forum:</strong> Government buildings open to public</li>
+                        <li><strong>Limited Public Forum:</strong> Restricted areas like lobbies</li>
+                    </ul>
                 </div>
             </div>
         </div>
@@ -205,7 +211,21 @@
         <div class="row">
             <div class="col-12">
                 <h4><i class="fas fa-edit"></i> Edit Existing Sections</h4>
-                
+
+                {% if formset.non_form_errors %}
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Form Errors:</h6>
+                        {{ formset.non_form_errors }}
+                    </div>
+                {% endif %}
+
+                {% if formset.errors %}
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle"></i> Please check the sections below for errors</h6>
+                        <p class="mb-0 small">Some sections have validation errors. Scroll down to see which fields need correction.</p>
+                    </div>
+                {% endif %}
+
                 {% if formset.forms %}
                     {% for form in formset.forms %}
                         <div class="section-card">
@@ -215,6 +235,13 @@
                                         <h5 class="mb-0">
                                             {% if form.instance.section_type %}
                                                 {{ form.instance.get_section_type_display }}
+                                                {% if form.instance.content and '[Enter your content here]' in form.instance.content or '[DESCRIPTION TO BE ADDED]' in form.instance.content or '[SPECIFIC VIOLATIONS TO BE DETAILED]' in form.instance.content %}
+                                                    <span class="badge bg-warning text-dark ms-2">Needs Editing</span>
+                                                {% elif form.instance.is_complete %}
+                                                    <span class="badge bg-success ms-2">Complete</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary ms-2">{{ form.instance.completion_percentage }}%</span>
+                                                {% endif %}
                                             {% else %}
                                                 Section {{ forloop.counter }}
                                             {% endif %}
@@ -238,11 +265,23 @@
                             </div>
                             
                             <div class="section-body">
+                                <!-- Show any form-level errors -->
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger mb-3">
+                                        {{ form.non_field_errors }}
+                                    </div>
+                                {% endif %}
+
                                 <!-- Hidden fields -->
                                 {% for hidden in form.hidden_fields %}
                                     {{ hidden }}
+                                    {% if hidden.errors %}
+                                        <div class="alert alert-danger small">
+                                            <strong>{{ hidden.label }}:</strong> {{ hidden.errors }}
+                                        </div>
+                                    {% endif %}
                                 {% endfor %}
-                                
+
                                 <div class="mb-3">
                                     {{ form.title.label_tag }}
                                     {{ form.title }}
@@ -250,7 +289,7 @@
                                         <div class="text-danger">{{ form.title.errors }}</div>
                                     {% endif %}
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     {{ form.content.label_tag }}
                                     {{ form.content }}
@@ -421,6 +460,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial check for any pre-checked delete boxes
     updateDeletionNotice();
+
+    // Before form submission, re-enable all disabled inputs so they submit properly
+    const sectionForm = document.getElementById('sectionManagementForm');
+    if (sectionForm) {
+        sectionForm.addEventListener('submit', function(e) {
+            // Re-enable all inputs in marked-for-deletion sections
+            // Django needs them enabled to process the deletion
+            const markedSections = document.querySelectorAll('.section-card.marked-for-deletion');
+            markedSections.forEach(function(section) {
+                const inputs = section.querySelectorAll('input:disabled, textarea:disabled');
+                inputs.forEach(input => {
+                    // Don't re-enable the delete checkbox itself
+                    if (!input.name.endsWith('-DELETE')) {
+                        input.disabled = false;
+                    }
+                });
+            });
+        });
+    }
     
     // Remove order input change handlers since we're enforcing standard order
     const orderInputs = document.querySelectorAll('input[name$="-order"]');
