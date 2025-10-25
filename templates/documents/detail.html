@@ -223,13 +223,45 @@
                 </div>
                 <div class="card-body">
                     {% if sections %}
+                        <!-- Overall Completion Status -->
+                        <div class="alert {% if document.is_document_complete %}alert-success{% elif document.completion_percentage > 50 %}alert-info{% else %}alert-warning{% endif %} mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>
+                                    <i class="fas fa-tasks"></i> Document Completion: {{ document.completed_sections }}/{{ document.total_sections }} Sections
+                                </strong>
+                                <span class="badge {% if document.completion_percentage == 100 %}bg-success{% elif document.completion_percentage > 50 %}bg-primary{% else %}bg-warning{% endif %}">
+                                    {{ document.completion_percentage }}%
+                                </span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar {% if document.completion_percentage == 100 %}bg-success{% elif document.completion_percentage > 50 %}bg-primary{% else %}bg-warning{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ document.completion_percentage }}%"
+                                     aria-valuenow="{{ document.completion_percentage }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+
                         <p class="text-muted small mb-3">
-                            <i class="fas fa-info-circle"></i> These are the legal sections of your complaint. 
+                            <i class="fas fa-info-circle"></i> These are the legal sections of your complaint.
                             Click "Manage Sections" to edit, reorder, add, or delete sections.
                         </p>
                         {% for section in sections %}
                         <div class="border-bottom pb-3 mb-3">
-                            <h5>{{ section.order }}. {{ section.title }}</h5>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h5 class="mb-0">{{ section.order }}. {{ section.title }}</h5>
+                                {% if section.is_complete %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check-circle"></i> Complete
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-exclamation-circle"></i> {{ section.completion_percentage }}%
+                                    </span>
+                                {% endif %}
+                            </div>
                             <div class="text-muted small mb-2">{{ section.get_section_type_display }}</div>
                             <div class="bg-body-tertiary p-3 rounded" style="font-family: 'Times New Roman', serif; line-height: 1.6;">
                                 {{ section.content|truncatewords:50 }}
@@ -326,7 +358,7 @@
                     <h5 class="mb-0"><i class="fas fa-chart-bar text-info"></i> Document Stats</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center">
+                    <div class="row text-center mb-3">
                         <div class="col-6">
                             <h4 class="text-primary">{{ sections.count }}</h4>
                             <small class="text-muted">Legal Sections</small>
@@ -336,6 +368,33 @@
                             <small class="text-muted">Status</small>
                         </div>
                     </div>
+
+                    {% if document.total_sections > 0 %}
+                    <hr>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="small">Section Completion</strong>
+                            <span class="badge {% if document.completion_percentage == 100 %}bg-success{% elif document.completion_percentage > 50 %}bg-primary{% else %}bg-warning{% endif %}">
+                                {{ document.completion_percentage }}%
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar {% if document.completion_percentage == 100 %}bg-success{% elif document.completion_percentage > 50 %}bg-primary{% else %}bg-warning{% endif %}"
+                                 role="progressbar"
+                                 style="width: {{ document.completion_percentage }}%"
+                                 aria-valuenow="{{ document.completion_percentage }}"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div class="small text-muted mt-2">
+                            <i class="fas fa-check-circle text-success"></i> {{ document.completed_sections }} Complete
+                            &nbsp;|&nbsp;
+                            <i class="fas fa-exclamation-circle text-warning"></i> {{ document.incomplete_sections }} Incomplete
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <hr>
                     <div class="small text-muted">
                         <strong>Last Updated:</strong><br>

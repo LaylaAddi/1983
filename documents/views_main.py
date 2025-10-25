@@ -18,14 +18,22 @@ from django.views.generic import DetailView
 @login_required
 def document_create(request):
     """Create a new lawsuit document"""
-    from accounts.models import UserProfile
-    
+    from accounts.models import UserProfile, Subscription
+
     # Check if user has complete profile
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     if not profile.is_complete:
         messages.warning(request, 'Please complete your profile with legal contact information before creating documents.')
         return redirect('profile')
-    
+
+    # Check if user's subscription allows document creation
+    subscription, created = Subscription.objects.get_or_create(user=request.user)
+    can_create, restriction_reason = subscription.can_create_document()
+
+    if not can_create:
+        messages.error(request, restriction_reason)
+        return redirect('document_list')
+
     if request.method == 'POST':
         form = LawsuitDocumentForm(request.POST)
         if form.is_valid():
@@ -54,6 +62,8 @@ def document_create(request):
 @login_required
 def document_list(request):
     """List user's documents with search and filtering"""
+    from accounts.models import Subscription
+
     documents = LawsuitDocument.objects.filter(user=request.user)
     
     # Handle search and filtering
@@ -87,11 +97,19 @@ def document_list(request):
     paginator = Paginator(documents.order_by('-created_at'), 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
+    # Get subscription info for display
+    subscription, created = Subscription.objects.get_or_create(user=request.user)
+    can_create, _ = subscription.can_create_document()
+    limit_info = subscription.get_document_limit_info()
+
     context = {
         'page_obj': page_obj,
         'search_form': search_form,
         'documents': page_obj,
+        'subscription': subscription,
+        'can_create_document': can_create,
+        'document_limit_info': limit_info,
     }
     
     return render(request, 'documents/list.html', context)

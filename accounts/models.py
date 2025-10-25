@@ -189,6 +189,83 @@ class Subscription(models.Model):
             estimated_cost = Decimal(str(estimated_cost))
         return self.api_credit_balance >= estimated_cost
 
+    def can_create_document(self):
+        """
+        Check if user can create a new document based on their subscription tier.
+
+        Returns:
+            tuple: (can_create: bool, reason: str)
+        """
+        from documents.models import LawsuitDocument
+
+        # Unlimited tier can always create documents
+        if self.plan_type == 'unlimited' and self.is_active:
+            return (True, '')
+
+        # Get user's document count
+        document_count = LawsuitDocument.objects.filter(user=self.user).count()
+
+        # Free tier: limited to 1 document
+        if self.plan_type == 'free':
+            if document_count >= 1:
+                return (False, 'Free tier users can only create 1 document. Please upgrade to create more.')
+            return (True, '')
+
+        # Pay-per-doc tier: can create one document at a time
+        # User must purchase current document before creating another
+        if self.plan_type == 'pay_per_doc':
+            from documents.models import PurchasedDocument
+            purchased_count = PurchasedDocument.objects.filter(user=self.user).count()
+
+            # If they haven't purchased all their documents, they can't create more
+            if document_count > purchased_count:
+                unpaid_docs = LawsuitDocument.objects.filter(user=self.user).exclude(
+                    purchases__user=self.user
+                ).count()
+                if unpaid_docs > 0:
+                    return (False, 'Please purchase your current document ($149) before creating another, or upgrade to Unlimited.')
+            return (True, '')
+
+        # Default: allow creation
+        return (True, '')
+
+    def get_document_limit_info(self):
+        """
+        Get information about document limits for display purposes.
+
+        Returns:
+            dict: Information about document limits and usage
+        """
+        from documents.models import LawsuitDocument, PurchasedDocument
+
+        document_count = LawsuitDocument.objects.filter(user=self.user).count()
+
+        if self.plan_type == 'unlimited':
+            return {
+                'limit': None,
+                'current': document_count,
+                'remaining': None,
+                'is_unlimited': True,
+                'message': 'Unlimited documents'
+            }
+        elif self.plan_type == 'free':
+            return {
+                'limit': 1,
+                'current': document_count,
+                'remaining': max(0, 1 - document_count),
+                'is_unlimited': False,
+                'message': f'{document_count}/1 documents used'
+            }
+        elif self.plan_type == 'pay_per_doc':
+            purchased_count = PurchasedDocument.objects.filter(user=self.user).count()
+            return {
+                'limit': purchased_count + 1,
+                'current': document_count,
+                'purchased': purchased_count,
+                'is_unlimited': False,
+                'message': f'{document_count} documents ({purchased_count} purchased)'
+            }
+
 
 class Payment(models.Model):
     PAYMENT_TYPE_CHOICES = [

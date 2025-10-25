@@ -100,6 +100,49 @@ class LawsuitDocument(models.Model):
         """Check if structured address fields are filled"""
         return bool(self.incident_city and self.incident_state)
 
+    @property
+    def total_sections(self):
+        """Get total number of sections in this document"""
+        return self.sections.count()
+
+    @property
+    def completed_sections(self):
+        """Get number of completed sections"""
+        return sum(1 for section in self.sections.all() if section.is_complete)
+
+    @property
+    def incomplete_sections(self):
+        """Get number of incomplete sections"""
+        return self.total_sections - self.completed_sections
+
+    @property
+    def completion_percentage(self):
+        """Calculate overall document completion percentage"""
+        if self.total_sections == 0:
+            return 0
+        return int((self.completed_sections / self.total_sections) * 100)
+
+    @property
+    def is_document_complete(self):
+        """Check if all sections are complete"""
+        return self.total_sections > 0 and self.completed_sections == self.total_sections
+
+    def get_section_completion_summary(self):
+        """
+        Get detailed completion summary for all sections.
+        Returns list of dicts with section info and completion status.
+        """
+        sections_data = []
+        for section in self.sections.all():
+            sections_data.append({
+                'type': section.section_type,
+                'title': section.get_section_type_display(),
+                'is_complete': section.is_complete,
+                'completion_percentage': section.completion_percentage,
+                'content_length': len(section.content) if section.content else 0,
+            })
+        return sections_data
+
 class DocumentSection(models.Model):
     """Sections within a lawsuit document"""
     SECTION_TYPES = [
@@ -122,9 +165,52 @@ class DocumentSection(models.Model):
     class Meta:
         ordering = ['order']
         unique_together = ['document', 'section_type']
-        
+
     def __str__(self):
         return f"{self.document.title} - {self.get_section_type_display()}"
+
+    @property
+    def is_complete(self):
+        """
+        Check if section has meaningful content.
+        A section is complete if it has content longer than 100 characters
+        and doesn't contain placeholder text.
+        """
+        if not self.content or len(self.content.strip()) < 100:
+            return False
+
+        # Check for common placeholder patterns
+        placeholder_phrases = [
+            '[INSERT',
+            '[TO BE COMPLETED]',
+            '[PLACEHOLDER]',
+            'TODO',
+            'TBD',
+        ]
+
+        content_upper = self.content.upper()
+        for phrase in placeholder_phrases:
+            if phrase in content_upper:
+                return False
+
+        return True
+
+    @property
+    def completion_percentage(self):
+        """
+        Estimate completion percentage based on content length.
+        Assumes a typical section should have at least 500 characters.
+        """
+        if not self.content:
+            return 0
+
+        min_length = 500
+        current_length = len(self.content.strip())
+
+        if current_length >= min_length:
+            return 100
+
+        return int((current_length / min_length) * 100)
     
 
 class LegalTemplate(models.Model):
