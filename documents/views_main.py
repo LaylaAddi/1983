@@ -120,20 +120,34 @@ def document_detail(request, pk):
     """View individual document details"""
     document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
     sections = document.sections.all().order_by('order')
-    
+
+    # Check which required sections are missing
+    from documents.models import DocumentSection
+    all_section_types = dict(DocumentSection.SECTION_TYPES)
+    existing_section_types = set(sections.values_list('section_type', flat=True))
+    missing_section_types = []
+
+    for section_type, display_name in DocumentSection.SECTION_TYPES:
+        if section_type not in existing_section_types:
+            missing_section_types.append({
+                'type': section_type,
+                'name': display_name
+            })
+
     # Video evidence counts
     video_evidence = document.video_evidence.all()
     reviewed_count = video_evidence.filter(is_reviewed=True).count()
     included_count = video_evidence.filter(include_in_complaint=True).count()
-    
+
     context = {
         'document': document,
         'sections': sections,
+        'missing_sections': missing_section_types,
         'video_evidence_count': video_evidence.count(),
         'video_evidence_reviewed': reviewed_count,
         'video_evidence_included': included_count,
     }
-    
+
     return render(request, 'documents/detail.html', context)
 
 @login_required
