@@ -153,9 +153,20 @@ class DocumentSection(models.Model):
         ('claims', 'Claims for Relief'),
         ('prayer', 'Prayer for Relief'),
         ('jury_demand', 'Jury Trial Demand'),
-        ('exhibits', 'List of Exhibits'), 
+        ('exhibits', 'List of Exhibits'),  # Optional section
     ]
-    
+
+    # Required sections for a complete document (exhibits is optional)
+    REQUIRED_SECTIONS = [
+        'introduction',
+        'jurisdiction',
+        'parties',
+        'facts',
+        'claims',
+        'prayer',
+        'jury_demand'
+    ]
+
     document = models.ForeignKey(LawsuitDocument, on_delete=models.CASCADE, related_name='sections')
     section_type = models.CharField(max_length=20, choices=SECTION_TYPES)
     title = models.CharField(max_length=200)

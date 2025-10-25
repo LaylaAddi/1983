@@ -121,14 +121,16 @@ def document_detail(request, pk):
     document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
     sections = document.sections.all().order_by('order')
 
-    # Check which required sections are missing
+    # Check which required sections are missing (exhibits is optional)
     from documents.models import DocumentSection
-    all_section_types = dict(DocumentSection.SECTION_TYPES)
     existing_section_types = set(sections.values_list('section_type', flat=True))
     missing_section_types = []
 
-    for section_type, display_name in DocumentSection.SECTION_TYPES:
+    # Only check for the 7 required sections (not exhibits which is optional)
+    section_types_dict = dict(DocumentSection.SECTION_TYPES)
+    for section_type in DocumentSection.REQUIRED_SECTIONS:
         if section_type not in existing_section_types:
+            display_name = section_types_dict.get(section_type, section_type)
             missing_section_types.append({
                 'type': section_type,
                 'name': display_name
