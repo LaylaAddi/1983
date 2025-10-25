@@ -52,19 +52,60 @@ class TemplateMatchingService:
     def prepare_document_context(document):
         """Prepare context data for template rendering from a document"""
         user_profile = getattr(document.user, 'profile', None)
-        
+
+        # Build the location string - prefer structured address over general location
+        location_str = None
+        if document.incident_city and document.incident_state:
+            # Use structured address
+            if document.incident_street_address:
+                location_str = f"{document.incident_street_address}, {document.incident_city}, {document.incident_state}"
+            else:
+                location_str = f"{document.incident_city}, {document.incident_state}"
+        elif document.incident_location:
+            # Use general location field as fallback
+            location_str = document.incident_location
+
+        # If still no location, use placeholder
+        if not location_str:
+            location_str = '[LOCATION]'
+
+        # Get user's state for plaintiff residency
+        user_state = '[STATE]'
+        if user_profile and user_profile.state:
+            # State abbreviation to full name mapping
+            state_names = {
+                'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+                'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+                'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+                'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+                'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+                'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+                'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+                'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+                'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+                'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+                'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+                'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+                'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
+            }
+            user_state = state_names.get(user_profile.state.upper(), user_profile.state)
+
         return {
             'plaintiff_name': (
-                user_profile.full_legal_name 
-                if user_profile else 
+                user_profile.full_legal_name
+                if user_profile else
                 document.user.get_full_name() or document.user.username
             ),
+            'plaintiff_state': user_state,
             'incident_date': (
-                document.incident_date.strftime('%B %d, %Y') 
-                if document.incident_date else 
+                document.incident_date.strftime('%B %d, %Y')
+                if document.incident_date else
                 '[DATE OF INCIDENT]'
             ),
-            'incident_location': document.incident_location or '[LOCATION]',
+            'incident_location': location_str,
+            'incident_city': document.incident_city or '[CITY]',
+            'incident_state': document.incident_state or '[STATE]',
+            'incident_street_address': document.incident_street_address or '',
             'defendants': document.defendants or '[DEFENDANTS TO BE IDENTIFIED]',
             'description': document.description or '[DESCRIPTION]',
         }

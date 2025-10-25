@@ -33,11 +33,124 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    <!-- Document Fields Checklist -->
+                    <div class="alert alert-light border mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Document Information Checklist</h6>
+                            <a href="{% url 'document_edit' document.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Edit All Fields
+                            </a>
+                        </div>
+                        <div class="row small mt-3">
+                            <div class="col-md-6">
+                                <!-- Incident Date -->
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if document.incident_date %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <strong>Incident Date:</strong>
+                                        <span class="ms-2">{{ document.incident_date|date:"M d, Y" }}</span>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                        <strong>Incident Date:</strong>
+                                        <span class="ms-2 text-muted">Not provided</span>
+                                        <a href="{% url 'document_edit' document.pk %}" class="ms-2 badge bg-warning text-dark">Add</a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Location -->
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if document.has_structured_address or document.incident_location %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <strong>Location:</strong>
+                                        <span class="ms-2">
+                                            {% if document.has_structured_address %}
+                                                {{ document.incident_city }}, {{ document.incident_state }}
+                                            {% else %}
+                                                {{ document.incident_location|truncatechars:30 }}
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                        <strong>Location:</strong>
+                                        <span class="ms-2 text-muted">Not provided</span>
+                                        <a href="{% url 'document_edit' document.pk %}" class="ms-2 badge bg-warning text-dark">Add</a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Defendants -->
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if document.defendants %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <strong>Defendants:</strong>
+                                        <span class="ms-2">{{ document.defendants|truncatewords:5 }}</span>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                        <strong>Defendants:</strong>
+                                        <span class="ms-2 text-muted">Not provided</span>
+                                        <a href="{% url 'document_edit' document.pk %}" class="ms-2 badge bg-warning text-dark">Add</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Video Evidence -->
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if document.youtube_url_1 or document.video_evidence.exists %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <strong>Video Evidence:</strong>
+                                        <span class="ms-2">
+                                            {% if document.video_evidence.exists %}
+                                                {{ document.video_evidence.count }} segment{{ document.video_evidence.count|pluralize }}
+                                            {% else %}
+                                                1 video
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
+                                        <i class="fas fa-info-circle text-muted me-2"></i>
+                                        <strong>Video Evidence:</strong>
+                                        <span class="ms-2 text-muted">Optional</span>
+                                        <a href="{% url 'evidence_manager' document.pk %}" class="ms-2 badge bg-secondary">Add</a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Sections -->
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if document.total_sections > 0 %}
+                                        {% if document.is_document_complete %}
+                                            <i class="fas fa-check-circle text-success me-2"></i>
+                                        {% else %}
+                                            <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                        {% endif %}
+                                        <strong>Legal Sections:</strong>
+                                        <span class="ms-2">{{ document.completed_sections }}/{{ document.total_sections }} complete</span>
+                                    {% else %}
+                                        <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                        <strong>Legal Sections:</strong>
+                                        <span class="ms-2 text-muted">Not generated</span>
+                                        <a href="{% url 'auto_populate_legal' document.pk %}" class="ms-2 badge bg-info">Generate</a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Federal Court District -->
+                                <div class="d-flex align-items-center mb-2">
+                                    {% if document.suggested_federal_district %}
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <strong>Court District:</strong>
+                                        <span class="ms-2">{{ document.suggested_federal_district|truncatewords:4 }}</span>
+                                    {% else %}
+                                        <i class="fas fa-info-circle text-muted me-2"></i>
+                                        <strong>Court District:</strong>
+                                        <span class="ms-2 text-muted">Auto-detected when location added</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Description -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h5><i class="fas fa-comment-alt text-primary"></i> Description</h5>
-                            <a href="{% url 'voice_recorder' %}?document_id={{ document.pk }}" 
+                            <a href="{% url 'voice_recorder' %}?document_id={{ document.pk }}"
                                class="btn btn-success btn-sm d-md-none">
                                 <i class="fas fa-microphone"></i> Add Voice Note
                             </a>
@@ -47,8 +160,11 @@
 
                     <!-- Incident Information -->
                     <div class="card border-primary mb-4">
-                        <div class="card-header bg-primary text-white">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                             <h5 class="mb-0"><i class="fas fa-map-marker-alt"></i> Incident Information</h5>
+                            <a href="{% url 'document_edit' document.pk %}" class="btn btn-sm btn-light">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
                         </div>
                         <div class="card-body">
                             <div class="row">
@@ -105,12 +221,21 @@
                     </div>
 
                     <!-- Defendants -->
-                    {% if document.defendants %}
                     <div class="mb-4">
-                        <h5><i class="fas fa-users text-primary"></i> Defendants</h5>
-                        <div class="bg-body-tertiary p-3 rounded">{{ document.defendants|linebreaks }}</div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="mb-0"><i class="fas fa-users text-primary"></i> Defendants</h5>
+                            <a href="{% url 'document_edit' document.pk %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> {% if document.defendants %}Edit{% else %}Add{% endif %}
+                            </a>
+                        </div>
+                        {% if document.defendants %}
+                            <div class="bg-body-tertiary p-3 rounded">{{ document.defendants|linebreaks }}</div>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Defendants not yet specified. Click "Add" to provide this information.
+                            </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
 
                     <!-- Video Evidence -->
                     {% if document.youtube_url_1 or document.youtube_url_2 or document.youtube_url_3 or document.youtube_url_4 %}
