@@ -19,10 +19,23 @@ class DocumentOrchestratorService:
     def __init__(self, document):
         self.document = document
 
-    def auto_populate_document(self):
+    def auto_populate_document(self, use_ai=True):
         """
-        Main method to populate document with appropriate legal templates
-        Uses the new modular services for better separation of concerns
+        Main method to populate document with appropriate legal templates.
+        Can use AI enhancement to personalize sections based on user's description.
+
+        Args:
+            use_ai: bool - whether to attempt AI enhancement (default True)
+
+        Returns:
+            dict with keys:
+            - violation_type, location_type
+            - templates_found, sections_created, sections_updated
+            - ai_enhanced_count: int (number of AI-enhanced sections)
+            - total_ai_cost: float (total cost of AI enhancements)
+            - warnings: list (budget warnings)
+            - upgrade_prompts: list (upgrade prompts if budget exceeded)
+            - sections, context_used, results_detail
         """
         # Step 1: Analyze the document to determine violation and location types
         violation_type = ViolationAnalysisService.analyze_violation_type(
@@ -38,13 +51,19 @@ class DocumentOrchestratorService:
         # Step 3: Prepare context data for template rendering
         context_data = TemplateMatchingService.prepare_document_context(self.document)
 
-        # Step 4: Generate sections from templates
+        # Step 4: Generate sections from templates (with optional AI enhancement)
         results = SectionGenerationService.bulk_generate_sections(
-            self.document, templates, context_data
+            self.document, templates, context_data, use_ai=use_ai
         )
 
         # Step 5: Ensure proper section ordering
         SectionGenerationService.reorder_sections(self.document)
+
+        # Collect AI usage statistics and warnings
+        ai_enhanced_count = sum(1 for r in results if r.get('ai_enhanced'))
+        total_ai_cost = sum(r.get('ai_cost', 0.0) for r in results)
+        warnings = [r.get('warning') for r in results if r.get('warning')]
+        upgrade_prompts = [r.get('upgrade_prompt') for r in results if r.get('upgrade_prompt')]
 
         # Return comprehensive results
         return {
@@ -53,6 +72,10 @@ class DocumentOrchestratorService:
             'templates_found': templates.count(),
             'sections_created': len([r for r in results if r['created']]),
             'sections_updated': len([r for r in results if not r['created']]),
+            'ai_enhanced_count': ai_enhanced_count,
+            'total_ai_cost': round(total_ai_cost, 4),
+            'warnings': warnings,
+            'upgrade_prompts': upgrade_prompts,
             'sections': [r['section'] for r in results],
             'context_used': context_data,
             'results_detail': results
