@@ -191,14 +191,14 @@
                 <strong>Sections marked for deletion!</strong>
                 <span id="deletionCount">0</span> section(s) will be permanently deleted.
             </div>
-            <button type="button" class="btn btn-danger" onclick="document.querySelector('form[method=post]').submit();">
+            <button type="button" class="btn btn-danger" onclick="document.getElementById('sectionManagementForm').submit();">
                 <i class="fas fa-save"></i> Save Changes Now
             </button>
         </div>
     </div>
 
     <!-- Section Management Form -->
-    <form method="post">
+    <form method="post" id="sectionManagementForm">
         {% csrf_token %}
         {{ formset.management_form }}
 
@@ -228,6 +228,9 @@
                                                 <label class="form-check-label text-danger fw-bold" for="{{ form.DELETE.id_for_label }}">
                                                     <i class="fas fa-trash-alt"></i> Delete Section
                                                 </label>
+                                            </div>
+                                            <div class="small text-muted mt-1">
+                                                <i class="fas fa-info-circle"></i> Toggle to mark, then scroll down and click "Save All Changes"
                                             </div>
                                         {% endif %}
                                     </div>
