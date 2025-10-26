@@ -26,6 +26,7 @@ from documents.services.document_orchestrator_service import DocumentOrchestrato
 from documents.services.ai_enhancement_service import AIEnhancementService
 from accounts.models import UserProfile, Subscription
 from decimal import Decimal
+from datetime import date
 
 
 def print_header(title):
@@ -148,7 +149,7 @@ def test_5_create_document_with_ai():
             "for obstruction if I didn't stop filming and leave immediately. "
             "I was standing on the public sidewalk about 20 feet away from the officers."
         ),
-        incident_date="2025-03-15",
+        incident_date=date(2025, 3, 15),
         incident_location="Main Street Park, Springfield, Illinois",
         incident_city="Springfield",
         incident_state="IL",
@@ -283,7 +284,7 @@ def test_7_budget_limit():
         user=user,
         title="Test Case 2",
         description="Another incident description",
-        incident_date="2025-03-20",
+        incident_date=date(2025, 3, 20),
         defendants="Officer Smith"
     )
 
@@ -325,7 +326,7 @@ def test_8_fallback_mechanism():
         user=user,
         title="Test Case - Template Only",
         description="This should use templates only",
-        incident_date="2025-03-25",
+        incident_date=date(2025, 3, 25),
         defendants="Officer Williams"
     )
 
@@ -370,7 +371,7 @@ def test_9_unlimited_tier():
         user=user,
         title="Test Case - Unlimited",
         description="Testing unlimited tier",
-        incident_date="2025-03-30",
+        incident_date=date(2025, 3, 30),
         defendants="Officer Davis"
     )
 
