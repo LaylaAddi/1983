@@ -74,34 +74,50 @@ class WhisperTranscriptService:
         """
         try:
             from youtube_transcript_api import YouTubeTranscriptApi
-            
+
+            # Configure proxy if available
+            proxy_url = os.getenv('PROXY_URL')
+            proxies = None
+            if proxy_url:
+                proxies = {
+                    'http': proxy_url,
+                    'https': proxy_url
+                }
+
             # Fetch the transcript
-            api = YouTubeTranscriptApi()
-            transcript_list = api.fetch(video_id)
+            transcript_list = YouTubeTranscriptApi.get_transcript(
+                video_id,
+                proxies=proxies
+            )
             
             # Filter by time range if specified
             if start_seconds is not None and end_seconds is not None:
                 filtered_text = []
                 for entry in transcript_list:
-                    entry_start = entry.start
-                    entry_end = entry.start + entry.duration
-                    
+                    entry_start = entry['start']
+                    entry_end = entry['start'] + entry['duration']
+
                     # Include if entry overlaps with our time range
                     if entry_end >= start_seconds and entry_start <= end_seconds:
-                        filtered_text.append(entry.text)
-                
+                        filtered_text.append(entry['text'])
+
                 full_text = ' '.join(filtered_text)
             else:
                 # No time filter - get all text
-                full_text = ' '.join([entry.text for entry in transcript_list])
+                full_text = ' '.join([entry['text'] for entry in transcript_list])
             
             return {
                 'success': True,
                 'text': full_text.strip(),
                 'method': 'youtube_transcript'
             }
-            
+
         except Exception as e:
+            # Log more details for debugging
+            import logging
+            logging.error(f"YouTube transcript fetch failed for video {video_id}: {str(e)}")
+            logging.error(f"Proxy configured: {os.getenv('PROXY_URL') is not None}")
+
             return {
                 'success': False,
                 'error': f'No YouTube transcript available: {str(e)}',
@@ -188,9 +204,17 @@ class WhisperTranscriptService:
                 # Download audio segment
                 result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
                 if result.returncode != 0:
+                    # Log error details for debugging
+                    import logging
+                    logging.error(f"yt-dlp failed for video {video_id}")
+                    logging.error(f"Command: {' '.join(cmd)}")
+                    logging.error(f"stdout: {result.stdout}")
+                    logging.error(f"stderr: {result.stderr}")
+                    logging.error(f"Proxy configured: {proxy_url is not None}")
+
                     return {
                         'success': False,
-                        'error': f'Failed to download audio. The video may be private or unavailable.'
+                        'error': f'Failed to download audio. The video may be private or unavailable. Error: {result.stderr[:200]}'
                     }
                 
                 # Check file exists
