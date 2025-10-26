@@ -9,7 +9,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import json
 from accounts.models import Subscription
-from ..models import LawsuitDocument, VideoEvidence
+from ..models import LawsuitDocument, VideoEvidence, Person, TranscriptQuote
 from ..services.whisper_transcript_service import WhisperTranscriptService
 from accounts.emails import EmailService
 from decimal import Decimal
@@ -23,14 +23,17 @@ def evidence_manager(request, pk):
     """
     document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
     evidence_segments = VideoEvidence.objects.filter(document=document)
-    
+
     # Group segments by YouTube URL
     segments_by_video = {}
     for segment in evidence_segments:
         if segment.youtube_url not in segments_by_video:
             segments_by_video[segment.youtube_url] = []
         segments_by_video[segment.youtube_url].append(segment)
-    
+
+    # Load people for speaker attribution
+    people = Person.objects.filter(document=document)
+
     context = {
         'document': document,
         'evidence_segments': evidence_segments,
@@ -38,8 +41,10 @@ def evidence_manager(request, pk):
         'total_segments': evidence_segments.count(),
         'reviewed_count': evidence_segments.filter(is_reviewed=True).count(),
         'included_count': evidence_segments.filter(include_in_complaint=True).count(),
+        'people': people,
+        'has_people': people.exists(),
     }
-    
+
     return render(request, 'documents/evidence_manager.html', context)
 
 @login_required
@@ -374,3 +379,405 @@ def preview_facts_from_evidence(request, pk):
         'exhibits': result.get('exhibits_list', ''),
         'metadata': result['metadata']
     })
+
+
+# ==================== PERSON MANAGEMENT ====================
+
+@login_required
+def get_document_people(request, pk):
+    """
+    Get all people involved in a document (plaintiff, defendants, witnesses).
+    Returns JSON list of people with their details.
+    """
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    people = Person.objects.filter(document=document)
+
+    people_data = [{
+        'id': person.id,
+        'name': person.name,
+        'role': person.role,
+        'role_display': person.get_role_display(),
+        'title': person.title,
+        'badge_number': person.badge_number,
+        'display_name': person.display_name,
+        'color_code': person.color_code,
+        'notes': person.notes
+    } for person in people]
+
+    return JsonResponse({
+        'success': True,
+        'people': people_data
+    })
+
+
+@login_required
+@require_POST
+def add_person(request, pk):
+    """
+    Add a new person to the document.
+    Creates a Person record for speaker attribution.
+    """
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+
+    try:
+        data = json.loads(request.body)
+
+        # Assign default colors based on role
+        color_map = {
+            'plaintiff': '#0d6efd',  # Blue
+            'defendant': '#dc3545',  # Red
+            'witness': '#198754',    # Green
+            'other': '#6c757d'       # Gray
+        }
+
+        person = Person.objects.create(
+            document=document,
+            name=data.get('name', '').strip(),
+            role=data.get('role', 'other'),
+            title=data.get('title', '').strip(),
+            badge_number=data.get('badge_number', '').strip(),
+            notes=data.get('notes', '').strip(),
+            color_code=data.get('color_code', color_map.get(data.get('role', 'other'), '#6c757d'))
+        )
+
+        return JsonResponse({
+            'success': True,
+            'person': {
+                'id': person.id,
+                'name': person.name,
+                'role': person.role,
+                'role_display': person.get_role_display(),
+                'title': person.title,
+                'badge_number': person.badge_number,
+                'display_name': person.display_name,
+                'color_code': person.color_code,
+                'notes': person.notes
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_POST
+def update_person(request, pk, person_id):
+    """Update person details"""
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    person = get_object_or_404(Person, pk=person_id, document=document)
+
+    try:
+        data = json.loads(request.body)
+
+        person.name = data.get('name', person.name).strip()
+        person.role = data.get('role', person.role)
+        person.title = data.get('title', person.title).strip()
+        person.badge_number = data.get('badge_number', person.badge_number).strip()
+        person.notes = data.get('notes', person.notes).strip()
+        person.color_code = data.get('color_code', person.color_code)
+        person.save()
+
+        return JsonResponse({
+            'success': True,
+            'person': {
+                'id': person.id,
+                'name': person.name,
+                'role': person.role,
+                'role_display': person.get_role_display(),
+                'title': person.title,
+                'badge_number': person.badge_number,
+                'display_name': person.display_name,
+                'color_code': person.color_code,
+                'notes': person.notes
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_POST
+def delete_person(request, pk, person_id):
+    """Delete a person (only if they have no quotes)"""
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    person = get_object_or_404(Person, pk=person_id, document=document)
+
+    # Check if person has any quotes
+    if person.quotes.exists():
+        return JsonResponse({
+            'success': False,
+            'error': f'Cannot delete {person.name} - they have {person.quotes.count()} attributed quotes. Remove quotes first.'
+        }, status=400)
+
+    person.delete()
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
+def sync_people_from_defendants(request, pk):
+    """
+    Auto-sync people from document.defendants field.
+    Parses the defendants field and creates Person records.
+    """
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+
+    try:
+        # Parse defendants field (assuming format: "Officer John Smith, Detective Jane Doe")
+        defendants_text = document.defendants.strip()
+        if not defendants_text:
+            return JsonResponse({
+                'success': False,
+                'error': 'No defendants listed in document'
+            }, status=400)
+
+        # Split by comma or newline
+        import re
+        defendant_names = re.split(r'[,\n]+', defendants_text)
+
+        created_count = 0
+        skipped_count = 0
+
+        for name_with_title in defendant_names:
+            name_with_title = name_with_title.strip()
+            if not name_with_title:
+                continue
+
+            # Try to extract title (Officer, Detective, etc.)
+            title = ''
+            name = name_with_title
+
+            # Common titles
+            title_patterns = [r'^(Officer|Detective|Sergeant|Lieutenant|Captain|Chief|Deputy)\s+(.+)$']
+            for pattern in title_patterns:
+                match = re.match(pattern, name_with_title, re.IGNORECASE)
+                if match:
+                    title = match.group(1)
+                    name = match.group(2)
+                    break
+
+            # Check if already exists
+            if Person.objects.filter(document=document, name=name, role='defendant').exists():
+                skipped_count += 1
+                continue
+
+            # Create defendant
+            Person.objects.create(
+                document=document,
+                name=name,
+                role='defendant',
+                title=title,
+                color_code='#dc3545'  # Red for defendants
+            )
+            created_count += 1
+
+        # Also create plaintiff (the user)
+        plaintiff_name = f"{request.user.first_name} {request.user.last_name}".strip()
+        if not plaintiff_name:
+            plaintiff_name = request.user.username
+
+        if not Person.objects.filter(document=document, role='plaintiff').exists():
+            Person.objects.create(
+                document=document,
+                name=plaintiff_name,
+                role='plaintiff',
+                color_code='#0d6efd'  # Blue for plaintiff
+            )
+            created_count += 1
+
+        return JsonResponse({
+            'success': True,
+            'created_count': created_count,
+            'skipped_count': skipped_count,
+            'message': f'Created {created_count} people ({skipped_count} already existed)'
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+# ==================== TRANSCRIPT QUOTE MANAGEMENT ====================
+
+@login_required
+def get_segment_quotes(request, pk, segment_id):
+    """Get all quotes for a video evidence segment"""
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    segment = get_object_or_404(VideoEvidence, pk=segment_id, document=document)
+
+    quotes = TranscriptQuote.objects.filter(video_evidence=segment)
+
+    quotes_data = [{
+        'id': quote.id,
+        'text': quote.text,
+        'start_position': quote.start_position,
+        'end_position': quote.end_position,
+        'speaker': {
+            'id': quote.speaker.id,
+            'name': quote.speaker.name,
+            'display_name': quote.speaker.display_name,
+            'role': quote.speaker.role,
+            'color_code': quote.speaker.color_code
+        },
+        'approximate_timestamp': quote.approximate_timestamp,
+        'significance': quote.significance,
+        'violation_tags': quote.violation_tags,
+        'notes': quote.notes,
+        'sort_order': quote.sort_order,
+        'include_in_document': quote.include_in_document,
+        'formatted_citation': quote.formatted_citation
+    } for quote in quotes]
+
+    return JsonResponse({
+        'success': True,
+        'quotes': quotes_data
+    })
+
+
+@login_required
+@require_POST
+def add_quote(request, pk, segment_id):
+    """
+    Add a new transcript quote with speaker attribution.
+    Triggered when user highlights text and assigns a speaker.
+    """
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    segment = get_object_or_404(VideoEvidence, pk=segment_id, document=document)
+
+    try:
+        data = json.loads(request.body)
+
+        speaker_id = data.get('speaker_id')
+        if not speaker_id:
+            return JsonResponse({
+                'success': False,
+                'error': 'Speaker is required'
+            }, status=400)
+
+        speaker = get_object_or_404(Person, pk=speaker_id, document=document)
+
+        # Get the next sort_order
+        max_order = TranscriptQuote.objects.filter(video_evidence=segment).aggregate(
+            models.Max('sort_order')
+        )['sort_order__max'] or 0
+
+        quote = TranscriptQuote.objects.create(
+            video_evidence=segment,
+            text=data.get('text', '').strip(),
+            start_position=data.get('start_position', 0),
+            end_position=data.get('end_position', 0),
+            speaker=speaker,
+            approximate_timestamp=data.get('approximate_timestamp', '').strip(),
+            significance=data.get('significance', '').strip(),
+            violation_tags=data.get('violation_tags', '').strip(),
+            notes=data.get('notes', '').strip(),
+            sort_order=max_order + 1,
+            include_in_document=data.get('include_in_document', True)
+        )
+
+        return JsonResponse({
+            'success': True,
+            'quote': {
+                'id': quote.id,
+                'text': quote.text,
+                'start_position': quote.start_position,
+                'end_position': quote.end_position,
+                'speaker': {
+                    'id': speaker.id,
+                    'name': speaker.name,
+                    'display_name': speaker.display_name,
+                    'role': speaker.role,
+                    'color_code': speaker.color_code
+                },
+                'approximate_timestamp': quote.approximate_timestamp,
+                'significance': quote.significance,
+                'violation_tags': quote.violation_tags,
+                'notes': quote.notes,
+                'sort_order': quote.sort_order,
+                'include_in_document': quote.include_in_document,
+                'formatted_citation': quote.formatted_citation
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_POST
+def update_quote(request, pk, segment_id, quote_id):
+    """Update a transcript quote"""
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    segment = get_object_or_404(VideoEvidence, pk=segment_id, document=document)
+    quote = get_object_or_404(TranscriptQuote, pk=quote_id, video_evidence=segment)
+
+    try:
+        data = json.loads(request.body)
+        from django.db import models
+
+        if 'speaker_id' in data:
+            speaker = get_object_or_404(Person, pk=data['speaker_id'], document=document)
+            quote.speaker = speaker
+
+        if 'text' in data:
+            quote.text = data['text'].strip()
+        if 'start_position' in data:
+            quote.start_position = data['start_position']
+        if 'end_position' in data:
+            quote.end_position = data['end_position']
+        if 'approximate_timestamp' in data:
+            quote.approximate_timestamp = data['approximate_timestamp'].strip()
+        if 'significance' in data:
+            quote.significance = data['significance'].strip()
+        if 'violation_tags' in data:
+            quote.violation_tags = data['violation_tags'].strip()
+        if 'notes' in data:
+            quote.notes = data['notes'].strip()
+        if 'sort_order' in data:
+            quote.sort_order = data['sort_order']
+        if 'include_in_document' in data:
+            quote.include_in_document = data['include_in_document']
+
+        quote.save()
+
+        return JsonResponse({
+            'success': True,
+            'quote': {
+                'id': quote.id,
+                'text': quote.text,
+                'speaker': {
+                    'id': quote.speaker.id,
+                    'name': quote.speaker.name,
+                    'display_name': quote.speaker.display_name,
+                    'role': quote.speaker.role,
+                    'color_code': quote.speaker.color_code
+                },
+                'formatted_citation': quote.formatted_citation
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+@require_POST
+def delete_quote(request, pk, segment_id, quote_id):
+    """Delete a transcript quote"""
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    segment = get_object_or_404(VideoEvidence, pk=segment_id, document=document)
+    quote = get_object_or_404(TranscriptQuote, pk=quote_id, video_evidence=segment)
+
+    quote.delete()
+    return JsonResponse({'success': True})
