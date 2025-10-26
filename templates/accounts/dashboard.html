@@ -7,7 +7,7 @@
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <h2 class="text-primary">{{ total_documents }}</h2>
@@ -15,7 +15,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <h2 class="text-warning">{{ draft_documents }}</h2>
@@ -23,13 +23,113 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card text-center">
             <div class="card-body">
                 <h2 class="text-success">{{ completed_documents }}</h2>
                 <p class="card-text">Completed</p>
             </div>
         </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h2 class="text-info">{{ ai_sections_count }}</h2>
+                <p class="card-text">AI-Enhanced Sections</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Budget Card -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="fas fa-robot"></i> AI Enhancement Budget</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Plan Type:</strong></p>
+                <h4>
+                    {% if subscription.plan_type == 'free' %}
+                        <span class="badge bg-secondary">Free ($0.50 AI Credit)</span>
+                    {% elif subscription.plan_type == 'pay_per_doc' %}
+                        <span class="badge bg-info">Pay-Per-Document</span>
+                    {% elif subscription.plan_type == 'unlimited' %}
+                        <span class="badge bg-success">Unlimited ($10/month AI Credit)</span>
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Remaining AI Budget:</strong></p>
+                <h4>
+                    <span class="badge {% if remaining_budget <= 0.10 %}bg-danger{% elif remaining_budget <= 0.25 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                        ${{ remaining_budget|floatformat:2 }} / ${{ budget_limit|floatformat:2 }}
+                    </span>
+                </h4>
+                <small class="text-muted">
+                    ~{{ remaining_ai_docs }} AI-enhanced document{{ remaining_ai_docs|pluralize }} remaining
+                </small>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="mt-3">
+            {% widthratio remaining_budget budget_limit 100 as budget_percentage %}
+            <div class="progress" style="height: 25px;">
+                <div class="progress-bar {% if budget_percentage <= 20 %}bg-danger{% elif budget_percentage <= 50 %}bg-warning{% else %}bg-success{% endif %}"
+                     role="progressbar"
+                     style="width: {{ budget_percentage }}%;"
+                     aria-valuenow="{{ budget_percentage }}"
+                     aria-valuemin="0"
+                     aria-valuemax="100">
+                    {{ budget_percentage }}% remaining
+                </div>
+            </div>
+        </div>
+
+        <!-- Warnings and Upgrade Prompts -->
+        {% if remaining_budget <= 0.10 %}
+        <div class="alert alert-danger mt-3">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>AI Budget Almost Exhausted!</strong> You have approximately {{ remaining_ai_docs }} AI-enhanced document{{ remaining_ai_docs|pluralize }} remaining.
+            {% if subscription.plan_type == 'free' %}
+            <a href="{% url 'pricing_page' %}" class="alert-link">Upgrade to Unlimited</a> for $10/month AI credit!
+            {% endif %}
+        </div>
+        {% elif remaining_budget <= 0.25 %}
+        <div class="alert alert-warning mt-3">
+            <i class="fas fa-info-circle"></i>
+            <strong>Low AI Budget:</strong> You have approximately {{ remaining_ai_docs }} AI-enhanced document{{ remaining_ai_docs|pluralize }} remaining.
+            {% if subscription.plan_type == 'free' %}
+            Consider <a href="{% url 'pricing_page' %}" class="alert-link">upgrading to Unlimited</a> for more AI-enhanced documents!
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Info Box -->
+        <div class="alert alert-info mt-3 mb-0">
+            <i class="fas fa-info-circle"></i>
+            <strong>How AI Enhancement Works:</strong>
+            <ul class="mb-0 mt-2">
+                <li>AI personalizes your Facts, Introduction, Claims, and Parties sections</li>
+                <li>Each document costs approximately $0.06 for AI enhancement</li>
+                <li>When budget is exhausted, documents use professional templates instead</li>
+                {% if subscription.plan_type == 'free' %}
+                <li><strong>Free plan:</strong> $0.50 total (~8 AI-enhanced documents)</li>
+                {% elif subscription.plan_type == 'unlimited' %}
+                <li><strong>Unlimited plan:</strong> $10/month refills automatically (~166 documents/month)</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        {% if subscription.plan_type == 'free' and remaining_budget > 0 %}
+        <div class="text-center mt-3">
+            <a href="{% url 'pricing_page' %}" class="btn btn-success btn-lg">
+                <i class="fas fa-arrow-up"></i> Upgrade for More AI Documents
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 

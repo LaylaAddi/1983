@@ -123,31 +123,58 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     """User dashboard - shows user's documents and profile"""
-    from documents.models import LawsuitDocument
-    
+    from documents.models import LawsuitDocument, DocumentSection
+
     # Get user's recent documents
     recent_documents = LawsuitDocument.objects.filter(
         user=request.user
     ).order_by('-created_at')[:5]
-    
+
     # Get document counts
     total_documents = LawsuitDocument.objects.filter(user=request.user).count()
     draft_documents = LawsuitDocument.objects.filter(
-        user=request.user, 
+        user=request.user,
         status='draft'
     ).count()
     completed_documents = LawsuitDocument.objects.filter(
-        user=request.user, 
+        user=request.user,
         status='completed'
     ).count()
-    
+
+    # Get AI usage statistics
+    profile = request.user.profile
+    subscription = request.user.subscription
+
+    # Count AI-enhanced sections
+    ai_sections_count = DocumentSection.objects.filter(
+        document__user=request.user,
+        ai_enhanced=True
+    ).count()
+
+    # Calculate estimated remaining AI documents
+    avg_cost_per_doc = 0.06  # Average cost for 4 AI-enhanced sections
+    if subscription.plan_type == 'unlimited':
+        remaining_budget = float(subscription.api_credit_balance)
+        budget_limit = 10.00
+    else:
+        remaining_budget = profile.remaining_api_budget
+        budget_limit = float(profile.api_cost_limit)
+
+    remaining_ai_docs = int(remaining_budget / avg_cost_per_doc) if avg_cost_per_doc > 0 else 0
+
     context = {
         'recent_documents': recent_documents,
         'total_documents': total_documents,
         'draft_documents': draft_documents,
         'completed_documents': completed_documents,
+        'profile': profile,
+        'subscription': subscription,
+        'ai_sections_count': ai_sections_count,
+        'remaining_ai_docs': remaining_ai_docs,
+        'remaining_budget': remaining_budget,
+        'budget_limit': budget_limit,
     }
-    
+
     return render(request, 'accounts/dashboard.html', context)
 
 
@@ -211,14 +238,34 @@ def change_password_ajax(request):
 @login_required
 def manage_subscription(request):
     """Page where users can view and manage their subscription"""
+    from documents.models import DocumentSection
+
     subscription = request.user.subscription
-    
+    profile = request.user.profile
+
     # Get payment history
     payments = Payment.objects.filter(
         user=request.user,
         status='completed'
     ).order_by('-completed_at')
-    
+
+    # Get AI usage statistics
+    ai_sections_count = DocumentSection.objects.filter(
+        document__user=request.user,
+        ai_enhanced=True
+    ).count()
+
+    total_ai_cost = float(profile.total_api_cost)
+
+    # Calculate remaining AI documents estimate
+    avg_cost_per_doc = 0.06
+    if subscription.plan_type == 'unlimited':
+        remaining_budget = float(subscription.api_credit_balance)
+    else:
+        remaining_budget = profile.remaining_api_budget
+
+    remaining_ai_docs = int(remaining_budget / avg_cost_per_doc) if avg_cost_per_doc > 0 else 0
+
     # Handle cancellation
     if request.method == 'POST' and 'cancel_subscription' in request.POST:
         if subscription.plan_type in ['pay_per_doc', 'unlimited']:
@@ -229,10 +276,15 @@ def manage_subscription(request):
             return redirect('manage_subscription')
         else:
             messages.info(request, 'You are already on the free plan.')
-    
+
     context = {
         'subscription': subscription,
+        'profile': profile,
         'payments': payments,
+        'ai_sections_count': ai_sections_count,
+        'total_ai_cost': total_ai_cost,
+        'remaining_ai_docs': remaining_ai_docs,
+        'remaining_budget': remaining_budget,
     }
-    
+
     return render(request, 'accounts/manage_subscription.html', context)

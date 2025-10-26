@@ -30,26 +30,76 @@
                             </h4>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>API Credit Balance:</strong></p>
+                            <p><strong>AI Enhancement Budget:</strong></p>
                             <h4>
-                                <span class="badge bg-warning text-dark">
-                                    ${{ subscription.api_credit_balance }}
+                                <span class="badge {% if remaining_budget <= 0.10 %}bg-danger{% elif remaining_budget <= 0.25 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                                    ${{ remaining_budget|floatformat:2 }}
                                 </span>
                             </h4>
                             <small class="text-muted">
                                 {% if subscription.plan_type == 'free' %}
-                                    Approximately {{ subscription.api_credit_balance|floatformat:2|cut:"0."|cut:"."|add:"0"|floatformat:0|default:"0" }} video extractions remaining
+                                    ~{{ remaining_ai_docs }} AI-enhanced documents remaining (Free: $0.50 total)
                                 {% elif subscription.plan_type == 'unlimited' %}
-                                    Refills with $10 every month
+                                    ~{{ remaining_ai_docs }} documents remaining (Refills with $10 every month)
+                                {% else %}
+                                    ~{{ remaining_ai_docs }} AI-enhanced documents remaining
                                 {% endif %}
                             </small>
                         </div>
                     </div>
 
-                    {% if subscription.plan_type == 'free' %}
+                    <!-- AI Usage Progress Bar -->
+                    <div class="mt-3">
+                        <p class="mb-2"><strong>AI Budget Usage:</strong></p>
+                        {% if subscription.plan_type == 'free' %}
+                            {% widthratio profile.total_api_cost profile.api_cost_limit 100 as usage_percentage %}
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar {% if usage_percentage >= 80 %}bg-danger{% elif usage_percentage >= 50 %}bg-warning{% else %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ usage_percentage }}%;"
+                                     aria-valuenow="{{ usage_percentage }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ usage_percentage }}% used
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                ${{ total_ai_cost|floatformat:2 }} of ${{ profile.api_cost_limit }} used
+                            </small>
+                        {% else %}
+                            {% widthratio remaining_budget 10.00 100 as remaining_percentage %}
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar {% if remaining_percentage <= 20 %}bg-danger{% elif remaining_percentage <= 50 %}bg-warning{% else %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ remaining_percentage }}%;"
+                                     aria-valuenow="{{ remaining_percentage }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ remaining_percentage }}% remaining
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                ${{ remaining_budget|floatformat:2 }} of $10.00 remaining this month
+                            </small>
+                        {% endif %}
+                    </div>
+
+                    <!-- AI Enhancement Stats -->
                     <div class="alert alert-info mt-3">
-                        <i class="fas fa-info-circle"></i> 
-                        <strong>Free Plan:</strong> You have limited API credits. Upgrade for more features!
+                        <i class="fas fa-robot"></i>
+                        <strong>AI Enhancement Stats:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>AI-enhanced sections created: <strong>{{ ai_sections_count }}</strong></li>
+                            <li>Total AI cost: <strong>${{ total_ai_cost|floatformat:2 }}</strong></li>
+                            <li>Average cost per document: <strong>~$0.06</strong></li>
+                        </ul>
+                    </div>
+
+                    {% if subscription.plan_type == 'free' %}
+                    <div class="alert alert-warning mt-3">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Free Plan:</strong> You have ${{ remaining_budget|floatformat:2 }} AI credit remaining (~{{ remaining_ai_docs }} documents).
+                        Upgrade for more AI-enhanced documents!
                     </div>
                     <a href="{% url 'pricing_page' %}" class="btn btn-warning btn-lg">
                         <i class="fas fa-star"></i> Upgrade Now
