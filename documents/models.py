@@ -153,15 +153,20 @@ class DocumentSection(models.Model):
         ('claims', 'Claims for Relief'),
         ('prayer', 'Prayer for Relief'),
         ('jury_demand', 'Jury Trial Demand'),
-        ('exhibits', 'List of Exhibits'), 
+        ('exhibits', 'List of Exhibits'),
     ]
-    
+
     document = models.ForeignKey(LawsuitDocument, on_delete=models.CASCADE, related_name='sections')
     section_type = models.CharField(max_length=20, choices=SECTION_TYPES)
     title = models.CharField(max_length=200)
     content = models.TextField()
     order = models.PositiveIntegerField(default=0)
-    
+
+    # AI Enhancement tracking
+    ai_enhanced = models.BooleanField(default=False, help_text='Whether this section was enhanced using AI')
+    ai_cost = models.DecimalField(max_digits=6, decimal_places=4, default=0.0, help_text='Cost of AI enhancement in USD')
+    ai_model = models.CharField(max_length=50, blank=True, help_text='AI model used (e.g., gpt-4o)')
+
     class Meta:
         ordering = ['order']
         unique_together = ['document', 'section_type']
