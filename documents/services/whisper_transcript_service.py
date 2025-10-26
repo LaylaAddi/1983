@@ -77,19 +77,22 @@ class WhisperTranscriptService:
 
             # Configure proxy if available
             proxy_url = os.getenv('PROXY_URL')
-            proxies = None
-            if proxy_url:
-                proxies = {
-                    'http': proxy_url,
-                    'https': proxy_url
-                }
+            api = None
 
-            # Fetch the transcript
-            transcript_list = YouTubeTranscriptApi.get_transcript(
-                video_id,
-                proxies=proxies
-            )
-            
+            if proxy_url:
+                from youtube_transcript_api.proxies import GenericProxyConfig
+                proxy_config = GenericProxyConfig(
+                    http_url=proxy_url,
+                    https_url=proxy_url
+                )
+                api = YouTubeTranscriptApi(proxy_config=proxy_config)
+            else:
+                api = YouTubeTranscriptApi()
+
+            # Fetch the transcript using the correct API for v1.2.2
+            fetched_transcript = api.fetch(video_id)
+            transcript_list = fetched_transcript.to_raw_data()
+
             # Filter by time range if specified
             if start_seconds is not None and end_seconds is not None:
                 filtered_text = []
@@ -105,7 +108,7 @@ class WhisperTranscriptService:
             else:
                 # No time filter - get all text
                 full_text = ' '.join([entry['text'] for entry in transcript_list])
-            
+
             return {
                 'success': True,
                 'text': full_text.strip(),
