@@ -30,23 +30,81 @@ class SectionGenerationService:
         return section, created
 
     @staticmethod
-    def create_section_from_template(document, template, context_data):
-        """Create a section from a legal template with context data"""
+    def create_section_from_template(document, template, context_data, use_ai=True):
+        """
+        Create a section from a legal template with context data.
+
+        Args:
+            document: LawsuitDocument instance
+            template: LegalTemplate instance
+            context_data: dict with placeholder values
+            use_ai: bool - whether to attempt AI enhancement (default True)
+
+        Returns:
+            tuple: (section, created, metadata)
+            metadata includes: 'ai_enhanced', 'ai_cost', 'method', 'warning', 'upgrade_prompt'
+        """
         from .template_matching_service import TemplateMatchingService
-        
-        # Render the template content
-        rendered_content = TemplateMatchingService.render_template_content(
-            template.template_text, 
-            context_data
-        )
-        
+        from .ai_enhancement_service import AIEnhancementService
+
+        ai_metadata = {
+            'ai_enhanced': False,
+            'ai_cost': 0.0,
+            'ai_model': None,
+            'method': 'template',
+            'warning': None,
+            'upgrade_prompt': None
+        }
+
+        rendered_content = None
+
+        # ATTEMPT 1: Try AI Enhancement (if enabled for this section)
+        if use_ai:
+            try:
+                ai_result = AIEnhancementService.enhance_section(
+                    template=template,
+                    document=document,
+                    context_data=context_data,
+                    timeout=10
+                )
+
+                if ai_result.get('success'):
+                    # AI enhancement succeeded!
+                    rendered_content = ai_result['content']
+                    ai_metadata.update({
+                        'ai_enhanced': True,
+                        'ai_cost': ai_result.get('cost', 0.0),
+                        'ai_model': ai_result.get('model'),
+                        'method': 'ai',
+                        'warning': ai_result.get('warning'),
+                        'tokens_used': ai_result.get('tokens_used')
+                    })
+                else:
+                    # AI failed - prepare fallback
+                    ai_metadata['method'] = 'template_fallback'
+                    ai_metadata['ai_failure_reason'] = ai_result.get('reason')
+                    ai_metadata['upgrade_prompt'] = ai_result.get('upgrade_prompt')
+
+            except Exception as e:
+                # AI error - will fall back to template
+                ai_metadata['method'] = 'template_fallback'
+                ai_metadata['ai_error'] = str(e)
+
+        # FALLBACK: Use template rendering if AI didn't work or wasn't attempted
+        if rendered_content is None:
+            rendered_content = TemplateMatchingService.render_template_content(
+                template.template_text,
+                context_data
+            )
+
         # Get the display title for the section type
         title = SectionGenerationService._get_section_title(template.section_type)
-        
+
         # Get the standard order for this section type
         order = SectionGenerationService._get_standard_order(template.section_type)
-        
-        return SectionGenerationService.create_or_update_section(
+
+        # Create or update the section
+        section, created = SectionGenerationService.create_or_update_section(
             document=document,
             section_type=template.section_type,
             title=title,
@@ -54,21 +112,71 @@ class SectionGenerationService:
             order=order
         )
 
+        # Store AI metadata in the section (if fields exist)
+        if hasattr(section, 'ai_enhanced'):
+            section.ai_enhanced = ai_metadata['ai_enhanced']
+            section.ai_cost = ai_metadata['ai_cost']
+            section.ai_model = ai_metadata.get('ai_model') or ''
+            section.save()
+
+        return section, created, ai_metadata
+
     @staticmethod
-    def bulk_generate_sections(document, templates, context_data):
-        """Generate multiple sections from templates"""
+    def bulk_generate_sections(document, templates, context_data, use_ai=True):
+        """
+        Generate multiple sections from templates.
+
+        Args:
+            document: LawsuitDocument instance
+            templates: QuerySet of LegalTemplate instances
+            context_data: dict with placeholder values
+            use_ai: bool - whether to attempt AI enhancement (default True)
+
+        Returns:
+            list of dicts with keys:
+            - 'section': DocumentSection instance
+            - 'created': bool
+            - 'template': LegalTemplate instance
+            - 'ai_enhanced': bool
+            - 'ai_cost': float
+            - 'method': str ('ai', 'template', 'template_fallback')
+            - 'warning': str (if low budget)
+            - 'upgrade_prompt': str (if budget exceeded)
+        """
         results = []
-        
+        total_ai_cost = 0.0
+        ai_sections_count = 0
+
         for template in templates:
-            section, created = SectionGenerationService.create_section_from_template(
-                document, template, context_data
+            section, created, ai_metadata = SectionGenerationService.create_section_from_template(
+                document, template, context_data, use_ai=use_ai
             )
+
+            # Track AI usage
+            if ai_metadata['ai_enhanced']:
+                ai_sections_count += 1
+                total_ai_cost += ai_metadata['ai_cost']
+
             results.append({
                 'section': section,
                 'created': created,
-                'template': template
+                'template': template,
+                'ai_enhanced': ai_metadata['ai_enhanced'],
+                'ai_cost': ai_metadata['ai_cost'],
+                'method': ai_metadata['method'],
+                'warning': ai_metadata.get('warning'),
+                'upgrade_prompt': ai_metadata.get('upgrade_prompt'),
+                'ai_failure_reason': ai_metadata.get('ai_failure_reason')
             })
-        
+
+        # Add summary to results
+        for result in results:
+            result['summary'] = {
+                'total_ai_cost': total_ai_cost,
+                'ai_sections_count': ai_sections_count,
+                'total_sections': len(results)
+            }
+
         return results
 
     @staticmethod
