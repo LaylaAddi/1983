@@ -121,8 +121,24 @@
 - `document` (FK), `youtube_url`, `video_title`
 - `start_time`, `end_time`, `start_seconds`, `end_seconds`
 - `raw_transcript`, `edited_transcript`, `manually_entered`
+- `source_type` - Choices: 'body_camera', 'plaintiff_recorded', 'surveillance', 'dashboard_camera', 'witness_recorded', 'other'
+- `source_description` - Optional custom description of video source
 - `violation_tags`, `notes`, `extraction_cost`
 - `is_reviewed`, `include_in_complaint`
+
+**Person** - People involved in case (for speaker attribution)
+- `document` (FK), `name`, `role` ('plaintiff', 'defendant', 'witness', 'other')
+- `title`, `badge_number`, `notes`
+- `color_code` - Hex color for UI highlighting (default '#6c757d')
+- Property: `display_name` - Formatted name with title
+
+**TranscriptQuote** - Highlighted transcript segments with speaker attribution
+- `video_evidence` (FK), `text`, `start_position`, `end_position`
+- `speaker` (FK to Person), `approximate_timestamp`
+- `significance` - Why quote is important
+- `violation_tags` - Associated civil rights violations
+- `notes`, `sort_order`, `include_in_document`
+- Properties: `full_timestamp`, `formatted_citation`
 
 **PurchasedDocument** - Pay-per-doc purchases
 - `user`, `document`, `amount_paid`
@@ -166,9 +182,13 @@
 
 ### whisper_transcript_service.py
 **WhisperTranscriptService** - Video transcription
-- `extract_transcript()` - Extracts audio and transcribes with Whisper
-- Uses yt-dlp for audio download
-- Costs ~$0.006 per minute of audio
+- `get_transcript()` - Main method with fallback: YouTube captions → Whisper API
+- `get_youtube_transcript()` - Fetches free captions via youtube-transcript-api v1.2.2
+- `extract_audio_and_transcribe()` - Downloads audio with yt-dlp and transcribes with Whisper
+- **Proxy Support**: Configures residential proxy for both youtube-transcript-api and yt-dlp
+- Uses `GenericProxyConfig` for youtube-transcript-api instance
+- Environment variable: `PROXY_URL` (for production on Render)
+- Costs ~$0.006 per minute of audio (Whisper only, captions are free)
 - Budget checking before API call
 
 ### court_lookup_service.py
@@ -184,8 +204,14 @@
 
 ### evidence_to_facts_service.py
 **EvidenceToFactsService** - Transforms video evidence to legal narrative
-- Combines multiple VideoEvidence segments into cohesive facts section
-- Uses GPT-4o with legal writing guidelines
+- `generate_facts_section()` - Creates Statement of Facts from tagged quotes
+- Generates narrative paragraphs (not bullet points) for Section 1983 format
+- Uses speaker attribution from TranscriptQuote model
+- Formats exhibit references: "See Exhibit A (Plaintiff-Recorded Video) at 1:23"
+- `generate_exhibits_list()` - Creates formal List of Exhibits section
+- Uses actual video source type (body camera, plaintiff-recorded, etc.)
+- Appends to existing Statement of Facts (doesn't replace)
+- Renumbers facts to continue sequence from existing content
 
 ## User Workflows
 
@@ -196,20 +222,39 @@
 
 2. **Extract Video Evidence** (`/documents/<pk>/evidence/`)
    - User adds YouTube URLs with timestamps
+   - User selects video source (body camera, plaintiff-recorded, etc.) - **REQUIRED**
    - WhisperTranscriptService extracts transcripts
-   - User reviews/edits transcripts with speaker attribution
+   - User reviews/edits transcripts
 
-3. **Generate Sections** (`/documents/<pk>/generate-defaults/`)
+3. **Tag Quotes with Speaker Attribution** (`/documents/<pk>/evidence/`)
+   - User manages people involved (plaintiff, defendants, witnesses)
+   - Can sync defendants from document's defendants field
+   - User highlights important quotes in transcript
+   - Assigns speaker to each quote
+   - Adds significance and violation tags
+   - Color-coded display by speaker role
+   - Marks quotes for inclusion in legal document
+
+4. **Generate Statement of Facts from Video** (`/documents/<pk>/evidence/generate-facts/`)
+   - EvidenceToFactsService converts tagged quotes to narrative paragraphs
+   - Appends to existing Statement of Facts (doesn't replace)
+   - Creates "List of Exhibits" section with video sources
+   - Uses actual video source type in exhibit references
+
+5. **Generate All Sections** (`/documents/<pk>/generate-defaults/`)
    - DocumentOrchestrator creates all 8 sections
    - AIEnhancementService enhances 4 key sections (if budget allows)
    - TemplateMatchingService fills remaining sections
    - Fallback to defaults if templates not found
 
-4. **Edit Sections** (`/documents/<pk>/sections/`)
+6. **Edit Sections** (`/documents/<pk>/sections/`)
    - User can manually edit any section content
+   - Can expand/collapse full text on detail page
+   - Individual "Save & Return to Document" buttons per section
+   - Anchor-based navigation between detail and sections pages
    - Can insert additional template sections
 
-5. **Download PDF** (`/documents/<pk>/download-pdf/`)
+7. **Download PDF** (`/documents/<pk>/download-pdf/`)
    - django-weasyprint generates final PDF
    - Includes all sections formatted for legal filing
 
@@ -275,12 +320,30 @@
 ### Documents
 - `/documents/create/` - Create new document
 - `/documents/list/` - List user's documents
-- `/documents/<pk>/` - Document detail view
+- `/documents/<pk>/` - Document detail view (with expand/collapse sections)
 - `/documents/<pk>/edit/` - Edit document metadata
-- `/documents/<pk>/evidence/` - Manage video evidence
-- `/documents/<pk>/sections/` - Edit document sections
+- `/documents/<pk>/evidence/` - Manage video evidence with speaker attribution
+- `/documents/<pk>/sections/` - Edit document sections (with anchor navigation)
+- `/documents/<pk>/sections/<section_id>/update/` - Update individual section (AJAX)
 - `/documents/<pk>/generate-defaults/` - Auto-generate all sections
 - `/documents/<pk>/download-pdf/` - Download final PDF
+
+### Evidence & Speaker Attribution
+- `/documents/<pk>/evidence/extract/` - Extract video transcript with AI
+- `/documents/<pk>/evidence/add-manual/` - Manually add video segment
+- `/documents/<pk>/evidence/<segment_id>/update/` - Update video segment
+- `/documents/<pk>/evidence/<segment_id>/delete/` - Delete video segment
+- `/documents/<pk>/evidence/generate-facts/` - Generate Statement of Facts from quotes
+- `/documents/<pk>/evidence/preview-facts/` - Preview facts before generating
+- `/documents/<pk>/people/` - Get all people in case
+- `/documents/<pk>/people/add/` - Add person
+- `/documents/<pk>/people/<person_id>/update/` - Update person
+- `/documents/<pk>/people/<person_id>/delete/` - Delete person
+- `/documents/<pk>/people/sync/` - Sync people from defendants field
+- `/documents/<pk>/evidence/<segment_id>/quotes/` - Get quotes for segment
+- `/documents/<pk>/evidence/<segment_id>/quotes/add/` - Add quote
+- `/documents/<pk>/evidence/<segment_id>/quotes/<quote_id>/update/` - Update quote
+- `/documents/<pk>/evidence/<segment_id>/quotes/<quote_id>/delete/` - Delete quote
 
 ## Environment Variables
 
@@ -295,8 +358,43 @@
 **Optional:**
 - `ALLOWED_HOSTS` - Comma-separated list
 - `REDIS_URL` - Redis connection for Celery
+- `PROXY_URL` - Residential proxy for YouTube transcript extraction (production only)
 
 ## Recent Major Features
+
+### Speaker Attribution System (October 2024)
+- **Person Model**: Track plaintiff, defendants, witnesses with roles and titles
+- **TranscriptQuote Model**: Highlight and tag specific quotes with speaker attribution
+- **Color-Coded UI**: Visual distinction by role (blue=plaintiff, red=defendants, green=witnesses)
+- **Quote Management**: Add, edit, delete, reorder quotes
+- **Significance Tracking**: Note why each quote is important
+- **Violation Tagging**: Associate quotes with specific civil rights violations
+- **Sync from Defendants**: Auto-create Person records from document's defendants field
+- **Integration**: EvidenceToFactsService uses tagged quotes for narrative generation
+
+### Video Source Selection (October 2024)
+- **Required Field**: Users must select video source type when adding evidence
+- **Source Types**: Body Camera, Plaintiff-Recorded, Surveillance, Dashboard Camera, Witness-Recorded, Other
+- **Custom Description**: Optional field for additional source details
+- **Legal Document Integration**: Actual source appears in Statement of Facts and Exhibits
+- **Example**: "See Exhibit A (Plaintiff-Recorded Video) at 1:23" instead of generic "Body Camera Footage"
+
+### Section Navigation Improvements (October 2024)
+- **Expand/Collapse**: View full section text in-place on detail page (no navigation)
+- **Edit Buttons**: Direct [Edit] button on each section (bottom right)
+- **Anchor Navigation**: URL anchors (e.g., `#section-facts`) for direct section linking
+- **Individual Save Buttons**: Each section has "Save & Return to Document" and "Save Changes"
+- **Context Preservation**: After saving, returns to exact section user was editing
+- **AJAX Saves**: Fast, no full page reload for individual section updates
+
+### Evidence Manager UX Improvements (October 2024)
+- **Workflow Guide**: 4-step visual guide at top of page
+- **Clear Button Labels**:
+  - "Save Transcript & Notes" instead of vague "Save Changes"
+  - "Add Video Evidence to Statement of Facts" instead of "Generate Statement of Facts"
+- **Confirmation Dialogs**: Multi-line explanations when generating (emphasizes APPEND vs REPLACE)
+- **Required Video Source**: Validation prevents submission without selecting source
+- **Sticky Action Bar**: Shows count of segments marked for inclusion
 
 ### AI-Enhanced Document Generation (October 2024)
 - Implemented GPT-4o integration for 4 sections
@@ -315,7 +413,7 @@
 - YouTube video integration with timestamp segments
 - Whisper transcription with cost tracking
 - Speaker attribution in transcripts
-- Evidence-to-facts transformation
+- Evidence-to-facts transformation with narrative format
 
 ### Referral Program
 - Percentage-based rewards (20% default)
@@ -440,7 +538,15 @@ docker-compose logs -f web        # View web logs
 
 ---
 
-**Last Updated:** October 26, 2024
+**Last Updated:** October 27, 2024
 **Django Version:** 4.2.7
 **Python Version:** 3.11+
 **Database:** PostgreSQL 15+
+
+## Recent Updates (October 27, 2024)
+- Added video source selection (required field with 6 source types)
+- Implemented speaker attribution system (Person and TranscriptQuote models)
+- Added section navigation with anchors and individual save buttons
+- Improved Evidence Manager UX with workflow guide and clear button labels
+- Updated evidence-to-facts generation to use actual video sources
+- Added expand/collapse functionality for sections on detail page
