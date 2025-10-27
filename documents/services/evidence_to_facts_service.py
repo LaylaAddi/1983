@@ -64,38 +64,47 @@ class EvidenceToFactsService:
                     # Fallback: if no quotes tagged, mention the segment exists
                     fact = (
                         f"{fact_number}. Video evidence from {segment.start_time} to {segment.end_time} "
-                        f"documents relevant events. "
-                        f"(Exhibit {exhibit_letter})."
+                        f"documents relevant events. See Exhibit {exhibit_letter}."
                     )
                     facts.append(fact)
                     fact_number += 1
                     continue
 
-                # Process each tagged quote
+                # Process each tagged quote - create narrative facts
                 for quote in quotes:
                     total_quotes += 1
 
-                    # Build the factual statement with speaker attribution
+                    # Get speaker information
                     speaker_name = quote.speaker.display_name
-                    speaker_role = quote.speaker.get_role_display()
+                    speaker_role = quote.speaker.role
 
-                    # Format the statement
+                    # Build narrative fact in legal format
                     fact_parts = []
 
-                    # Add context/significance if provided
+                    # Add context/significance first if provided
                     if quote.significance:
+                        # Make significance part of the narrative
                         fact_parts.append(f"{quote.significance}.")
 
-                    # Add the quote with attribution
-                    fact_parts.append(f'{speaker_name} stated: "{quote.text}"')
+                    # Format the quote based on speaker role for natural narrative
+                    if speaker_role == 'plaintiff':
+                        # First person quotes for plaintiff
+                        fact_parts.append(f'The Plaintiff stated, "{quote.text}"')
+                    elif speaker_role == 'defendant':
+                        # Third person for defendants (officers, etc.)
+                        fact_parts.append(f'{speaker_name} stated, "{quote.text}"')
+                    elif speaker_role == 'witness':
+                        fact_parts.append(f'{speaker_name} stated, "{quote.text}"')
+                    else:
+                        fact_parts.append(f'{speaker_name} stated, "{quote.text}"')
 
-                    # Combine parts
+                    # Combine narrative parts
                     fact_text = ' '.join(fact_parts)
 
-                    # Add exhibit reference
+                    # Add exhibit reference in legal format
                     fact = (
                         f"{fact_number}. {fact_text} "
-                        f"(Exhibit {exhibit_letter}, {segment.start_time})."
+                        f"See Exhibit {exhibit_letter} (Body Camera Footage) at {segment.start_time}."
                     )
 
                     facts.append(fact)
@@ -130,7 +139,7 @@ class EvidenceToFactsService:
 
     @staticmethod
     def _generate_exhibits_list(videos, exhibit_map):
-        """Generate formatted exhibits list for complaint."""
+        """Generate formatted exhibits list for complaint in legal format."""
         exhibits = []
 
         for url, segments in videos.items():
@@ -158,14 +167,18 @@ class EvidenceToFactsService:
             if all_tags:
                 violations = ', '.join(sorted(tag.replace('_', ' ').title() for tag in all_tags))
             else:
-                violations = 'Constitutional violations'
+                violations = 'civil rights violations'
 
+            # Format exhibit in legal style (matching Section 1983 format)
             exhibit_text = (
-                f"EXHIBIT {letter}: Video Evidence\n"
-                f"URL: {url}\n"
-                f"Relevant Timestamps: {', '.join(timestamps)}\n"
-                f"Description: Video documentation of {violations}"
+                f"EXHIBIT {letter}: Body Camera Footage\n\n"
+                f"Description: Video documentation of {violations}\n\n"
+                f"Source: {url}\n\n"
+                f"Relevant Timestamps: {', '.join(timestamps)}\n\n"
+                f"Note: Because this piece of evidence is a video, it cannot be attached "
+                f"to this Complaint. The video evidence will be produced during discovery "
+                f"and is available for review."
             )
             exhibits.append(exhibit_text)
 
-        return "\n\n".join(exhibits)
+        return "\n\n---\n\n".join(exhibits)
