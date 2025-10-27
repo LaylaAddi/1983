@@ -196,8 +196,9 @@
                                     <input type="url" id="new-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Video Source</label>
+                                    <label class="form-label">Video Source <span class="text-danger">*</span></label>
                                     <select id="new-source-type" class="form-select">
+                                        <option value="">-- Select Source --</option>
                                         <option value="body_camera">Body Camera Footage</option>
                                         <option value="plaintiff_recorded">Plaintiff-Recorded Video</option>
                                         <option value="surveillance">Surveillance Camera</option>
@@ -269,8 +270,9 @@
                                     <input type="url" id="manual-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <label class="form-label">Video Source</label>
+                                    <label class="form-label">Video Source <span class="text-danger">*</span></label>
                                     <select id="manual-source-type" class="form-select">
+                                        <option value="">-- Select Source --</option>
                                         <option value="body_camera">Body Camera Footage</option>
                                         <option value="plaintiff_recorded">Plaintiff-Recorded Video</option>
                                         <option value="surveillance">Surveillance Camera</option>
@@ -687,6 +689,12 @@ async function extractNewSegment() {
         return;
     }
 
+    // Validate source type is selected
+    if (!sourceType) {
+        statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Please select a video source</div>';
+        return;
+    }
+
     if (!start || !end) {
         statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Both start and end times are required</div>';
         return;
@@ -837,7 +845,13 @@ function addManualSegment() {
         statusDiv.innerHTML = '<div class="alert alert-danger">URL and transcript are required</div>';
         return;
     }
-    
+
+    // Validate source type is selected
+    if (!sourceType) {
+        statusDiv.innerHTML = '<div class="alert alert-danger">Please select a video source</div>';
+        return;
+    }
+
     if (!start || !end) {
         statusDiv.innerHTML = '<div class="alert alert-danger">Both start and end times are required</div>';
         return;
