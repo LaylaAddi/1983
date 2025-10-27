@@ -356,12 +356,12 @@
                 <div class="card-body">
                     {% if sections %}
                         <!-- Overall Completion Status -->
-                        {% if document.total_sections == 7 %}
-                            <!-- All 7 sections present - show completion percentage -->
+                        {% if document.total_sections >= 7 %}
+                            <!-- All required sections present - show completion percentage -->
                             <div class="alert {% if document.is_document_complete %}alert-success{% elif document.completion_percentage > 50 %}alert-info{% else %}alert-warning{% endif %} mb-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <strong>
-                                        <i class="fas fa-tasks"></i> Document Completion: {{ document.completed_sections }}/7 Sections
+                                        <i class="fas fa-check-circle"></i> All Required Sections Complete: {{ document.completed_sections }}/{{ document.total_sections }} Sections
                                     </strong>
                                     <span class="badge {% if document.completion_percentage == 100 %}bg-success{% elif document.completion_percentage > 50 %}bg-primary{% else %}bg-warning{% endif %}">
                                         {{ document.completion_percentage }}%
@@ -402,7 +402,7 @@
                             Click "Manage Sections" to edit, reorder, add, or delete sections.
                         </p>
                         {% for section in sections %}
-                        <div class="border-bottom pb-3 mb-3">
+                        <div class="border-bottom pb-3 mb-3" id="section-{{ section.section_type }}">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h5 class="mb-0">{{ section.order }}. {{ section.title }}</h5>
                                 {% if section.is_complete %}
@@ -417,10 +417,31 @@
                             </div>
                             <div class="text-muted small mb-2">{{ section.get_section_type_display }}</div>
                             <div class="bg-body-tertiary p-3 rounded" style="font-family: 'Times New Roman', serif; line-height: 1.6;">
-                                {{ section.content|truncatewords:50 }}
-                                {% if section.content|wordcount > 50 %}
-                                    <span class="text-muted">... <a href="{% url 'manage_document_sections' document.pk %}">view full section</a></span>
-                                {% endif %}
+                                <div id="section-content-truncated-{{ section.id }}" {% if section.content|wordcount <= 50 %}style="display: none;"{% endif %}>
+                                    {{ section.content|truncatewords:50 }}
+                                    {% if section.content|wordcount > 50 %}
+                                        <span class="text-muted">...
+                                            <a href="#" onclick="toggleSectionView({{ section.id }}); return false;">
+                                                view full section <i class="fas fa-chevron-down"></i>
+                                            </a>
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <div id="section-content-full-{{ section.id }}" style="display: {% if section.content|wordcount > 50 %}none{% else %}block{% endif %};">
+                                    {{ section.content|linebreaks }}
+                                    {% if section.content|wordcount > 50 %}
+                                        <div class="mt-2">
+                                            <a href="#" onclick="toggleSectionView({{ section.id }}); return false;">
+                                                <i class="fas fa-chevron-up"></i> collapse
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end mt-2">
+                                <a href="{% url 'manage_document_sections' document.pk %}#section-{{ section.section_type }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
                             </div>
                         </div>
                         {% endfor %}
@@ -632,4 +653,23 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleSectionView(sectionId) {
+    const truncatedDiv = document.getElementById('section-content-truncated-' + sectionId);
+    const fullDiv = document.getElementById('section-content-full-' + sectionId);
+
+    if (truncatedDiv.style.display === 'none') {
+        // Currently showing full, switch to truncated
+        truncatedDiv.style.display = 'block';
+        fullDiv.style.display = 'none';
+    } else {
+        // Currently showing truncated, switch to full
+        truncatedDiv.style.display = 'none';
+        fullDiv.style.display = 'block';
+    }
+}
+</script>
 {% endblock %}

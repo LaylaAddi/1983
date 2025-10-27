@@ -14,13 +14,40 @@
                 </div>
                 <div class="d-flex gap-2">
                     {% if included_count > 0 %}
-                    <a href="{% url 'generate_facts_from_evidence' document.pk %}" class="btn btn-success">
-                        <i class="fas fa-magic"></i> Generate Statement of Facts
+                    <a href="{% url 'generate_facts_from_evidence' document.pk %}" class="btn btn-success" onclick="return confirm('Add video evidence to Statement of Facts?\n\n✓ Tagged quotes will be converted to narrative paragraphs\n✓ Will be ADDED to your existing Statement of Facts (not replaced)\n✓ A separate \'List of Exhibits\' section will be created\n\nContinue?')">
+                        <i class="fas fa-plus-circle"></i> Add Video Evidence to Statement of Facts
                     </a>
                     {% endif %}
                     <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Back to Document
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Guide -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading"><i class="fas fa-list-ol"></i> How This Works</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>1. Extract or Enter</strong>
+                        <p class="small mb-0">Add video evidence using AI extraction or manual entry</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>2. Edit & Tag Quotes</strong>
+                        <p class="small mb-0">Highlight important quotes and assign speakers (plaintiff, defendants, witnesses)</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>3. Mark for Inclusion</strong>
+                        <p class="small mb-0">Check "Include in Complaint" for segments you want in your legal document</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>4. Generate</strong>
+                        <p class="small mb-0">Click the green button to add video evidence to Statement of Facts</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -79,6 +106,91 @@
         </div>
     </div>
 
+    <!-- People Management Panel (NEW - for speaker attribution) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users"></i> People Involved (Speaker Attribution)
+                    </h5>
+                    <button class="btn btn-sm btn-light" type="button" data-bs-toggle="collapse" data-bs-target="#peoplePanel">
+                        <i class="fas fa-chevron-down"></i> Toggle
+                    </button>
+                </div>
+                <div class="collapse show" id="peoplePanel">
+                    <div class="card-body">
+                        <!-- Info Alert -->
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <strong><i class="fas fa-info-circle"></i> New Feature!</strong>
+                            Tag who said what in your video transcripts for better organization and AI-generated citations.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+
+                        <!-- Sync Button -->
+                        {% if document.defendants %}
+                        <div class="mb-3">
+                            <button class="btn btn-primary" onclick="syncPeopleFromDefendants()">
+                                <i class="fas fa-sync"></i> Auto-Sync People from Document Defendants
+                            </button>
+                            <small class="text-muted d-block mt-1">
+                                This will create people from your defendants field: "{{ document.defendants|truncatechars:100 }}"
+                            </small>
+                        </div>
+                        {% endif %}
+
+                        <!-- People List -->
+                        <div id="peopleList" class="row g-2 mb-3">
+                            {% if has_people %}
+                                {% for person in people %}
+                                <div class="col-md-4" data-person-id="{{ person.id }}">
+                                    <div class="card h-100" style="border-left: 4px solid {{ person.color_code }};">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <h6 class="mb-0">{{ person.display_name }}</h6>
+                                                    <small class="text-muted">{{ person.get_role_display }}</small>
+                                                    {% if person.badge_number %}
+                                                    <br><small class="text-muted">Badge: {{ person.badge_number }}</small>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="btn-group-vertical btn-group-sm">
+                                                    <button class="btn btn-outline-primary btn-sm" onclick="editPerson({{ person.id }})" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-danger btn-sm" onclick="deletePerson({{ person.id }})" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-12">
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> No people added yet.
+                                        {% if document.defendants %}
+                                        Click "Auto-Sync" above to get started!
+                                        {% else %}
+                                        Add defendants to your document first, then sync.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Add Person Button -->
+                        <button class="btn btn-success btn-sm" onclick="showAddPersonModal()">
+                            <i class="fas fa-plus"></i> Add Person Manually
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Add New Segment -->
     <div class="row mb-4">
         <div class="col-12">
@@ -106,12 +218,24 @@
                         <!-- AI Extract Tab -->
                         <div class="tab-pane fade show active" id="extract-tab">
                             <div class="row">
-                                <div class="col-md-12 mb-3">
+                                <div class="col-md-8 mb-3">
                                     <label class="form-label">YouTube URL</label>
                                     <input type="url" id="new-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
                                 </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Video Source <span class="text-danger">*</span></label>
+                                    <select id="new-source-type" class="form-select">
+                                        <option value="">-- Select Source --</option>
+                                        <option value="body_camera">Body Camera Footage</option>
+                                        <option value="plaintiff_recorded">Plaintiff-Recorded Video</option>
+                                        <option value="surveillance">Surveillance Camera</option>
+                                        <option value="dashboard_camera">Dashboard Camera</option>
+                                        <option value="witness_recorded">Witness-Recorded Video</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">
@@ -168,12 +292,24 @@
                         <!-- Manual Entry Tab -->
                         <div class="tab-pane fade" id="manual-tab">
                             <div class="row">
-                                <div class="col-md-12 mb-3">
+                                <div class="col-md-8 mb-3">
                                     <label class="form-label">YouTube URL</label>
                                     <input type="url" id="manual-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
                                 </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Video Source <span class="text-danger">*</span></label>
+                                    <select id="manual-source-type" class="form-select">
+                                        <option value="">-- Select Source --</option>
+                                        <option value="body_camera">Body Camera Footage</option>
+                                        <option value="plaintiff_recorded">Plaintiff-Recorded Video</option>
+                                        <option value="surveillance">Surveillance Camera</option>
+                                        <option value="dashboard_camera">Dashboard Camera</option>
+                                        <option value="witness_recorded">Witness-Recorded Video</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">
@@ -286,14 +422,31 @@
                                     <label class="form-label">
                                         <i class="fas fa-edit"></i> Edited Transcript (Add speaker names, fix errors)
                                     </label>
-                                    <textarea 
-                                        class="form-control edited-transcript" 
+                                    <textarea
+                                        class="form-control edited-transcript"
                                         data-segment-id="{{ segment.id }}"
-                                        rows="6" 
+                                        rows="6"
                                         style="font-family: monospace;">{{ segment.edited_transcript }}</textarea>
                                     <small class="text-muted">
                                         Example: "Officer Smith: You need to show ID. Plaintiff: Am I being detained? Officer Smith: Yes, you're being detained."
                                     </small>
+                                    <div class="mt-2">
+                                        <button class="btn btn-sm btn-info" onclick="enableHighlightMode({{ segment.id }})">
+                                            <i class="fas fa-highlighter"></i> Highlight Text to Tag Speaker
+                                        </button>
+                                        <small class="text-muted ms-2">Select text in the transcript above, then click this button</small>
+                                    </div>
+                                </div>
+
+                                <!-- Tagged Quotes Section (NEW) -->
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-quotes-left"></i> Tagged Quotes
+                                        <span class="badge bg-secondary" id="quote-count-{{ segment.id }}">0</span>
+                                    </label>
+                                    <div id="quotes-list-{{ segment.id }}" class="border rounded p-2 bg-body-secondary" style="min-height: 100px; max-height: 300px; overflow-y: auto;">
+                                        <p class="text-muted text-center mb-0"><i class="fas fa-info-circle"></i> No quotes tagged yet. Highlight text above to get started.</p>
+                                    </div>
                                 </div>
 
                                 <!-- Violation Tags -->
@@ -344,8 +497,8 @@
                                             <i class="fas fa-file-alt"></i> Include in Complaint
                                         </label>
                                     </div>
-                                    <button class="btn btn-info" onclick="saveSegment({{ segment.id }})">
-                                        <i class="fas fa-save"></i> Save Changes
+                                    <button class="btn btn-primary btn-sm" onclick="saveSegment({{ segment.id }})">
+                                        <i class="fas fa-save"></i> Save Transcript & Notes
                                     </button>
                                 </div>
 
@@ -376,17 +529,17 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h5 class="mb-0">
-                    <i class="fas fa-check-circle"></i> 
-                    <span id="selected-count">0</span> segment<span id="plural-s">s</span> selected for complaint
+                    <i class="fas fa-check-circle"></i>
+                    <span id="selected-count">0</span> segment<span id="plural-s">s</span> marked "Include in Complaint"
                 </h5>
-                <small>These will be converted into numbered factual statements</small>
+                <small>These tagged quotes will be added to your Statement of Facts as narrative paragraphs</small>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-light" onclick="previewFacts()">
-                    <i class="fas fa-eye"></i> Preview Facts
+                <button class="btn btn-outline-light" onclick="previewFacts()" data-bs-toggle="tooltip" title="See how your quotes will look as legal facts before generating">
+                    <i class="fas fa-eye"></i> Preview
                 </button>
                 <button class="btn btn-warning btn-lg" onclick="generateFacts()">
-                    <i class="fas fa-magic"></i> Generate Statement of Facts
+                    <i class="fas fa-plus-circle"></i> Add Video Evidence to Statement of Facts
                 </button>
             </div>
         </div>
@@ -542,10 +695,11 @@ function updateEndFromDuration(prefix) {
 async function extractNewSegment() {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 2000; // 2 seconds
-    
+
     const url = document.getElementById('new-url').value.trim();
     const start = document.getElementById('new-start').value.trim();
     const end = document.getElementById('new-end').value.trim();
+    const sourceType = document.getElementById('new-source-type').value;
     const statusDiv = document.getElementById('extract-status');
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
@@ -559,6 +713,12 @@ async function extractNewSegment() {
     // Validate YouTube URL format
     if (!youtubeRegex.test(url)) {
         statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Invalid YouTube URL format. Please use a valid YouTube link like:<br><small>• https://www.youtube.com/watch?v=VIDEO_ID<br>• https://youtu.be/VIDEO_ID</small></div>';
+        return;
+    }
+
+    // Validate source type is selected
+    if (!sourceType) {
+        statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> Please select a video source</div>';
         return;
     }
 
@@ -618,7 +778,8 @@ const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/extract/`, {
     body: JSON.stringify({
         youtube_url: url,
         start_time: start,
-        end_time: end
+        end_time: end,
+        source_type: sourceType
     })
 });
 
@@ -703,6 +864,7 @@ function addManualSegment() {
     const start = document.getElementById('manual-start').value.trim();
     const end = document.getElementById('manual-end').value.trim();
     const transcript = document.getElementById('manual-transcript').value.trim();
+    const sourceType = document.getElementById('manual-source-type').value;
     const statusDiv = document.getElementById('manual-status');
 
     // Validation
@@ -710,7 +872,13 @@ function addManualSegment() {
         statusDiv.innerHTML = '<div class="alert alert-danger">URL and transcript are required</div>';
         return;
     }
-    
+
+    // Validate source type is selected
+    if (!sourceType) {
+        statusDiv.innerHTML = '<div class="alert alert-danger">Please select a video source</div>';
+        return;
+    }
+
     if (!start || !end) {
         statusDiv.innerHTML = '<div class="alert alert-danger">Both start and end times are required</div>';
         return;
@@ -742,7 +910,8 @@ function addManualSegment() {
             youtube_url: url,
             start_time: start,
             end_time: end,
-            transcript: transcript
+            transcript: transcript,
+            source_type: sourceType
         })
     })
     .then(response => response.json())
@@ -906,7 +1075,13 @@ function previewFacts() {
 
 // Generate facts and redirect
 function generateFacts() {
-    if (confirm('Generate Statement of Facts from selected video segments? This will create/update the Statement of Facts section in your document.')) {
+    const message = `Add video evidence to Statement of Facts?\n\n` +
+                    `✓ Tagged quotes will be converted to narrative paragraphs\n` +
+                    `✓ Will be ADDED to your existing Statement of Facts (not replaced)\n` +
+                    `✓ A separate "List of Exhibits" section will be created\n\n` +
+                    `Continue?`;
+
+    if (confirm(message)) {
         window.location.href = `/documents/${DOCUMENT_ID}/evidence/generate-facts/`;
     }
 }
@@ -914,13 +1089,484 @@ function generateFacts() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     updateStickyBar();
-    
+
     // Initialize tooltips
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
+
+    // Load people for all segments
+    loadAllPeople();
+
+    // Load quotes for all segments
+    document.querySelectorAll('[data-segment-id]').forEach(element => {
+        const segmentId = element.getAttribute('data-segment-id');
+        if (segmentId) {
+            loadQuotes(segmentId);
+        }
+    });
 });
+
+// ==================== PEOPLE MANAGEMENT ====================
+
+let allPeople = [];  // Global store for people
+
+// Load all people involved in the document
+async function loadAllPeople() {
+    try {
+        const response = await fetch(`/documents/${DOCUMENT_ID}/people/`);
+        const data = await response.json();
+        if (data.success) {
+            allPeople = data.people;
+        }
+    } catch (error) {
+        console.error('Error loading people:', error);
+    }
+}
+
+// Sync people from defendants field
+async function syncPeopleFromDefendants() {
+    if (!confirm('This will auto-create people from your defendants field. Continue?')) return;
+
+    try {
+        const response = await fetch(`/documents/${DOCUMENT_ID}/people/sync/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN
+            }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error syncing people: ' + error);
+    }
+}
+
+// Show add person modal
+function showAddPersonModal() {
+    document.getElementById('personModalTitle').textContent = 'Add Person';
+    document.getElementById('personId').value = '';
+    document.getElementById('personName').value = '';
+    document.getElementById('personRole').value = 'defendant';
+    document.getElementById('personTitle').value = '';
+    document.getElementById('personBadgeNumber').value = '';
+    document.getElementById('personNotes').value = '';
+
+    const modal = new bootstrap.Modal(document.getElementById('personModal'));
+    modal.show();
+}
+
+// Edit person
+function editPerson(personId) {
+    const person = allPeople.find(p => p.id === personId);
+    if (!person) return;
+
+    document.getElementById('personModalTitle').textContent = 'Edit Person';
+    document.getElementById('personId').value = person.id;
+    document.getElementById('personName').value = person.name;
+    document.getElementById('personRole').value = person.role;
+    document.getElementById('personTitle').value = person.title || '';
+    document.getElementById('personBadgeNumber').value = person.badge_number || '';
+    document.getElementById('personNotes').value = person.notes || '';
+
+    const modal = new bootstrap.Modal(document.getElementById('personModal'));
+    modal.show();
+}
+
+// Save person (add or update)
+async function savePerson() {
+    const personId = document.getElementById('personId').value;
+    const name = document.getElementById('personName').value.trim();
+    const role = document.getElementById('personRole').value;
+    const title = document.getElementById('personTitle').value.trim();
+    const badge_number = document.getElementById('personBadgeNumber').value.trim();
+    const notes = document.getElementById('personNotes').value.trim();
+
+    if (!name) {
+        alert('Name is required');
+        return;
+    }
+
+    const data = { name, role, title, badge_number, notes };
+
+    const url = personId
+        ? `/documents/${DOCUMENT_ID}/people/${personId}/update/`
+        : `/documents/${DOCUMENT_ID}/people/add/`;
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('personModal')).hide();
+            location.reload();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error saving person: ' + error);
+    }
+}
+
+// Delete person
+async function deletePerson(personId) {
+    if (!confirm('Delete this person? This will fail if they have attributed quotes.')) return;
+
+    try {
+        const response = await fetch(`/documents/${DOCUMENT_ID}/people/${personId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error deleting person: ' + error);
+    }
+}
+
+// ==================== QUOTE MANAGEMENT ====================
+
+// Enable highlight mode - captures text selection
+function enableHighlightMode(segmentId) {
+    const textarea = document.querySelector(`.edited-transcript[data-segment-id="${segmentId}"]`);
+    const selectedText = textarea.value.substring(textarea.selectionStart, textarea.selectionEnd).trim();
+
+    if (!selectedText) {
+        alert('Please select text in the transcript first, then click this button.');
+        return;
+    }
+
+    // Calculate positions
+    const startPos = textarea.selectionStart;
+    const endPos = textarea.selectionEnd;
+
+    // Show quote modal
+    showQuoteModal(segmentId, selectedText, startPos, endPos);
+}
+
+// Show quote attribution modal
+function showQuoteModal(segmentId, text, startPos, endPos) {
+    // Reload people to ensure we have latest
+    loadAllPeople().then(() => {
+        if (allPeople.length === 0) {
+            alert('No people added yet! Please add people first using the People panel above.');
+            return;
+        }
+
+        // Set quote data
+        document.getElementById('quoteSegmentId').value = segmentId;
+        document.getElementById('quoteText').value = text;
+        document.getElementById('quoteStartPos').value = startPos;
+        document.getElementById('quoteEndPos').value = endPos;
+
+        // Populate speaker dropdown
+        const speakerSelect = document.getElementById('quoteSpeaker');
+        speakerSelect.innerHTML = '<option value="">-- Select Speaker --</option>';
+
+        allPeople.forEach(person => {
+            const option = document.createElement('option');
+            option.value = person.id;
+            option.textContent = `${person.display_name} (${person.role_display})`;
+            speakerSelect.appendChild(option);
+        });
+
+        // Clear other fields
+        document.getElementById('quoteSignificance').value = '';
+        document.getElementById('quoteNotes').value = '';
+
+        // Reset violation checkboxes
+        document.querySelectorAll('.violation-checkbox-quote').forEach(cb => cb.checked = false);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('quoteModal'));
+        modal.show();
+    });
+}
+
+// Save quote
+async function saveQuote() {
+    const segmentId = document.getElementById('quoteSegmentId').value;
+    const text = document.getElementById('quoteText').value.trim();
+    const startPos = parseInt(document.getElementById('quoteStartPos').value);
+    const endPos = parseInt(document.getElementById('quoteEndPos').value);
+    const speakerId = document.getElementById('quoteSpeaker').value;
+    const significance = document.getElementById('quoteSignificance').value.trim();
+    const notes = document.getElementById('quoteNotes').value.trim();
+
+    // Get violation tags
+    const violationTags = [];
+    document.querySelectorAll('.violation-checkbox-quote:checked').forEach(cb => {
+        violationTags.push(cb.value);
+    });
+
+    if (!speakerId) {
+        alert('Please select a speaker');
+        return;
+    }
+
+    const data = {
+        text,
+        start_position: startPos,
+        end_position: endPos,
+        speaker_id: speakerId,
+        significance,
+        notes,
+        violation_tags: violationTags.join(',')
+    };
+
+    try {
+        const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/${segmentId}/quotes/add/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            bootstrap.Modal.getInstance(document.getElementById('quoteModal')).hide();
+            loadQuotes(segmentId);  // Reload quotes for this segment
+        } else {
+            alert('Error: ' + result.error);
+        }
+    } catch (error) {
+        alert('Error saving quote: ' + error);
+    }
+}
+
+// Load quotes for a segment
+async function loadQuotes(segmentId) {
+    try {
+        const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/${segmentId}/quotes/`);
+        const data = await response.json();
+
+        if (data.success) {
+            displayQuotes(segmentId, data.quotes);
+        }
+    } catch (error) {
+        console.error('Error loading quotes:', error);
+    }
+}
+
+// Display quotes in the UI
+function displayQuotes(segmentId, quotes) {
+    const container = document.getElementById(`quotes-list-${segmentId}`);
+    const countBadge = document.getElementById(`quote-count-${segmentId}`);
+
+    if (!container) return;
+
+    countBadge.textContent = quotes.length;
+
+    if (quotes.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center mb-0"><i class="fas fa-info-circle"></i> No quotes tagged yet. Highlight text above to get started.</p>';
+        return;
+    }
+
+    let html = '';
+    quotes.forEach(quote => {
+        const colorStyle = `border-left: 4px solid ${quote.speaker.color_code}`;
+        html += `
+            <div class="card mb-2" style="${colorStyle}">
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <blockquote class="mb-1">
+                                <i class="fas fa-quote-left text-muted small"></i>
+                                <em>${quote.text}</em>
+                                <i class="fas fa-quote-right text-muted small"></i>
+                            </blockquote>
+                            <div>
+                                <span class="badge" style="background-color: ${quote.speaker.color_code}">
+                                    ${quote.speaker.display_name}
+                                </span>
+                                ${quote.significance ? `<span class="badge bg-info ms-1">${quote.significance}</span>` : ''}
+                                ${quote.violation_tags ? quote.violation_tags.split(',').map(tag =>
+                                    `<span class="badge bg-warning text-dark ms-1">${tag.replace('_', ' ')}</span>`
+                                ).join('') : ''}
+                            </div>
+                            ${quote.notes ? `<small class="text-muted d-block mt-1">${quote.notes}</small>` : ''}
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-clock"></i> ${quote.formatted_citation || 'No timestamp'}
+                            </small>
+                        </div>
+                        <div class="btn-group-vertical btn-group-sm ms-2">
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteQuote(${segmentId}, ${quote.id})" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+// Delete quote
+async function deleteQuote(segmentId, quoteId) {
+    if (!confirm('Delete this quote?')) return;
+
+    try {
+        const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/${segmentId}/quotes/${quoteId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': CSRF_TOKEN
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            loadQuotes(segmentId);  // Reload quotes
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Error deleting quote: ' + error);
+    }
+}
+
 </script>
+
+<!-- Add/Edit Person Modal -->
+<div class="modal fade" id="personModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="personModalTitle">Add Person</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="personId">
+                <div class="mb-3">
+                    <label class="form-label">Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="personName" placeholder="e.g., John Smith">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role <span class="text-danger">*</span></label>
+                    <select class="form-select" id="personRole">
+                        <option value="plaintiff">Plaintiff</option>
+                        <option value="defendant" selected>Defendant</option>
+                        <option value="witness">Witness</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Title/Position</label>
+                    <input type="text" class="form-control" id="personTitle" placeholder="e.g., Officer, Detective">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Badge Number</label>
+                    <input type="text" class="form-control" id="personBadgeNumber" placeholder="e.g., 1234">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-control" id="personNotes" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="savePerson()">
+                    <i class="fas fa-save"></i> Save Person
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quote Attribution Modal -->
+<div class="modal fade" id="quoteModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-quote-left"></i> Tag Quote with Speaker
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="quoteSegmentId">
+                <input type="hidden" id="quoteStartPos">
+                <input type="hidden" id="quoteEndPos">
+
+                <div class="mb-3">
+                    <label class="form-label">Selected Quote</label>
+                    <textarea class="form-control bg-body-secondary" id="quoteText" rows="3" readonly></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Who said this? <span class="text-danger">*</span></label>
+                    <select class="form-select" id="quoteSpeaker">
+                        <option value="">-- Select Speaker --</option>
+                    </select>
+                    <small class="text-muted">Don't see the person? Add them in the People panel above first.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Significance (optional)</label>
+                    <input type="text" class="form-control" id="quoteSignificance" placeholder="e.g., Unlawful demand for ID, Admission of guilt">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Related Violations (optional)</label>
+                    <div class="form-check">
+                        <input class="form-check-input violation-checkbox-quote" type="checkbox" value="first_amendment" id="quote-violation-1st">
+                        <label class="form-check-label" for="quote-violation-1st">First Amendment</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input violation-checkbox-quote" type="checkbox" value="fourth_amendment" id="quote-violation-4th">
+                        <label class="form-check-label" for="quote-violation-4th">Fourth Amendment</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input violation-checkbox-quote" type="checkbox" value="excessive_force" id="quote-violation-force">
+                        <label class="form-check-label" for="quote-violation-force">Excessive Force</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input violation-checkbox-quote" type="checkbox" value="unlawful_detention" id="quote-violation-detention">
+                        <label class="form-check-label" for="quote-violation-detention">Unlawful Detention</label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Additional Notes (optional)</label>
+                    <textarea class="form-control" id="quoteNotes" rows="2" placeholder="Context or additional information about this quote"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveQuote()">
+                    <i class="fas fa-save"></i> Save Quote
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

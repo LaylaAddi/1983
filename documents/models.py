@@ -271,7 +271,27 @@ class VideoEvidence(models.Model):
     # Video information
     youtube_url = models.URLField(help_text="Full YouTube URL")
     video_title = models.CharField(max_length=300, blank=True, help_text="Auto-fetched from YouTube")
-    
+
+    # Video source/origin
+    SOURCE_TYPE_CHOICES = [
+        ('body_camera', 'Body Camera Footage'),
+        ('plaintiff_recorded', 'Plaintiff-Recorded Video'),
+        ('surveillance', 'Surveillance Camera'),
+        ('dashboard_camera', 'Dashboard Camera'),
+        ('witness_recorded', 'Witness-Recorded Video'),
+        ('other', 'Other'),
+    ]
+    source_type = models.CharField(
+        max_length=50,
+        choices=SOURCE_TYPE_CHOICES,
+        default='body_camera',
+        help_text="Type/origin of video footage"
+    )
+    source_description = models.TextField(
+        blank=True,
+        help_text="Additional description of video source (optional)"
+    )
+
     # Timestamp segment
     start_time = models.CharField(max_length=10, help_text="Start time (MM:SS or HH:MM:SS)")
     end_time = models.CharField(max_length=10, help_text="End time (MM:SS or HH:MM:SS)")
@@ -339,6 +359,134 @@ class PurchasedDocument(models.Model):
     
     class Meta:
         unique_together = ['user', 'document']
-    
+
     def __str__(self):
         return f"{self.user.username} - {self.document.title}"
+
+
+class Person(models.Model):
+    """
+    Tracks people involved in the case (plaintiff, defendants, witnesses).
+    Used for speaker attribution in video transcripts.
+    """
+    ROLE_CHOICES = [
+        ('plaintiff', 'Plaintiff'),
+        ('defendant', 'Defendant'),
+        ('witness', 'Witness'),
+        ('other', 'Other'),
+    ]
+
+    document = models.ForeignKey(
+        LawsuitDocument,
+        on_delete=models.CASCADE,
+        related_name='people'
+    )
+
+    name = models.CharField(max_length=200, help_text="Full name of the person")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, help_text="Role in the case")
+    title = models.CharField(max_length=200, blank=True, help_text="Job title or position (e.g., 'Officer', 'Detective')")
+    badge_number = models.CharField(max_length=50, blank=True, help_text="Badge number for law enforcement")
+    notes = models.TextField(blank=True, help_text="Additional notes about this person")
+
+    # Display preferences for quotes
+    color_code = models.CharField(max_length=7, default='#6c757d', help_text="Color for highlighting (hex code)")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['role', 'name']
+        verbose_name_plural = "People"
+        unique_together = ['document', 'name', 'role']
+
+    def __str__(self):
+        if self.title:
+            return f"{self.name} ({self.title}) - {self.get_role_display()}"
+        return f"{self.name} - {self.get_role_display()}"
+
+    @property
+    def display_name(self):
+        """Display name with title if available"""
+        return f"{self.title} {self.name}" if self.title else self.name
+
+
+class TranscriptQuote(models.Model):
+    """
+    Stores highlighted transcript segments with speaker attribution.
+    Allows users to organize and tag who said what in video evidence.
+    """
+    video_evidence = models.ForeignKey(
+        VideoEvidence,
+        on_delete=models.CASCADE,
+        related_name='quotes'
+    )
+
+    # The quoted text
+    text = models.TextField(help_text="The actual quoted text from the transcript")
+
+    # Position in transcript (for highlighting UI)
+    start_position = models.IntegerField(help_text="Character start position in edited_transcript")
+    end_position = models.IntegerField(help_text="Character end position in edited_transcript")
+
+    # Speaker attribution
+    speaker = models.ForeignKey(
+        Person,
+        on_delete=models.CASCADE,
+        related_name='quotes',
+        help_text="Who said this quote"
+    )
+
+    # Timestamp context (within the segment)
+    approximate_timestamp = models.CharField(
+        max_length=20,
+        blank=True,
+        help_text="Approximate timestamp within segment (MM:SS)"
+    )
+
+    # Categorization and significance
+    significance = models.CharField(
+        max_length=300,
+        blank=True,
+        help_text="Why this quote is significant (e.g., 'Unlawful demand for ID')"
+    )
+
+    violation_tags = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Comma-separated violation types: fourth_amendment,first_amendment,excessive_force,etc"
+    )
+
+    # User notes
+    notes = models.TextField(blank=True, help_text="Additional context or notes about this quote")
+
+    # Ordering and organization
+    sort_order = models.IntegerField(default=0, help_text="Manual sort order within segment")
+
+    # Include in document
+    include_in_document = models.BooleanField(
+        default=True,
+        help_text="Include this quote in AI-generated document"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['video_evidence', 'sort_order', 'start_position']
+        verbose_name = "Transcript Quote"
+        verbose_name_plural = "Transcript Quotes"
+
+    def __str__(self):
+        preview = self.text[:50] + "..." if len(self.text) > 50 else self.text
+        return f"{self.speaker.name}: \"{preview}\""
+
+    @property
+    def full_timestamp(self):
+        """Get full timestamp including video segment start time"""
+        if self.approximate_timestamp:
+            return f"{self.video_evidence.start_time}+{self.approximate_timestamp}"
+        return self.video_evidence.start_time
+
+    @property
+    def formatted_citation(self):
+        """Generate formatted citation for legal document"""
+        return f'At {self.full_timestamp}, {self.speaker.display_name} stated: "{self.text}"'
