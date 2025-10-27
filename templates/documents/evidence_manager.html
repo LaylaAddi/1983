@@ -191,12 +191,23 @@
                         <!-- AI Extract Tab -->
                         <div class="tab-pane fade show active" id="extract-tab">
                             <div class="row">
-                                <div class="col-md-12 mb-3">
+                                <div class="col-md-8 mb-3">
                                     <label class="form-label">YouTube URL</label>
                                     <input type="url" id="new-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
                                 </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Video Source</label>
+                                    <select id="new-source-type" class="form-select">
+                                        <option value="body_camera">Body Camera Footage</option>
+                                        <option value="plaintiff_recorded">Plaintiff-Recorded Video</option>
+                                        <option value="surveillance">Surveillance Camera</option>
+                                        <option value="dashboard_camera">Dashboard Camera</option>
+                                        <option value="witness_recorded">Witness-Recorded Video</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">
@@ -253,12 +264,23 @@
                         <!-- Manual Entry Tab -->
                         <div class="tab-pane fade" id="manual-tab">
                             <div class="row">
-                                <div class="col-md-12 mb-3">
+                                <div class="col-md-8 mb-3">
                                     <label class="form-label">YouTube URL</label>
                                     <input type="url" id="manual-url" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
                                 </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Video Source</label>
+                                    <select id="manual-source-type" class="form-select">
+                                        <option value="body_camera">Body Camera Footage</option>
+                                        <option value="plaintiff_recorded">Plaintiff-Recorded Video</option>
+                                        <option value="surveillance">Surveillance Camera</option>
+                                        <option value="dashboard_camera">Dashboard Camera</option>
+                                        <option value="witness_recorded">Witness-Recorded Video</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">
@@ -644,10 +666,11 @@ function updateEndFromDuration(prefix) {
 async function extractNewSegment() {
     const MAX_RETRIES = 3;
     const RETRY_DELAY = 2000; // 2 seconds
-    
+
     const url = document.getElementById('new-url').value.trim();
     const start = document.getElementById('new-start').value.trim();
     const end = document.getElementById('new-end').value.trim();
+    const sourceType = document.getElementById('new-source-type').value;
     const statusDiv = document.getElementById('extract-status');
     const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
 
@@ -720,7 +743,8 @@ const response = await fetch(`/documents/${DOCUMENT_ID}/evidence/extract/`, {
     body: JSON.stringify({
         youtube_url: url,
         start_time: start,
-        end_time: end
+        end_time: end,
+        source_type: sourceType
     })
 });
 
@@ -805,6 +829,7 @@ function addManualSegment() {
     const start = document.getElementById('manual-start').value.trim();
     const end = document.getElementById('manual-end').value.trim();
     const transcript = document.getElementById('manual-transcript').value.trim();
+    const sourceType = document.getElementById('manual-source-type').value;
     const statusDiv = document.getElementById('manual-status');
 
     // Validation
@@ -844,7 +869,8 @@ function addManualSegment() {
             youtube_url: url,
             start_time: start,
             end_time: end,
-            transcript: transcript
+            transcript: transcript,
+            source_type: sourceType
         })
     })
     .then(response => response.json())

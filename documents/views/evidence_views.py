@@ -63,7 +63,8 @@ def extract_evidence_segment(request, pk):
         youtube_url = data.get('youtube_url', '')
         start_time_str = data.get('start_time', '0')
         end_time_str = data.get('end_time', '30')
-        
+        source_type = data.get('source_type', 'body_camera')
+
         if not youtube_url:
             return JsonResponse({
                 'success': False,
@@ -150,7 +151,8 @@ def extract_evidence_segment(request, pk):
             end_seconds=end_seconds,
             raw_transcript=result['text'],
             edited_transcript=result['text'],
-            extraction_cost=result.get('cost_estimate', 0)
+            extraction_cost=result.get('cost_estimate', 0),
+            source_type=source_type
         )
         
         # Deduct actual cost from user's API credit
@@ -254,7 +256,8 @@ def add_manual_segment(request, pk):
         start_time_str = data.get('start_time', '0')
         end_time_str = data.get('end_time', '30')
         manual_transcript = data.get('transcript', '')
-        
+        source_type = data.get('source_type', 'body_camera')
+
         if not youtube_url or not manual_transcript:
             return JsonResponse({
                 'success': False,
@@ -275,7 +278,8 @@ def add_manual_segment(request, pk):
             end_seconds=end_seconds,
             raw_transcript=manual_transcript,
             edited_transcript=manual_transcript,
-            manually_entered=True
+            manually_entered=True,
+            source_type=source_type
         )
         
         return JsonResponse({

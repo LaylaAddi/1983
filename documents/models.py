@@ -271,7 +271,27 @@ class VideoEvidence(models.Model):
     # Video information
     youtube_url = models.URLField(help_text="Full YouTube URL")
     video_title = models.CharField(max_length=300, blank=True, help_text="Auto-fetched from YouTube")
-    
+
+    # Video source/origin
+    SOURCE_TYPE_CHOICES = [
+        ('body_camera', 'Body Camera Footage'),
+        ('plaintiff_recorded', 'Plaintiff-Recorded Video'),
+        ('surveillance', 'Surveillance Camera'),
+        ('dashboard_camera', 'Dashboard Camera'),
+        ('witness_recorded', 'Witness-Recorded Video'),
+        ('other', 'Other'),
+    ]
+    source_type = models.CharField(
+        max_length=50,
+        choices=SOURCE_TYPE_CHOICES,
+        default='body_camera',
+        help_text="Type/origin of video footage"
+    )
+    source_description = models.TextField(
+        blank=True,
+        help_text="Additional description of video source (optional)"
+    )
+
     # Timestamp segment
     start_time = models.CharField(max_length=10, help_text="Start time (MM:SS or HH:MM:SS)")
     end_time = models.CharField(max_length=10, help_text="End time (MM:SS or HH:MM:SS)")

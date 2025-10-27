@@ -102,9 +102,11 @@ class EvidenceToFactsService:
                     fact_text = ' '.join(fact_parts)
 
                     # Add exhibit reference in legal format
+                    # Use actual video source type instead of hardcoded "Body Camera Footage"
+                    source_display = segment.get_source_type_display()
                     fact = (
                         f"{fact_number}. {fact_text} "
-                        f"See Exhibit {exhibit_letter} (Body Camera Footage) at {segment.start_time}."
+                        f"See Exhibit {exhibit_letter} ({source_display}) at {segment.start_time}."
                     )
 
                     facts.append(fact)
@@ -170,8 +172,10 @@ class EvidenceToFactsService:
                 violations = 'civil rights violations'
 
             # Format exhibit in legal style (matching Section 1983 format)
+            # Use actual video source type from the first segment in this video
+            source_display = segments[0].get_source_type_display()
             exhibit_text = (
-                f"EXHIBIT {letter}: Body Camera Footage\n\n"
+                f"EXHIBIT {letter}: {source_display}\n\n"
                 f"Description: Video documentation of {violations}\n\n"
                 f"Source: {url}\n\n"
                 f"Relevant Timestamps: {', '.join(timestamps)}\n\n"
