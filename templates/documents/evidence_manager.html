@@ -393,7 +393,7 @@
                                         <i class="fas fa-quotes-left"></i> Tagged Quotes
                                         <span class="badge bg-secondary" id="quote-count-{{ segment.id }}">0</span>
                                     </label>
-                                    <div id="quotes-list-{{ segment.id }}" class="border rounded p-2" style="min-height: 100px; max-height: 300px; overflow-y: auto; background-color: #f8f9fa;">
+                                    <div id="quotes-list-{{ segment.id }}" class="border rounded p-2 bg-body-secondary" style="min-height: 100px; max-height: 300px; overflow-y: auto;">
                                         <p class="text-muted text-center mb-0"><i class="fas fa-info-circle"></i> No quotes tagged yet. Highlight text above to get started.</p>
                                     </div>
                                 </div>
@@ -1445,7 +1445,7 @@ async function deleteQuote(segmentId, quoteId) {
 
                 <div class="mb-3">
                     <label class="form-label">Selected Quote</label>
-                    <textarea class="form-control" id="quoteText" rows="3" readonly style="background-color: #f8f9fa;"></textarea>
+                    <textarea class="form-control bg-body-secondary" id="quoteText" rows="3" readonly></textarea>
                 </div>
 
                 <div class="mb-3">
