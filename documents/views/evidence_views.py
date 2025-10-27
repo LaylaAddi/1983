@@ -314,7 +314,7 @@ def generate_facts_from_evidence(request, pk):
     
     from ..models import DocumentSection
     
-    # Create or update Statement of Facts section (just the numbered facts)
+    # Create or update Statement of Facts section
     facts_section, created = DocumentSection.objects.get_or_create(
         document=document,
         section_type='facts',
@@ -323,8 +323,41 @@ def generate_facts_from_evidence(request, pk):
             'order': 4  # Typical position for facts section
         }
     )
-    
-    facts_section.content = result['content']
+
+    # APPEND video evidence quotes to existing content instead of replacing
+    if facts_section.content and facts_section.content.strip():
+        # Existing content present - append video evidence as continuation
+        # First, find the last fact number to continue numbering
+        import re
+        existing_numbers = re.findall(r'^(\d+)\.', facts_section.content, re.MULTILINE)
+        if existing_numbers:
+            last_number = max(int(n) for n in existing_numbers)
+            # Renumber video facts to continue from existing facts
+            video_facts = result['content']
+            # Replace numbering in video facts to continue sequence
+            def renumber(match):
+                old_num = int(match.group(1))
+                new_num = last_number + old_num
+                return f"{new_num}."
+            video_facts = re.sub(r'^(\d+)\.', renumber, video_facts, flags=re.MULTILINE)
+
+            # Append with section header
+            facts_section.content = (
+                f"{facts_section.content.strip()}\n\n"
+                f"## Video Evidence\n\n"
+                f"{video_facts}"
+            )
+        else:
+            # No existing numbered facts, just append
+            facts_section.content = (
+                f"{facts_section.content.strip()}\n\n"
+                f"## Video Evidence\n\n"
+                f"{result['content']}"
+            )
+    else:
+        # No existing content, use video evidence as the entire content
+        facts_section.content = result['content']
+
     facts_section.save()
     
     # Create or update List of Exhibits section (separate from facts)
