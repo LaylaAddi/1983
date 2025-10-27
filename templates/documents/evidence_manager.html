@@ -14,13 +14,40 @@
                 </div>
                 <div class="d-flex gap-2">
                     {% if included_count > 0 %}
-                    <a href="{% url 'generate_facts_from_evidence' document.pk %}" class="btn btn-success">
-                        <i class="fas fa-magic"></i> Generate Statement of Facts
+                    <a href="{% url 'generate_facts_from_evidence' document.pk %}" class="btn btn-success" onclick="return confirm('Add video evidence to Statement of Facts?\n\n✓ Tagged quotes will be converted to narrative paragraphs\n✓ Will be ADDED to your existing Statement of Facts (not replaced)\n✓ A separate \'List of Exhibits\' section will be created\n\nContinue?')">
+                        <i class="fas fa-plus-circle"></i> Add Video Evidence to Statement of Facts
                     </a>
                     {% endif %}
                     <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-secondary">
                         <i class="fas fa-arrow-left"></i> Back to Document
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workflow Guide -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading"><i class="fas fa-list-ol"></i> How This Works</h5>
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>1. Extract or Enter</strong>
+                        <p class="small mb-0">Add video evidence using AI extraction or manual entry</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>2. Edit & Tag Quotes</strong>
+                        <p class="small mb-0">Highlight important quotes and assign speakers (plaintiff, defendants, witnesses)</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>3. Mark for Inclusion</strong>
+                        <p class="small mb-0">Check "Include in Complaint" for segments you want in your legal document</p>
+                    </div>
+                    <div class="col-md-3">
+                        <strong>4. Generate</strong>
+                        <p class="small mb-0">Click the green button to add video evidence to Statement of Facts</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -470,8 +497,8 @@
                                             <i class="fas fa-file-alt"></i> Include in Complaint
                                         </label>
                                     </div>
-                                    <button class="btn btn-info" onclick="saveSegment({{ segment.id }})">
-                                        <i class="fas fa-save"></i> Save Changes
+                                    <button class="btn btn-primary btn-sm" onclick="saveSegment({{ segment.id }})">
+                                        <i class="fas fa-save"></i> Save Transcript & Notes
                                     </button>
                                 </div>
 
@@ -502,17 +529,17 @@
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h5 class="mb-0">
-                    <i class="fas fa-check-circle"></i> 
-                    <span id="selected-count">0</span> segment<span id="plural-s">s</span> selected for complaint
+                    <i class="fas fa-check-circle"></i>
+                    <span id="selected-count">0</span> segment<span id="plural-s">s</span> marked "Include in Complaint"
                 </h5>
-                <small>These will be converted into numbered factual statements</small>
+                <small>These tagged quotes will be added to your Statement of Facts as narrative paragraphs</small>
             </div>
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-light" onclick="previewFacts()">
-                    <i class="fas fa-eye"></i> Preview Facts
+                <button class="btn btn-outline-light" onclick="previewFacts()" data-bs-toggle="tooltip" title="See how your quotes will look as legal facts before generating">
+                    <i class="fas fa-eye"></i> Preview
                 </button>
                 <button class="btn btn-warning btn-lg" onclick="generateFacts()">
-                    <i class="fas fa-magic"></i> Generate Statement of Facts
+                    <i class="fas fa-plus-circle"></i> Add Video Evidence to Statement of Facts
                 </button>
             </div>
         </div>
@@ -1048,7 +1075,13 @@ function previewFacts() {
 
 // Generate facts and redirect
 function generateFacts() {
-    if (confirm('Generate Statement of Facts from selected video segments? This will create/update the Statement of Facts section in your document.')) {
+    const message = `Add video evidence to Statement of Facts?\n\n` +
+                    `✓ Tagged quotes will be converted to narrative paragraphs\n` +
+                    `✓ Will be ADDED to your existing Statement of Facts (not replaced)\n` +
+                    `✓ A separate "List of Exhibits" section will be created\n\n` +
+                    `Continue?`;
+
+    if (confirm(message)) {
         window.location.href = `/documents/${DOCUMENT_ID}/evidence/generate-facts/`;
     }
 }
