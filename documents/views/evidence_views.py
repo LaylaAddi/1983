@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.db import models
 import json
 from accounts.models import Subscription
 from ..models import LawsuitDocument, VideoEvidence, Person, TranscriptQuote
@@ -722,7 +723,6 @@ def update_quote(request, pk, segment_id, quote_id):
 
     try:
         data = json.loads(request.body)
-        from django.db import models
 
         if 'speaker_id' in data:
             speaker = get_object_or_404(Person, pk=data['speaker_id'], document=document)
