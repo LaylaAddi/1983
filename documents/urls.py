@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 # from .views import transcript_views
 from .views import whisper_views
 from .views import evidence_views
+from .views import section_views
 
 
 urlpatterns = [
@@ -19,6 +20,7 @@ urlpatterns = [
     path('<int:pk>/sections/', views.manage_document_sections, name='manage_document_sections'),
     path('<int:pk>/sections/template/', views.insert_template_section, name='insert_template_section'),
     path('<int:pk>/sections/blank/', views.add_blank_section, name='add_blank_section'),
+    path('<int:pk>/sections/<int:section_id>/update/', section_views.update_section, name='update_section'),
     path('<int:pk>/preview/', views.document_preview, name='document_preview'),
     path('<int:pk>/generate-defaults/', views.generate_default_sections, name='generate_default_sections'),
     path('voice-recorder/', views.voice_recorder_view, name='voice_recorder'),

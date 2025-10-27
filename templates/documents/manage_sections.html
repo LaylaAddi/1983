@@ -235,7 +235,7 @@
 
                 {% if formset.forms %}
                     {% for form in formset.forms %}
-                        <div class="section-card">
+                        <div class="section-card" id="section-{{ form.instance.section_type }}">
                             <div class="section-header">
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
@@ -304,6 +304,16 @@
                                         <div class="text-danger">{{ form.content.errors }}</div>
                                     {% endif %}
                                 </div>
+
+                                <!-- Individual Section Save Buttons -->
+                                <div class="d-flex justify-content-end gap-2 mt-3">
+                                    <button type="button" class="btn btn-success" onclick="saveSectionAndReturn('{{ form.instance.id }}', '{{ form.instance.section_type }}')">
+                                        <i class="fas fa-save"></i> Save & Return to Document
+                                    </button>
+                                    <button type="button" class="btn btn-primary" onclick="saveSection('{{ form.instance.id }}', '{{ form.instance.section_type }}')">
+                                        <i class="fas fa-save"></i> Save Changes
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     {% endfor %}
@@ -325,6 +335,88 @@
 </div>
 
 <script>
+// Individual section save functions
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function saveSection(sectionId, sectionType) {
+    const sectionCard = document.getElementById('section-' + sectionType);
+    const titleInput = sectionCard.querySelector('input[name$="-title"]');
+    const contentTextarea = sectionCard.querySelector('textarea[name$="-content"]');
+
+    const csrfToken = getCookie('csrftoken');
+    const documentId = '{{ document.pk }}';
+
+    fetch(`/documents/${documentId}/sections/${sectionId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            title: titleInput.value,
+            content: contentTextarea.value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Section saved successfully!');
+        } else {
+            alert('Error saving section: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error saving section: ' + error);
+    });
+}
+
+function saveSectionAndReturn(sectionId, sectionType) {
+    const sectionCard = document.getElementById('section-' + sectionType);
+    const titleInput = sectionCard.querySelector('input[name$="-title"]');
+    const contentTextarea = sectionCard.querySelector('textarea[name$="-content"]');
+
+    const csrfToken = getCookie('csrftoken');
+    const documentId = '{{ document.pk }}';
+
+    fetch(`/documents/${documentId}/sections/${sectionId}/update/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            title: titleInput.value,
+            content: contentTextarea.value,
+            return_to_document: true
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect back to document detail with anchor
+            window.location.href = `/documents/${documentId}/#section-${sectionType}`;
+        } else {
+            alert('Error saving section: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        alert('Error saving section: ' + error);
+    });
+}
+
 // Auto-resize textareas and enforce standard legal ordering
 document.addEventListener('DOMContentLoaded', function() {
     // Standard legal document order

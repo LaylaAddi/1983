@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import models
+import json
 
 from ..forms import DocumentSectionFormSet, TemplateInsertForm, BlankSectionForm
 from ..models import DocumentSection, LawsuitDocument
@@ -148,5 +149,42 @@ def add_blank_section(request, pk):
         messages.success(request, f'Added blank section: {section.title}')
     else:
         messages.error(request, 'Invalid section data.')
-    
+
     return redirect('manage_document_sections', pk=document.pk)
+
+
+@login_required
+@require_POST
+def update_section(request, pk, section_id):
+    """Update a specific section via AJAX"""
+    document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
+    section = get_object_or_404(DocumentSection, pk=section_id, document=document)
+
+    try:
+        data = json.loads(request.body)
+        title = data.get('title', '')
+        content = data.get('content', '')
+        return_to_document = data.get('return_to_document', False)
+
+        if not title or not content:
+            return JsonResponse({
+                'success': False,
+                'error': 'Title and content are required'
+            })
+
+        # Update the section
+        section.title = title
+        section.content = content
+        section.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Section updated successfully',
+            'return_to_document': return_to_document
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
