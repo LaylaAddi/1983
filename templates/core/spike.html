@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climax Spike Scalp - Counter-Trend Strategy</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .danger-box {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .chart-container {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 8px;
+        }
+        
+        .condition-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .condition-box {
+            padding: 20px;
+            border-radius: 10px;
+            border: 3px solid;
+        }
+        
+        .good-conditions {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .bad-conditions {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .condition-box h4 {
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .good-conditions h4 {
+            color: #28a745;
+        }
+        
+        .bad-conditions h4 {
+            color: #dc3545;
+        }
+        
+        table {
+            width: 100%;
+            margin: 20px 0;
+        }
+        
+        table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+        }
+        
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        .signal-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .signal-list ul {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        
+        .signal-list li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        @media (max-width: 768px) {
+            .condition-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Climax Spike Scalp Strategy (Counter-Trend)</h1>
+        
+        <div class="card">
+            <h2>🎯 What You've Discovered</h2>
+            <p class="lead">You're describing what Al Brooks calls a <strong>"buying climax"</strong> or <strong>"exhaustion spike"</strong> - when price extends too far, too fast from the trend channel.</p>
+            
+            <div class="success-box">
+                <h4>✅ This IS a Recognized Strategy</h4>
+                <p><strong>Names for this setup:</strong></p>
+                <ul>
+                    <li><strong>Climax Scalp</strong> - Al Brooks terminology</li>
+                    <li><strong>Exhaustion Fade</strong> - Mean reversion play</li>
+                    <li><strong>Blow-off Top Scalp</strong> (in uptrend) or <strong>Selling Climax Scalp</strong> (in downtrend)</li>
+                    <li><strong>Channel Overshoot</strong> - Price extends beyond channel, snaps back</li>
+                </ul>
+                <p class="mt-3"><strong>Why it works:</strong> Price moved too far, too fast. Needs to "catch its breath" and pull back to the moving average or channel. You're not predicting a reversal - just a temporary pause/retracement.</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📈 Visual Example</h2>
+            <div class="chart-container">
+                <canvas id="climaxChart" width="1200" height="500"></canvas>
+            </div>
+            <div class="alert alert-info">
+                <strong>What the chart shows:</strong> Price is in an uptrend (above EMA), makes a parabolic spike outside the channel with large bars. This creates a <strong>buying climax</strong>. You short the exhaustion for a quick scalp back to the channel/EMA.
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>✅ When This Works (High Probability)</h2>
+            
+            <div class="condition-grid">
+                <div class="condition-box good-conditions">
+                    <h4>✅ TRADE IT When:</h4>
+                    <ul>
+                        <li><strong>Weak/Broad Channel Trend</strong> - Not a raging bull run</li>
+                        <li><strong>Multiple large bars in a row</strong> - 3-5+ big bull bars</li>
+                        <li><strong>Price far from EMA</strong> - 20+ points on MNQ, 10+ on MES</li>
+                        <li><strong>Parabolic move</strong> - Accelerating, not steady</li>
+                        <li><strong>Large tails appear</strong> - Bulls getting rejected</li>
+                        <li><strong>Volume spike</strong> - Often climaxes on volume</li>
+                        <li><strong>Two-sided bars</strong> - Big wicks = exhaustion</li>
+                        <li><strong>After 2+ hours of trending</strong> - Trend is tired</li>
+                        <li><strong>Near round numbers</strong> - MNQ 21500, 22000, etc.</li>
+                        <li><strong>Midday (11 AM-1 PM)</strong> - Lower energy time</li>
+                    </ul>
+                </div>
+                
+                <div class="condition-box bad-conditions">
+                    <h4>🚫 AVOID When:</h4>
+                    <ul>
+                        <li><strong>Strong trend channel</strong> - Tight, consecutive bars</li>
+                        <li><strong>Breaking major resistance</strong> - Likely to continue</li>
+                        <li><strong>Opening 30 min (9:30-10 AM)</strong> - Too much momentum</li>
+                        <li><strong>After Fed/economic news</strong> - Trends can run for hours</li>
+                        <li><strong>Gap and go pattern</strong> - Morning gap up continuing</li>
+                        <li><strong>First spike of the day</strong> - Often has follow-through</li>
+                        <li><strong>Very strong Always In direction</strong> - Don't fade power</li>
+                        <li><strong>Low volume spike</strong> - Fake exhaustion</li>
+                        <li><strong>Small bars</strong> - Not a real climax</li>
+                        <li><strong>Fresh trend</strong> - Trend just started, has legs</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Entry Rules (Critical!)</h2>
+            
+            <div class="signal-list">
+                <h4>Signal Bar Requirements:</h4>
+                <ul>
+                    <li><strong>Large bar with tail at top</strong> - Bears rejecting the high</li>
+                    <li><strong>Doji or inside bar</strong> - Momentum stalling</li>
+                    <li><strong>Strong reversal bar</strong> - Opens high, closes near low with big range</li>
+                    <li><strong>Two-bar reversal</strong> - Big bull bar followed by big bear bar that engulfs it</li>
+                </ul>
+                
+                <h4 class="mt-4">Entry Methods:</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-success">
+                            <strong>Conservative (Recommended):</strong><br>
+                            Wait for price to close below prior bar low, THEN enter short<br>
+                            Confirms the pullback is starting
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <strong>Aggressive (Risky):</strong><br>
+                            Short at the high or during formation of reversal bar<br>
+                            Better fill but bar could fail
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Entry</th>
+                        <th>Stop Loss</th>
+                        <th>Target</th>
+                        <th>Time Limit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1 tick below signal bar low OR after close below prior low</td>
+                        <td>2-3 ticks above spike high (TIGHT!)<br>MNQ: 8-12 pts<br>MES: 4-6 pts</td>
+                        <td>Top of channel, EMA, or 1:1.5 risk/reward<br>MNQ: 10-15 pts<br>MES: 5-8 pts</td>
+                        <td>5-15 minutes max<br>If not moving, exit at breakeven</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2>⚠️ Critical Rules (MUST Follow!)</h2>
+            
+            <div class="danger-box">
+                <h4>🚨 This is SCALPING Only - Not Swing Trading!</h4>
+                <ol style="line-height: 2;">
+                    <li><strong>TIGHT STOPS</strong> - If spike continues, you're wrong. Get out immediately. Don't hope.</li>
+                    <li><strong>QUICK EXITS</strong> - Exit at EMA or channel top. Don't get greedy. Take 5-15 points on MNQ, 3-8 on MES.</li>
+                    <li><strong>TIME LIMIT</strong> - If trade doesn't move within 5-10 min, exit at breakeven. This is quick or nothing.</li>
+                    <li><strong>ONLY 1 CONTRACT</strong> - Don't size up on counter-trend trades. Risk is higher.</li>
+                    <li><strong>RESPECT THE TREND</strong> - You're borrowing against the trend. Trend can resume anytime.</li>
+                    <li><strong>MAX 1-2 PER DAY</strong> - These are low-frequency, opportunistic scalps. Don't force them.</li>
+                    <li><strong>IF WRONG, FLIP</strong> - If stopped out and trend continues, consider going WITH trend instead.</li>
+                    <li><strong>NEVER add to losers</strong> - Don't average into a counter-trend position. Recipe for disaster.</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📊 Best Targets for the Pullback</h2>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="alert alert-primary">
+                        <h5>Target 1: Top of Channel</h5>
+                        <p>Most conservative. Price usually returns here quickly.</p>
+                        <strong>MNQ:</strong> 8-12 pts<br>
+                        <strong>MES:</strong> 4-6 pts
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-primary">
+                        <h5>Target 2: 20 EMA</h5>
+                        <p>Standard mean reversion target. Very common.</p>
+                        <strong>MNQ:</strong> 12-18 pts<br>
+                        <strong>MES:</strong> 6-10 pts
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="alert alert-primary">
+                        <h5>Target 3: Prior Swing</h5>
+                        <p>Ambitious but possible if climax was severe.</p>
+                        <strong>MNQ:</strong> 20-30 pts<br>
+                        <strong>MES:</strong> 10-15 pts
+                    </div>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <strong>Scaling Out Recommended:</strong>
+                <ul>
+                    <li><strong>50% position</strong> at channel top or first sign of support</li>
+                    <li><strong>50% position</strong> trail to EMA or take at 2R</li>
+                    <li><strong>If price stalls</strong> at any level, exit remaining position</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🎯 MNQ vs MES Differences</h2>
+            
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>MNQ (More Volatile)</th>
+                        <th>MES (More Stable)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Spike Distance</strong></td>
+                        <td>20-40+ points from EMA</td>
+                        <td>10-20+ points from EMA</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Typical Stop</strong></td>
+                        <td>10-15 points</td>
+                        <td>5-8 points</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scalp Target</strong></td>
+                        <td>10-20 points (to channel/EMA)</td>
+                        <td>5-10 points (to channel/EMA)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Time Duration</strong></td>
+                        <td>5-15 minutes typically</td>
+                        <td>5-15 minutes typically</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Success Rate</strong></td>
+                        <td>60-70% (when conditions right)</td>
+                        <td>60-70% (when conditions right)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Risk Level</strong></td>
+                        <td>Higher - can spike further</td>
+                        <td>Lower - more predictable</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <h2>💡 Al Brooks on Counter-Trend Scalping</h2>
+            
+            <div class="alert alert-info">
+                <h4>Key Quotes and Concepts:</h4>
+                <blockquote class="mt-3">
+                    <p><em>"In a strong trend, every reversal attempt fails. But after a climax, even a strong trend needs to pause."</em></p>
+                </blockquote>
+                <blockquote>
+                    <p><em>"The problem with counter-trend trading is you can be right 8 times and wrong once, and that one time wipes out everything."</em></p>
+                </blockquote>
+                <blockquote>
+                    <p><em>"Counter-trend scalps work best in trading ranges and broad channels. In strong trends, don't fight the tape."</em></p>
+                </blockquote>
+            </div>
+            
+            <div class="success-box mt-4">
+                <h4>When Al Brooks Says to Take It:</h4>
+                <ul>
+                    <li>After 3+ consecutive large bars in one direction</li>
+                    <li>Price is far from EMA (2-3 times average distance)</li>
+                    <li>Late in the trend (after 1-2 hours of trending)</li>
+                    <li>Reversal bar is strong (large range, closes near opposite extreme)</li>
+                    <li>You're in a broad bull channel, not a tight trend channel</li>
+                </ul>
+            </div>
+            
+            <div class="danger-box mt-4">
+                <h4>When Al Brooks Says to AVOID:</h4>
+                <ul>
+                    <li>During strong trend channels with consecutive bars</li>
+                    <li>First spike of the day - often has follow-through</li>
+                    <li>After major news - momentum can last hours</li>
+                    <li>When breakout just happened - let it develop first</li>
+                    <li>If you can't define a logical stop</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📝 Pre-Trade Checklist</h2>
+            
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th width="70%">Question</th>
+                        <th width="30%">Check</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Is this a weak/broad channel trend (not strong spike & channel)?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Have there been 3+ consecutive large bars creating the spike?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Is price 20+ pts (MNQ) or 10+ pts (MES) from the EMA?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Am I seeing exhaustion signals (tails, dojis, two-sided bars)?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Is it after 10:30 AM (not during opening momentum)?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Has the trend been going for 1+ hours (not fresh)?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Is there a clear stop level above the spike (tight, 8-15 pts)?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Am I willing to exit IMMEDIATELY if wrong (no hoping)?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Am I treating this as a SCALP ONLY (not a reversal)?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                    <tr>
+                        <td>Will I exit at EMA/channel or within 15 minutes?</td>
+                        <td class="text-center">☐</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="alert alert-danger">
+                <strong>⚠️ If you checked NO to ANY question, DO NOT TAKE THE TRADE!</strong>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🎓 Summary: The Trade-Off</h2>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="success-box">
+                        <h4>✅ Pros:</h4>
+                        <ul>
+                            <li>High reward:risk (often 2:1 or better)</li>
+                            <li>Quick trade (5-15 min)</li>
+                            <li>Obvious stop placement</li>
+                            <li>60-70% win rate when done right</li>
+                            <li>Clear target (EMA/channel)</li>
+                            <li>Low time commitment</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="danger-box">
+                        <h4>❌ Cons:</h4>
+                        <ul>
+                            <li>Counter-trend = higher risk</li>
+                            <li>Can get stopped out quickly</li>
+                            <li>Requires discipline to exit fast</li>
+                            <li>Easy to overtrade (forcing it)</li>
+                            <li>One big loser can wipe out many wins</li>
+                            <li>Requires experience to read exhaustion</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-warning mt-4">
+                <h4>🎯 Bottom Line:</h4>
+                <p class="mb-0">This is a <strong>valid strategy</strong> that works - BUT it's <strong>advanced</strong>. New traders should focus on WITH-trend trades first. Once you're consistently profitable trading WITH the trend, THEN add these counter-trend scalps as occasional opportunities. Think of it as a bonus trade, not your bread and butter.</p>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        function drawClimaxChart() {
+            const canvas = document.getElementById('climaxChart');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Background
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, width, height);
+            
+            const candleWidth = 20;
+            const spacing = 35;
+            let x = 80;
+            const baseY = height - 80;
+            const scale = 4;
+            
+            // Uptrend with climax spike
+            const bars = [
+                // Uptrend
+                {o: 20, h: 28, l: 19, c: 27, vol: 'normal'},
+                {o: 27, h: 35, l: 26, c: 33, vol: 'normal'},
+                {o: 33, h: 40, l: 32, c: 38, vol: 'normal'},
+                {o: 38, h: 44, l: 37, c: 42, vol: 'normal'},
+                {o: 42, h: 48, l: 41, c: 46, vol: 'normal'},
+                // Small pullback
+                {o: 46, h: 47, l: 42, c: 44, vol: 'low'},
+                // Resume
+                {o: 44, h: 50, l: 43, c: 48, vol: 'normal'},
+                // CLIMAX SPIKE
+                {o: 48, h: 60, l: 47, c: 58, vol: 'high'},
+                {o: 58, h: 68, l: 57, c: 66, vol: 'high'},
+                {o: 66, h: 76, l: 65, c: 74, vol: 'spike'},
+                {o: 74, h: 80, l: 73, c: 78, vol: 'spike'},
+                // EXHAUSTION (signal bar)
+                {o: 78, h: 82, l: 72, c: 74, vol: 'high'},
+                // PULLBACK
+                {o: 74, h: 75, l: 65, c: 67, vol: 'normal'},
+                {o: 67, h: 69, l: 58, c: 60, vol: 'normal'},
+                {o: 60, h: 63, l: 55, c: 58, vol: 'low'},
+                // Back to channel
+                {o: 58, h: 60, l: 54, c: 56, vol: 'low'},
+            ];
+            
+            const emaPoints = [];
+            
+            // Draw candles
+            bars.forEach((bar, i) => {
+                const isBull = bar.c > bar.o;
+                const color = isBull ? '#26a69a' : '#ef5350';
+                
+                // Body
+                const bodyHeight = Math.abs(bar.c - bar.o) * scale;
+                const bodyTop = Math.max(bar.o, bar.c) * scale;
+                
+                // Wick
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x, baseY - (bar.h * scale));
+                ctx.lineTo(x, baseY - (bar.l * scale));
+                ctx.stroke();
+                
+                // Body
+                ctx.fillStyle = color;
+                ctx.fillRect(x - candleWidth/2, baseY - bodyTop, candleWidth, bodyHeight);
+                
+                // EMA line points
+                const emaValue = 22 + (i * 2.8);
+                emaPoints.push({x: x, y: baseY - (emaValue * scale)});
+                
+                // Labels
+                if (i === 7) {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.font = 'bold 14px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('SPIKE', x, baseY - (bar.h * scale) - 25);
+                }
+                if (i === 10) {
+                    ctx.fillStyle = '#ffd700';
+                    ctx.font = 'bold 14px Arial';
+                    ctx.fillText('CLIMAX', x, baseY - (bar.h * scale) - 25);
+                }
+                if (i === 11) {
+                    ctx.fillStyle = '#ff6b6b';
+                    ctx.font = 'bold 14px Arial';
+                    ctx.fillText('EXHAUSTION', x, baseY - (bar.h * scale) - 40);
+                    ctx.fillText('(Signal Bar)', x, baseY - (bar.h * scale) - 23);
+                }
+                
+                x += spacing;
+            });
+            
+            // Draw EMA
+            ctx.strokeStyle = '#ffa726';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(emaPoints[0].x, emaPoints[0].y);
+            for (let i = 1; i < emaPoints.length; i++) {
+                ctx.lineTo(emaPoints[i].x, emaPoints[i].y);
+            }
+            ctx.stroke();
+            
+            // Draw channel lines
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            
+            // Upper channel
+            ctx.beginPath();
+            ctx.moveTo(80, baseY - (28 * scale));
+            ctx.lineTo(80 + (6 * spacing), baseY - (50 * scale));
+            ctx.stroke();
+            
+            // Lower channel (near EMA)
+            ctx.beginPath();
+            ctx.moveTo(80, baseY - (20 * scale));
+            ctx.lineTo(80 + (6 * spacing), baseY - (44 * scale));
+            ctx.stroke();
+            
+            ctx.setLineDash([]);
+            
+            // Entry arrow (short)
+            const entryX = 80 + (11 * spacing);
+            const entryY = baseY - (72 * scale);
+            ctx.fillStyle = '#f44336';
+            ctx.beginPath();
+            ctx.moveTo(entryX, entryY);
+            ctx.lineTo(entryX - 12, entryY - 18);
+            ctx.lineTo(entryX + 12, entryY - 18);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('SHORT', entryX, entryY - 30);
+            ctx.font = 'bold 12px Arial';
+            ctx.fillText('(Fade the Spike)', entryX, entryY - 15);
+            
+            // Stop loss line
+            ctx.strokeStyle = '#f44336';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(50, baseY - (82 * scale));
+            ctx.lineTo(width - 50, baseY - (82 * scale));
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#f44336';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('STOP (above spike)', 60, baseY - (82 * scale) - 8);
+            
+            // Target 1: Channel
+            ctx.strokeStyle = '#ffeb3b';
+            ctx.lineWidth = 3;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(50, baseY - (50 * scale));
+            ctx.lineTo(width - 50, baseY - (50 * scale));
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#ffeb3b';
+            ctx.textAlign = 'left';
+            ctx.fillText('TARGET 1: Channel Top', 60, baseY - (50 * scale) - 8);
+            
+            // Target 2: EMA (labeled on EMA line)
+            ctx.fillStyle = '#ffa726';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText('TARGET 2: EMA →', width - 60, baseY - (50 * scale));
+            
+            // Annotations
+            ctx.fillStyle = 'white';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'left';
+            
+            // Normal trend
+            ctx.fillText('Normal Uptrend', 90, baseY - (50 * scale) + 80);
+            
+            // Outside channel annotation
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = 'bold 14px Arial';
+            const arrowX = 80 + (9.5 * spacing);
+            ctx.fillText('Price OUTSIDE', arrowX - 50, baseY - (70 * scale));
+            ctx.fillText('channel = Climax!', arrowX - 50, baseY - (70 * scale) + 18);
+            
+            // Draw arrow pointing to spike
+            ctx.strokeStyle = '#ff6b6b';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(arrowX, baseY - (68 * scale));
+            ctx.lineTo(arrowX, baseY - (75 * scale));
+            ctx.stroke();
+            
+            // Pullback zone
+            ctx.fillStyle = '#4caf50';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('✓ Quick Pullback', 80 + (13 * spacing), baseY - (60 * scale));
+            ctx.fillText('to Channel/EMA', 80 + (13 * spacing), baseY - (60 * scale) + 18);
+        }
+        
+        drawClimaxChart();
+    </script>
+</body>
+</html>
