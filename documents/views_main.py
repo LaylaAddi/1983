@@ -27,12 +27,13 @@ def document_create(request):
         return redirect('profile')
 
     # Check if user's subscription allows document creation
-    subscription, created = Subscription.objects.get_or_create(user=request.user)
-    can_create, restriction_reason = subscription.can_create_document()
-
-    if not can_create:
-        messages.error(request, restriction_reason)
-        return redirect('document_list')
+    subscription, created = Subscription.objects.get_or_create(
+        user=request.user,
+        defaults={'plan_type': 'basic'}
+    )
+    # In new 2-tier model, all users can create documents (features differ by plan)
+    # Basic: 2 AI gen, 5 min video, no PDF download
+    # Standard: 10 AI gen, 30 min video, PDF download
 
     if request.method == 'POST':
         form = LawsuitDocumentForm(request.POST)

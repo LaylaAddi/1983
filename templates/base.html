@@ -84,8 +84,32 @@
 
         /* Dark mode card adjustments */
         [data-bs-theme="dark"] .card {
+            background-color: #1a1d20;
+            color: #e9ecef;
             box-shadow: 0 0.125rem 0.25rem rgba(255, 255, 255, 0.075);
             border: 1px solid rgba(255, 255, 255, 0.125);
+        }
+
+        [data-bs-theme="dark"] .card-header {
+            background-color: #212529;
+            border-bottom-color: rgba(255, 255, 255, 0.125);
+        }
+
+        [data-bs-theme="dark"] .card-body {
+            background-color: #1a1d20;
+        }
+
+        [data-bs-theme="dark"] .table {
+            color: #e9ecef;
+        }
+
+        [data-bs-theme="dark"] .table-bordered {
+            border-color: rgba(255, 255, 255, 0.125);
+        }
+
+        [data-bs-theme="dark"] .table-bordered th,
+        [data-bs-theme="dark"] .table-bordered td {
+            border-color: rgba(255, 255, 255, 0.125);
         }
 
         .btn-primary {
