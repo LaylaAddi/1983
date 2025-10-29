@@ -22,27 +22,24 @@
         <div class="col-md-8">
             <h6 class="mb-2">
                 <i class="fas fa-crown"></i>
-                {% if subscription.plan_type == 'unlimited' %}
-                    Unlimited Plan
-                {% elif subscription.plan_type == 'pay_per_doc' %}
-                    Pay Per Document Plan
+                {% if subscription.plan_type == 'standard' %}
+                    Standard Plan
                 {% else %}
-                    Free Plan
+                    Basic Plan (Free)
                 {% endif %}
             </h6>
             <p class="mb-0">
-                {{ document_limit_info.message }}
-                {% if not document_limit_info.is_unlimited %}
-                    {% if document_limit_info.remaining == 0 %}
-                        <span class="badge bg-warning text-dark ms-2">Document Limit Reached</span>
-                    {% endif %}
+                {% if subscription.plan_type == 'standard' %}
+                    Full access to AI generation, video extraction, and PDF downloads
+                {% else %}
+                    Limited to 2 AI generations and 5 minutes video per document. Upgrade for full access and PDF downloads.
                 {% endif %}
             </p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            {% if subscription.plan_type != 'unlimited' %}
+            {% if subscription.plan_type != 'standard' %}
                 <a href="{% url 'pricing_page' %}" class="btn btn-sm btn-success">
-                    <i class="fas fa-arrow-up"></i> Upgrade to Unlimited
+                    <i class="fas fa-arrow-up"></i> Upgrade to Standard
                 </a>
             {% endif %}
         </div>

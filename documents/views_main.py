@@ -100,9 +100,12 @@ def document_list(request):
     page_obj = paginator.get_page(page_number)
 
     # Get subscription info for display
-    subscription, created = Subscription.objects.get_or_create(user=request.user)
-    can_create, _ = subscription.can_create_document()
-    limit_info = subscription.get_document_limit_info()
+    subscription, created = Subscription.objects.get_or_create(
+        user=request.user,
+        defaults={'plan_type': 'basic'}
+    )
+    # In new 2-tier model, all users can create documents
+    can_create = True
 
     context = {
         'page_obj': page_obj,
@@ -110,7 +113,6 @@ def document_list(request):
         'documents': page_obj,
         'subscription': subscription,
         'can_create_document': can_create,
-        'document_limit_info': limit_info,
     }
     
     return render(request, 'documents/list.html', context)
