@@ -4,7 +4,7 @@ from django.utils.html import format_html
 from django.shortcuts import redirect
 from django.urls import reverse
 from .emails import EmailService
-from .models import UserProfile, Subscription, Payment, DiscountCode, ReferralReward, ReferralSettings, Payout
+from .models import UserProfile, Subscription, Payment, DiscountCode, ReferralReward, ReferralSettings, Payout, PromoSettings
 
 
 @admin.register(UserProfile)
@@ -394,6 +394,102 @@ class ReferralSettingsAdmin(admin.ModelAdmin):
         css = {
             'all': ('admin/css/forms.css',)
         }
+
+
+@admin.register(PromoSettings)
+class PromoSettingsAdmin(admin.ModelAdmin):
+    """
+    Admin interface for promotional pricing settings.
+    Control launch discounts, sales, and special offers.
+    """
+
+    fieldsets = (
+        ('🎯 Promotion Status', {
+            'fields': (
+                'is_active',
+            ),
+            'description': (
+                '<strong style="font-size: 14px;">⚠️ Toggle promotional pricing ON/OFF</strong><br><br>'
+                '<span style="color: green;"><strong>✓ ACTIVE:</strong> Promotional price shown across site</span><br>'
+                '<span style="color: red;"><strong>✗ INACTIVE:</strong> Regular price shown</span>'
+            )
+        }),
+        ('💰 Pricing', {
+            'fields': (
+                'regular_price',
+                'promo_price',
+            ),
+            'description': (
+                'Set regular and promotional prices.<br>'
+                '<strong>Default:</strong> Regular $197 → Promo $129 (saves $68)'
+            )
+        }),
+        ('📢 Promotion Messaging', {
+            'fields': (
+                'promo_badge_text',
+                'promo_headline',
+                'promo_description',
+                'promo_urgency_text',
+            ),
+            'description': (
+                'Edit promotional text shown to users.<br>'
+                '<strong>Examples:</strong><br>'
+                '• Badge: "LAUNCH SPECIAL", "LIMITED TIME", "BLACK FRIDAY"<br>'
+                '• Headline: "Launch Discount - Save $68!"<br>'
+                '• Urgency: "Offer ends December 31st"'
+            )
+        }),
+        ('⏱️ Countdown Timer (Optional)', {
+            'fields': (
+                'show_countdown',
+                'promo_end_date',
+            ),
+            'description': 'Show countdown timer on pricing page (requires end date)',
+            'classes': ('collapse',)
+        }),
+        ('💳 Stripe Integration', {
+            'fields': (
+                'stripe_promo_price_id',
+            ),
+            'description': (
+                'Stripe Price ID for promotional pricing (e.g., price_xxxxx)<br>'
+                'Create this in Stripe Dashboard → Products → Prices'
+            ),
+            'classes': ('collapse',)
+        }),
+        ('📝 Metadata', {
+            'fields': ('created_at', 'updated_at', 'updated_by'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    readonly_fields = ('created_at', 'updated_at', 'updated_by')
+
+    def has_add_permission(self, request):
+        """Only allow one settings object"""
+        return not PromoSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        """Don't allow deleting the settings"""
+        return False
+
+    def save_model(self, request, obj, form, change):
+        """Track who updated the settings"""
+        obj.updated_by = request.user
+        super().save_model(request, obj, form, change)
+
+    def changelist_view(self, request, extra_context=None):
+        """Redirect directly to the settings edit page"""
+        if PromoSettings.objects.exists():
+            obj = PromoSettings.objects.first()
+            return redirect(reverse('admin:accounts_promosettings_change', args=[obj.pk]))
+        return super().changelist_view(request, extra_context)
+
+    class Media:
+        css = {
+            'all': ('admin/css/forms.css',)
+        }
+
 
 # Add to the imports at the top
 from accounts.models import Payout

@@ -663,3 +663,145 @@ class Payout(models.Model):
         if admin_user:
             self.processed_by = admin_user
         self.save()
+
+
+class PromoSettings(models.Model):
+    """
+    Global settings for promotional pricing (launch discounts, sales, etc.)
+    Only ONE row should exist in the database (singleton pattern).
+    Auto-creates with defaults on first access.
+    """
+
+    # Enable/disable promotional pricing
+    is_active = models.BooleanField(
+        default=False,
+        help_text="Enable promotional pricing across the site"
+    )
+
+    # Pricing
+    regular_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=197.00,
+        help_text="Regular price for document ($197)"
+    )
+    promo_price = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=129.00,
+        help_text="Promotional price for document ($129)"
+    )
+
+    # Promotion text/messaging (editable in admin)
+    promo_badge_text = models.CharField(
+        max_length=50,
+        default="LAUNCH SPECIAL",
+        help_text="Badge text shown on pricing (e.g., 'LAUNCH SPECIAL', 'LIMITED TIME', 'BLACK FRIDAY')"
+    )
+    promo_headline = models.CharField(
+        max_length=200,
+        default="Launch Discount - Save $68!",
+        help_text="Main headline for promotion"
+    )
+    promo_description = models.TextField(
+        default="Get our complete Section 1983 document generator at our special launch price. Limited time offer for early adopters.",
+        help_text="Description text for promotion"
+    )
+    promo_urgency_text = models.CharField(
+        max_length=200,
+        blank=True,
+        default="",
+        help_text="Optional urgency text (e.g., 'Offer ends December 31st', 'Only 50 spots left')"
+    )
+
+    # Display settings
+    show_countdown = models.BooleanField(
+        default=False,
+        help_text="Show countdown timer (requires end date)"
+    )
+    promo_end_date = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When promotion ends (optional - for countdown)"
+    )
+
+    # Stripe product IDs for promotional pricing
+    stripe_promo_price_id = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Stripe Price ID for promotional price (e.g., price_xxxxx)"
+    )
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='promo_settings_updates',
+        help_text="Admin who last updated settings"
+    )
+
+    class Meta:
+        verbose_name = "Promotional Pricing Setting"
+        verbose_name_plural = "Promotional Pricing Settings"
+
+    def __str__(self):
+        status = "ACTIVE" if self.is_active else "INACTIVE"
+        return f"Promo Settings ({status}) - ${self.promo_price}"
+
+    def save(self, *args, **kwargs):
+        """Ensure only one settings object exists (singleton pattern)"""
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Prevent deletion of settings"""
+        pass
+
+    @classmethod
+    def get_settings(cls):
+        """
+        Get or create the single settings instance with defaults.
+        This ensures settings always exist.
+        """
+        obj, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'is_active': False,
+                'regular_price': Decimal('197.00'),
+                'promo_price': Decimal('129.00'),
+                'promo_badge_text': 'LAUNCH SPECIAL',
+                'promo_headline': 'Launch Discount - Save $68!',
+                'promo_description': 'Get our complete Section 1983 document generator at our special launch price. Limited time offer for early adopters.',
+            }
+        )
+        return obj
+
+    @property
+    def current_price(self):
+        """Return current price based on promo status"""
+        return self.promo_price if self.is_active else self.regular_price
+
+    @property
+    def savings_amount(self):
+        """Calculate savings if promo is active"""
+        return self.regular_price - self.promo_price if self.is_active else Decimal('0.00')
+
+    @property
+    def savings_percentage(self):
+        """Calculate savings percentage"""
+        if self.regular_price == 0:
+            return 0
+        return int((self.savings_amount / self.regular_price) * 100)
+
+    @property
+    def is_ending_soon(self):
+        """Check if promo ends within 24 hours"""
+        if not self.promo_end_date or not self.is_active:
+            return False
+        time_left = self.promo_end_date - timezone.now()
+        return time_left.total_seconds() <= 86400  # 24 hours
+
