@@ -5,9 +5,9 @@
 This guide will help you implement Stripe payments for the new simplified pricing model:
 
 **Pricing Structure:**
-- **FREE (Trial)**: 2 AI generations, 5 min video, preview only
+- **BASIC (Free)**: 2 AI generations, 5 min video, preview only
 - **STANDARD ($197 or Promo $129)**: 10 AI generations, 30 min video, PDF download
-- **Add-ons ($29 each)**: +10 AI generations OR +30 minutes
+- **ADD-ON BUNDLE ($29)**: +20 AI generations AND +15 minutes video (bundled together)
 
 ---
 
@@ -39,31 +39,14 @@ This guide will help you implement Stripe payments for the new simplified pricin
    Price ID: (copy this - e.g., price_1XYZ789...)
    ```
 
-### 1.2 AI Generations Add-On
+### 1.2 Add-On Bundle (AI + Video)
 
 1. **Products** → **Add Product**
 
 2. **Product Details:**
    ```
-   Name: Additional AI Generations
-   Description: 10 additional AI section generations for your document
-   ```
-
-3. **Price:**
-   ```
-   Amount: $29.00
-   Billing: One-time
-   Price ID: (copy this)
-   ```
-
-### 1.3 Video Extraction Add-On
-
-1. **Products** → **Add Product**
-
-2. **Product Details:**
-   ```
-   Name: Additional Video Extraction Time
-   Description: 30 additional minutes of video transcript extraction
+   Name: AI + Video Add-On Bundle
+   Description: Additional capacity bundle - includes 20 AI generations AND 15 minutes of video extraction
    ```
 
 3. **Price:**
@@ -87,67 +70,92 @@ STRIPE_SECRET_KEY=sk_live_xxxxx  # or sk_test_xxxxx for testing
 STRIPE_PUBLISHABLE_KEY=pk_live_xxxxx  # or pk_test_xxxxx
 
 # Product Price IDs
-STRIPE_DOCUMENT_REGULAR_PRICE_ID=price_1ABC123...
-STRIPE_DOCUMENT_PROMO_PRICE_ID=price_1XYZ789...
-STRIPE_AI_ADDON_PRICE_ID=price_1DEF456...
-STRIPE_VIDEO_ADDON_PRICE_ID=price_1GHI789...
+STRIPE_PRICE_STANDARD=price_1ABC123...  # Regular $197
+STRIPE_PRICE_STANDARD_PROMO=price_1XYZ789...  # Promo $129
+STRIPE_PRICE_ADDON_BUNDLE=price_1DEF456...  # $29 bundle
 
 # Webhook Secret (for production)
 STRIPE_WEBHOOK_SECRET=whsec_xxxxx
 ```
 
-### 2.2 Update config/settings.py
+### 2.2 Update config/settings.py (Already Done)
 
 ```python
 # Stripe Configuration
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
-STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
-STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
-# Stripe Product Price IDs
-STRIPE_PRICES = {
-    'document_regular': os.getenv('STRIPE_DOCUMENT_REGULAR_PRICE_ID'),
-    'document_promo': os.getenv('STRIPE_DOCUMENT_PROMO_PRICE_ID'),
-    'ai_generations_addon': os.getenv('STRIPE_AI_ADDON_PRICE_ID'),
-    'video_extraction_addon': os.getenv('STRIPE_VIDEO_ADDON_PRICE_ID'),
-}
+# Stripe Price IDs
+STRIPE_PRICE_STANDARD = os.getenv('STRIPE_PRICE_STANDARD', 'price_xxxxx')
+STRIPE_PRICE_STANDARD_PROMO = os.getenv('STRIPE_PRICE_STANDARD_PROMO', 'price_xxxxx')
+STRIPE_PRICE_ADDON_BUNDLE = os.getenv('STRIPE_PRICE_ADDON_BUNDLE', 'price_xxxxx')
+
+# Pricing Constants
+PRICE_STANDARD = 197.00
+PRICE_STANDARD_PROMO = 129.00
+PRICE_ADDON_BUNDLE = 29.00
+
+# Usage Limits
+BASIC_AI_GENERATIONS = 2
+BASIC_EXTRACTION_MINUTES = 5
+STANDARD_AI_GENERATIONS = 10
+STANDARD_EXTRACTION_MINUTES = 30
+ADDON_AI_GENERATIONS = 20
+ADDON_EXTRACTION_MINUTES = 15
 ```
 
 ---
 
 ## Step 3: Database Models (Already Done)
 
-The `PromoSettings` model already exists in `accounts/models.py`. It includes:
+The following models have been created and are ready to use:
+
+### PromoSettings Model (`accounts/models.py`)
 - `is_active` - Toggle promo on/off
 - `regular_price` - $197
 - `promo_price` - $129
 - `stripe_promo_price_id` - For storing Stripe price ID
+- Singleton pattern - only one instance exists
 
-You also need to add fields to `LawsuitDocument`:
-
+### LawsuitDocument Model Updates (`documents/models.py`)
+Usage tracking fields added:
 ```python
-# Add to documents/models.py - LawsuitDocument model
-
-# Purchased add-ons
-ai_generations_purchased = models.IntegerField(default=10)  # Base 10 included
-extraction_minutes_purchased = models.IntegerField(default=30)  # Base 30 min
-
-# Usage tracking
+ai_generations_purchased = models.IntegerField(default=2)  # Basic: 2, Standard: 10
+extraction_minutes_purchased = models.IntegerField(default=5)  # Basic: 5, Standard: 30
 ai_generations_used = models.IntegerField(default=0)
 extraction_minutes_used = models.DecimalField(max_digits=6, decimal_places=2, default=0)
 
-# Stripe payment tracking
+# Payment tracking
 stripe_payment_intent_id = models.CharField(max_length=255, blank=True)
 stripe_customer_id = models.CharField(max_length=255, blank=True)
 purchased_at = models.DateTimeField(null=True, blank=True)
 
+# Properties
 @property
 def ai_generations_remaining(self):
-    return self.ai_generations_purchased - self.ai_generations_used
+    return max(0, self.ai_generations_purchased - self.ai_generations_used)
 
 @property
 def extraction_minutes_remaining(self):
-    return self.extraction_minutes_purchased - float(self.extraction_minutes_used)
+    return max(0, float(self.extraction_minutes_purchased) - float(self.extraction_minutes_used))
+
+@property
+def is_purchased(self):
+    return bool(self.stripe_payment_intent_id)
+```
+
+### DocumentAddon Model (`documents/models.py`)
+Tracks add-on bundle purchases:
+```python
+class DocumentAddon(models.Model):
+    document = models.ForeignKey('LawsuitDocument', on_delete=models.CASCADE)
+    addon_type = models.CharField(max_length=20, default='bundle')
+    ai_generations_added = models.IntegerField(default=20)
+    extraction_minutes_added = models.IntegerField(default=15)
+    amount = models.DecimalField(max_digits=6, decimal_places=2, default=29.00)
+    stripe_payment_intent_id = models.CharField(max_length=255)
+    purchased_at = models.DateTimeField(auto_now_add=True)
 ```
 
 ---

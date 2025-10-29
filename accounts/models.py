@@ -121,157 +121,76 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class Subscription(models.Model):
+    """
+    User subscription - tracks which plan they're on.
+    In the new system:
+    - 'basic' = Free trial (2 AI gen, 5 min video, preview only)
+    - 'standard' = Paid ($197 or promo) - tracks usage per document
+    """
     PLAN_CHOICES = [
-        ('free', 'Free'),
-        ('pay_per_doc', 'Pay Per Document'),
-        ('unlimited', 'Unlimited'),
+        ('basic', 'Basic (Free Trial)'),
+        ('standard', 'Standard'),
     ]
-    
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
-    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='free')
-    
+    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='basic')
+
     # Stripe integration
     stripe_customer_id = models.CharField(max_length=255, blank=True, null=True)
-    stripe_subscription_id = models.CharField(max_length=255, blank=True, null=True)
-    
+
     # Payment tracking
     is_active = models.BooleanField(default=True)
     started_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField(null=True, blank=True)
-    
-    # API Credit tracking
-    api_credit_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.50)
-    last_credit_refill = models.DateTimeField(null=True, blank=True)
+
+    # Referral earnings (separate from document purchases)
     referral_cash_balance = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+        max_digits=10,
+        decimal_places=2,
         default=0.00,
         help_text="Referral earnings available for cash withdrawal"
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def __str__(self):
         return f"{self.user.username} - {self.get_plan_type_display()}"
-    
+
     @property
-    def is_unlimited(self):
-        return self.plan_type == 'unlimited' and self.is_active
-    
+    def is_standard(self):
+        """Check if user has standard plan"""
+        return self.plan_type == 'standard' and self.is_active
+
     @property
-    def monthly_credit_amount(self):
-        """How much credit user gets per month"""
-        if self.plan_type == 'unlimited':
-            return 10.00
-        return 0.00
-    
-    def refill_monthly_credit(self):
-        """Refill credit for unlimited users"""
-        if self.plan_type == 'unlimited' and self.is_active:
-            self.api_credit_balance += Decimal(str(self.monthly_credit_amount))
-            self.last_credit_refill = timezone.now()
-            self.save()
-    
-    def deduct_api_cost(self, cost):
-        """Deduct cost from credit balance"""
-        if isinstance(cost, float):
-            cost = Decimal(str(cost))
-        
-        if self.api_credit_balance >= cost:
-            self.api_credit_balance -= cost
-            self.save()
-            return True
-        return False
-    
-    def has_sufficient_credit(self, estimated_cost):
-        """Check if user has enough credit"""
-        if isinstance(estimated_cost, float):
-            estimated_cost = Decimal(str(estimated_cost))
-        return self.api_credit_balance >= estimated_cost
+    def is_basic(self):
+        """Check if user is on basic/free plan"""
+        return self.plan_type == 'basic'
 
     def can_create_document(self):
         """
-        Check if user can create a new document based on their subscription tier.
-
-        Returns:
-            tuple: (can_create: bool, reason: str)
+        Check if user can create a new document.
+        Basic: Unlimited documents (but limited features)
+        Standard: After purchasing, unlimited documents
         """
-        from documents.models import LawsuitDocument
+        return True  # Both can create documents, features differ
 
-        # Unlimited tier can always create documents
-        if self.plan_type == 'unlimited' and self.is_active:
-            return (True, '')
-
-        # Get user's document count
-        document_count = LawsuitDocument.objects.filter(user=self.user).count()
-
-        # Free tier: limited to 1 document
-        if self.plan_type == 'free':
-            if document_count >= 1:
-                return (False, 'Free tier users can only create 1 document. Please upgrade to create more.')
-            return (True, '')
-
-        # Pay-per-doc tier: can create one document at a time
-        # User must purchase current document before creating another
-        if self.plan_type == 'pay_per_doc':
-            from documents.models import PurchasedDocument
-            purchased_count = PurchasedDocument.objects.filter(user=self.user).count()
-
-            # If they haven't purchased all their documents, they can't create more
-            if document_count > purchased_count:
-                unpaid_docs = LawsuitDocument.objects.filter(user=self.user).exclude(
-                    purchases__user=self.user
-                ).count()
-                if unpaid_docs > 0:
-                    return (False, 'Please purchase your current document ($149) before creating another, or upgrade to Unlimited.')
-            return (True, '')
-
-        # Default: allow creation
-        return (True, '')
-
-    def get_document_limit_info(self):
+    def can_download_pdf(self, document):
         """
-        Get information about document limits for display purposes.
-
-        Returns:
-            dict: Information about document limits and usage
+        Check if user can download PDF for a specific document.
+        Basic: Never
+        Standard: Only if document is purchased
         """
-        from documents.models import LawsuitDocument, PurchasedDocument
+        if self.plan_type == 'basic':
+            return False
 
-        document_count = LawsuitDocument.objects.filter(user=self.user).count()
-
-        if self.plan_type == 'unlimited':
-            return {
-                'limit': None,
-                'current': document_count,
-                'remaining': None,
-                'is_unlimited': True,
-                'message': 'Unlimited documents'
-            }
-        elif self.plan_type == 'free':
-            return {
-                'limit': 1,
-                'current': document_count,
-                'remaining': max(0, 1 - document_count),
-                'is_unlimited': False,
-                'message': f'{document_count}/1 documents used'
-            }
-        elif self.plan_type == 'pay_per_doc':
-            purchased_count = PurchasedDocument.objects.filter(user=self.user).count()
-            return {
-                'limit': purchased_count + 1,
-                'current': document_count,
-                'purchased': purchased_count,
-                'is_unlimited': False,
-                'message': f'{document_count} documents ({purchased_count} purchased)'
-            }
+        # Check if document is purchased
+        return hasattr(document, 'stripe_payment_intent_id') and document.stripe_payment_intent_id
 
 
 class Payment(models.Model):
     PAYMENT_TYPE_CHOICES = [
-        ('pay_per_doc', 'Pay Per Document'),
-        ('unlimited', 'Unlimited Plan'),
-        ('api_credit', 'API Credit Top-Up'),
+        ('standard', 'Standard Plan - Document Purchase'),
+        ('addon_bundle', 'Add-on Bundle - AI + Video'),
     ]
     
     STATUS_CHOICES = [

@@ -74,7 +74,41 @@ class LawsuitDocument(models.Model):
     
     # Generated Files
     pdf_file = models.FileField(upload_to='documents/pdfs/', blank=True, null=True)
-    
+
+    # Usage Tracking (New Pricing Model)
+    # Base limits: Basic (2 AI, 5 min) | Standard (10 AI, 30 min)
+    ai_generations_purchased = models.IntegerField(
+        default=2,
+        help_text="Total AI generations purchased for this document (Basic: 2, Standard: 10 + add-ons)"
+    )
+    extraction_minutes_purchased = models.IntegerField(
+        default=5,
+        help_text="Total video extraction minutes purchased (Basic: 5, Standard: 30 + add-ons)"
+    )
+    ai_generations_used = models.IntegerField(
+        default=0,
+        help_text="Number of AI generations used so far"
+    )
+    extraction_minutes_used = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=0.00,
+        help_text="Video extraction minutes used so far"
+    )
+
+    # Payment Tracking
+    stripe_payment_intent_id = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Stripe payment ID - indicates document was purchased"
+    )
+    stripe_customer_id = models.CharField(max_length=255, blank=True)
+    purchased_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the Standard plan was purchased for this document"
+    )
+
     class Meta:
         ordering = ['-created_at']
         
@@ -99,6 +133,21 @@ class LawsuitDocument(models.Model):
     def has_structured_address(self):
         """Check if structured address fields are filled"""
         return bool(self.incident_city and self.incident_state)
+
+    @property
+    def ai_generations_remaining(self):
+        """Calculate remaining AI generations"""
+        return max(0, self.ai_generations_purchased - self.ai_generations_used)
+
+    @property
+    def extraction_minutes_remaining(self):
+        """Calculate remaining video extraction minutes"""
+        return max(0, float(self.extraction_minutes_purchased) - float(self.extraction_minutes_used))
+
+    @property
+    def is_purchased(self):
+        """Check if document has been purchased (Standard plan)"""
+        return bool(self.stripe_payment_intent_id)
 
     @property
     def total_sections(self):
@@ -362,6 +411,55 @@ class PurchasedDocument(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.document.title}"
+
+
+class DocumentAddon(models.Model):
+    """
+    Tracks add-on bundle purchases for documents.
+    Each bundle adds +20 AI generations AND +15 minutes video extraction for $29.
+    """
+    ADDON_TYPES = [
+        ('bundle', 'AI + Video Bundle'),
+    ]
+
+    document = models.ForeignKey(
+        'LawsuitDocument',
+        on_delete=models.CASCADE,
+        related_name='addon_purchases'
+    )
+    addon_type = models.CharField(
+        max_length=20,
+        choices=ADDON_TYPES,
+        default='bundle',
+        help_text="Type of add-on purchased"
+    )
+
+    # What this add-on includes
+    ai_generations_added = models.IntegerField(
+        default=20,
+        help_text="AI generations added by this purchase"
+    )
+    extraction_minutes_added = models.IntegerField(
+        default=15,
+        help_text="Video extraction minutes added by this purchase"
+    )
+
+    # Payment tracking
+    amount = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        default=29.00,
+        help_text="Amount paid for this add-on"
+    )
+    stripe_payment_intent_id = models.CharField(max_length=255)
+
+    purchased_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.document.title} - {self.get_addon_type_display()} (${self.amount})"
+
+    class Meta:
+        ordering = ['-purchased_at']
 
 
 class Person(models.Model):

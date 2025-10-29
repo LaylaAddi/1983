@@ -10,144 +10,154 @@
         <p class="lead">Generate professional Section 1983 lawsuit documents with AI-powered video transcription</p>
     </div>
 
-    <div class="row">
-        <!-- Free Tier -->
-        <div class="col-md-4 mb-4">
+    <!-- Promotional Banner (if promo is active) -->
+    {% if promo.is_active %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-danger text-center" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); border: none;">
+                <span class="badge bg-light text-danger mb-2" style="font-size: 1.1rem;">{{ promo.promo_badge_text }}</span>
+                <h3 class="text-white mb-2">{{ promo.promo_headline }}</h3>
+                <p class="text-white mb-0">{{ promo.promo_description }}</p>
+                {% if promo.show_countdown and promo.promo_end_date %}
+                <p class="text-white mb-0"><small>{{ promo.promo_urgency_text }}</small></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Main Pricing Cards -->
+    <div class="row justify-content-center">
+        <!-- Basic (Free) -->
+        <div class="col-md-5 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-secondary text-white text-center">
-                    <h3>Free</h3>
+                    <h3>Basic</h3>
                     <h2 class="display-4">$0</h2>
+                    <p class="mb-0">Free Trial</p>
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled">
-                        <li>✅ Unlimited documents</li>
-                        <li>✅ $0.50 API credit (~6 extractions)</li>
-                        <li>✅ Manual transcript entry</li>
-                        <li>✅ 3 min max per extraction</li>
-                        <li>✅ Preview in browser</li>
-                        <li>❌ No PDF downloads</li>
+                        <li class="mb-2">✅ <strong>2 AI generations</strong></li>
+                        <li class="mb-2">✅ <strong>5 minutes</strong> video extraction</li>
+                        <li class="mb-2">✅ Create unlimited documents</li>
+                        <li class="mb-2">✅ Preview in browser</li>
+                        <li class="mb-2">✅ Manual transcript entry</li>
+                        <li class="mb-2">❌ No PDF downloads</li>
                     </ul>
                     <div class="text-center mt-4">
                         {% if user.is_authenticated %}
-                            <a href="{% url 'document_list' %}" class="btn btn-secondary btn-block">Get Started</a>
+                            <a href="{% url 'document_list' %}" class="btn btn-secondary btn-lg btn-block">Get Started Free</a>
                         {% else %}
-                            <a href="{% url 'register' %}" class="btn btn-secondary btn-block">Sign Up Free</a>
+                            <a href="{% url 'register' %}" class="btn btn-secondary btn-lg btn-block">Sign Up Free</a>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Pay Per Document -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 border-primary">
-                <div class="card-header bg-primary text-white text-center">
-                    <h3>Pay Per Document</h3>
-                    <h2 class="display-4" id="price-ppd">${{ price_per_doc|floatformat:0 }}</h2>
-                    <p class="mb-0">one-time</p>
+        <!-- Standard (Paid) -->
+        <div class="col-md-5 mb-4">
+            <div class="card h-100 border-success shadow-lg" style="border-width: 3px;">
+                <div class="card-header bg-success text-white text-center position-relative">
+                    <div class="badge bg-warning text-dark position-absolute" style="top: 10px; right: 10px;">POPULAR</div>
+                    <h3>Standard</h3>
+                    {% if promo.is_active %}
+                    <h2 class="display-4">
+                        <span style="text-decoration: line-through; font-size: 0.5em; opacity: 0.7;">${{ promo.regular_price|floatformat:0 }}</span>
+                        <span class="text-warning">${{ promo.promo_price|floatformat:0 }}</span>
+                    </h2>
+                    <p class="mb-0">
+                        <strong>SAVE ${{ promo.savings_amount|floatformat:0 }}!</strong>
+                    </p>
+                    {% else %}
+                    <h2 class="display-4">${{ promo.regular_price|floatformat:0 }}</h2>
+                    <p class="mb-0">one-time payment</p>
+                    {% endif %}
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled">
-                        <li>✅ Everything in Free</li>
-                        <li>✅ <strong>Download ONE document PDF</strong></li>
-                        <li>✅ $5 API credit (~60 extractions)</li>
-                        <li>✅ Re-download unlimited times</li>
-                        <li>✅ 3 min max per extraction</li>
+                        <li class="mb-2">✅ <strong>10 AI generations</strong></li>
+                        <li class="mb-2">✅ <strong>30 minutes</strong> video extraction</li>
+                        <li class="mb-2">✅ <strong>Download PDF</strong></li>
+                        <li class="mb-2">✅ Complete one document</li>
+                        <li class="mb-2">✅ All Basic features</li>
+                        <li class="mb-2">✅ Can purchase more via add-ons</li>
                     </ul>
-                    
-                    <!-- Discount Code Input -->
-                    <div class="form-group mt-3">
-                        <label for="discount-code-ppd">Have a referral code?</label>
-                        <div class="input-group">
-                            <input 
-                                type="text" 
-                                class="form-control" 
-                                id="discount-code-ppd" 
-                                placeholder="Enter code"
-                                value="{{ referred_by_code }}"
-                                onkeypress="if(event.key==='Enter') validateCode('pay_per_doc')"
-                            >
-                            <div class="input-group-append">
-                                <button 
-                                    class="btn btn-outline-secondary" 
-                                    type="button"
-                                    onclick="validateCode('pay_per_doc')"
-                                >
-                                    Apply
-                                </button>
-                            </div>
-                        </div>
-                        <small class="text-muted">Get 25% off with a referral code!</small>
-                        <div id="code-feedback-ppd" class="mt-2"></div>
-                    </div>
-                    
-                    <div class="text-center mt-4">
-                        {% if user.is_authenticated %}
-                            <button class="btn btn-primary btn-block" onclick="checkout('pay_per_doc')">Purchase</button>
-                        {% else %}
-                            <a href="{% url 'login' %}?next={% url 'pricing_page' %}" class="btn btn-primary btn-block">Login to Purchase</a>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Unlimited -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100 border-success">
-                <div class="card-header bg-success text-white text-center">
-                    <h3>Unlimited</h3>
-                    <h2 class="display-4" id="price-unl">${{ price_unlimited|floatformat:0 }}</h2>
-                    <p class="mb-0">lifetime</p>
-                </div>
-                <div class="card-body">
-                    <ul class="list-unstyled">
-                        <li>✅ Everything in Pay-Per-Doc</li>
-                        <li>✅ <strong>Download ALL documents</strong></li>
-                        <li>✅ $10 API credit/month (forever)</li>
-                        <li>✅ ~120 extractions/month</li>
-                        <li>✅ 3 min max per extraction</li>
-                        <li>✅ Priority support</li>
-                    </ul>
-                    
                     <!-- Discount Code Input -->
                     <div class="form-group mt-3">
-                        <label for="discount-code-unl">Have a referral code?</label>
+                        <label for="discount-code-std">Have a referral code?</label>
                         <div class="input-group">
-                            <input 
-                                type="text" 
-                                class="form-control" 
-                                id="discount-code-unl" 
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="discount-code-std"
                                 placeholder="Enter code"
                                 value="{{ referred_by_code }}"
-                                onkeypress="if(event.key==='Enter') validateCode('unlimited')"
+                                onkeypress="if(event.key==='Enter') validateCode('standard')"
                             >
                             <div class="input-group-append">
-                                <button 
-                                    class="btn btn-outline-secondary" 
+                                <button
+                                    class="btn btn-outline-secondary"
                                     type="button"
-                                    onclick="validateCode('unlimited')"
+                                    onclick="validateCode('standard')"
                                 >
                                     Apply
                                 </button>
                             </div>
                         </div>
-                        <small class="text-muted">Get 25% off with a referral code!</small>
-                        <div id="code-feedback-unl" class="mt-2"></div>
+                        <small class="text-muted">Get additional discount with referral codes!</small>
+                        <div id="code-feedback-std" class="mt-2"></div>
                     </div>
-                    
+
                     <div class="text-center mt-4">
                         {% if user.is_authenticated %}
-                            <button class="btn btn-success btn-block" onclick="checkout('unlimited')">Purchase</button>
+                            <button class="btn btn-success btn-lg btn-block" onclick="checkout('standard')">
+                                Purchase Now
+                            </button>
                         {% else %}
-                            <a href="{% url 'login' %}?next={% url 'pricing_page' %}" class="btn btn-success btn-block">Login to Purchase</a>
+                            <a href="{% url 'login' %}?next={% url 'pricing_page' %}" class="btn btn-success btn-lg btn-block">
+                                Login to Purchase
+                            </a>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    
+
+    <!-- Add-On Bundle Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h3 class="mb-3">Need More? Purchase Add-On Bundles</h3>
+                    <p class="lead mb-4">For Standard plan users who need additional capacity</p>
+
+                    <div class="row justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h4 class="text-primary">AI + Video Bundle</h4>
+                                    <h2 class="display-4">$29</h2>
+                                    <hr>
+                                    <ul class="list-unstyled">
+                                        <li class="mb-2"><strong>+20 AI generations</strong></li>
+                                        <li class="mb-2"><strong>+15 minutes</strong> video extraction</li>
+                                    </ul>
+                                    <p class="text-muted mb-0">
+                                        <small>Available after purchasing Standard plan for a document</small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Features Comparison -->
     <div class="row mt-5">
         <div class="col-12">
@@ -157,50 +167,111 @@
                     <thead class="thead-light">
                         <tr>
                             <th>Feature</th>
-                            <th class="text-center">Free</th>
-                            <th class="text-center">Pay Per Document</th>
-                            <th class="text-center">Unlimited</th>
+                            <th class="text-center">Basic (Free)</th>
+                            <th class="text-center">Standard</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Create Documents</td>
-                            <td class="text-center">Unlimited</td>
+                            <td><strong>AI Section Generations</strong></td>
+                            <td class="text-center">2 per document</td>
+                            <td class="text-center">10 per document<br><small class="text-muted">(+20 per add-on)</small></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Video Transcript Extraction</strong></td>
+                            <td class="text-center">5 minutes total</td>
+                            <td class="text-center">30 minutes total<br><small class="text-muted">(+15 min per add-on)</small></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Create Documents</strong></td>
                             <td class="text-center">Unlimited</td>
                             <td class="text-center">Unlimited</td>
                         </tr>
                         <tr>
-                            <td>Download PDFs</td>
+                            <td><strong>PDF Downloads</strong></td>
                             <td class="text-center">❌</td>
-                            <td class="text-center">1 Document</td>
-                            <td class="text-center">All Documents</td>
+                            <td class="text-center">✅ Full access</td>
                         </tr>
                         <tr>
-                            <td>API Credit</td>
-                            <td class="text-center">$0.50</td>
-                            <td class="text-center">$5</td>
-                            <td class="text-center">$10/month</td>
-                        </tr>
-                        <tr>
-                            <td>Video Extractions</td>
-                            <td class="text-center">~6</td>
-                            <td class="text-center">~60</td>
-                            <td class="text-center">~120/month</td>
-                        </tr>
-                        <tr>
-                            <td>Manual Entry</td>
-                            <td class="text-center">Unlimited</td>
+                            <td><strong>Manual Entry</strong></td>
                             <td class="text-center">Unlimited</td>
                             <td class="text-center">Unlimited</td>
                         </tr>
                         <tr>
-                            <td>Max Extraction Length</td>
-                            <td class="text-center">3 minutes</td>
-                            <td class="text-center">3 minutes</td>
-                            <td class="text-center">3 minutes</td>
+                            <td><strong>Browser Preview</strong></td>
+                            <td class="text-center">✅</td>
+                            <td class="text-center">✅</td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="row mt-5 mb-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Frequently Asked Questions</h3>
+            <div class="accordion" id="faqAccordion">
+                <div class="card">
+                    <div class="card-header" id="faq1">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse1">
+                                What counts as an "AI generation"?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse1" class="collapse" data-parent="#faqAccordion">
+                        <div class="card-body">
+                            Each time you use the AI to auto-generate or regenerate a section (like Statement of Facts, Prayer for Relief, etc.), it counts as one generation.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" id="faq2">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse2">
+                                How does video extraction work?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse2" class="collapse" data-parent="#faqAccordion">
+                        <div class="card-body">
+                            You can extract transcripts from YouTube videos (like body cam footage). Each minute of video you extract counts toward your limit. Most cases only need 2-5 minutes of key evidence.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" id="faq3">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse3">
+                                Can I purchase add-ons later?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse3" class="collapse" data-parent="#faqAccordion">
+                        <div class="card-body">
+                            Yes! After purchasing the Standard plan for a document, you can purchase add-on bundles anytime to add more AI generations and video extraction time to that specific document.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header" id="faq4">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapse4">
+                                What if I run out of AI generations or video minutes?
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="collapse4" class="collapse" data-parent="#faqAccordion">
+                        <div class="card-body">
+                            You can purchase add-on bundles for $29 each, which gives you +20 AI generations AND +15 minutes of video extraction. Most users find the base Standard limits (10 AI + 30 min video) are sufficient for one complete lawsuit document.
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -212,31 +283,27 @@ const stripe = Stripe('{{ stripe_public_key }}');
 
 // Store validated discount info
 const discountData = {
-    pay_per_doc: null,
-    unlimited: null
+    standard: null
 };
 
 async function validateCode(planType) {
-    const inputId = planType === 'pay_per_doc' ? 'discount-code-ppd' : 'discount-code-unl';
-    const feedbackId = planType === 'pay_per_doc' ? 'code-feedback-ppd' : 'code-feedback-unl';
-    const priceId = planType === 'pay_per_doc' ? 'price-ppd' : 'price-unl';
-    
+    const inputId = 'discount-code-std';
+    const feedbackId = 'code-feedback-std';
+
     const codeInput = document.getElementById(inputId);
     const feedback = document.getElementById(feedbackId);
-    const priceDisplay = document.getElementById(priceId);
-    
+
     const code = codeInput.value.trim().toUpperCase();
-    
+
     if (!code) {
         feedback.innerHTML = '';
         discountData[planType] = null;
-        priceDisplay.innerHTML = planType === 'pay_per_doc' ? '${{ price_per_doc|floatformat:0 }}' : '${{ price_unlimited|floatformat:0 }}';
         return;
     }
-    
+
     // Show loading
     feedback.innerHTML = '<small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Validating...</small>';
-    
+
     try {
         const response = await fetch('/accounts/validate-discount-code/', {
             method: 'POST',
@@ -249,9 +316,9 @@ async function validateCode(planType) {
                 plan_type: planType
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.valid) {
             // Success
             discountData[planType] = data;
@@ -259,15 +326,11 @@ async function validateCode(planType) {
                 <div class="alert alert-success py-2 px-3 mb-0">
                     <small>
                         <i class="fas fa-check-circle"></i> ${data.message}<br>
-                        <strong>Original:</strong> $${data.original_price.toFixed(2)} 
-                        <strong>Discount:</strong> -$${data.discount_amount.toFixed(2)} 
+                        <strong>Original:</strong> $${data.original_price.toFixed(2)}
+                        <strong>Discount:</strong> -$${data.discount_amount.toFixed(2)}
                         <strong>Final:</strong> $${data.final_price.toFixed(2)}
                     </small>
                 </div>
-            `;
-            priceDisplay.innerHTML = `
-                <span style="text-decoration: line-through; font-size: 0.6em; opacity: 0.7;">$${data.original_price.toFixed(0)}</span>
-                $${data.final_price.toFixed(0)}
             `;
         } else {
             // Error
@@ -277,7 +340,6 @@ async function validateCode(planType) {
                     <small><i class="fas fa-times-circle"></i> ${data.message}</small>
                 </div>
             `;
-            priceDisplay.innerHTML = planType === 'pay_per_doc' ? '${{ price_per_doc|floatformat:0 }}' : '${{ price_unlimited|floatformat:0 }}';
         }
     } catch (error) {
         console.error('Error:', error);
@@ -291,9 +353,8 @@ async function validateCode(planType) {
 }
 
 async function checkout(planType) {
-    const inputId = planType === 'pay_per_doc' ? 'discount-code-ppd' : 'discount-code-unl';
-    const discountCode = document.getElementById(inputId).value.trim();
-    
+    const discountCode = document.getElementById('discount-code-std').value.trim();
+
     try {
         const response = await fetch('/accounts/create-checkout-session/', {
             method: 'POST',
@@ -306,19 +367,19 @@ async function checkout(planType) {
                 discount_code: discountCode
             })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
             alert('Error: ' + data.error);
             return;
         }
-        
+
         // Redirect to Stripe Checkout
         const result = await stripe.redirectToCheckout({
             sessionId: data.sessionId
         });
-        
+
         if (result.error) {
             alert(result.error.message);
         }

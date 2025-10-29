@@ -16,19 +16,23 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def pricing_page(request):
-    """Public pricing page"""
+    """Public pricing page - New 2-tier + add-on model"""
+    from .models import PromoSettings
+
     referred_by_code = ''
-    
+
     # If user is logged in, check if they have a referral code
     if request.user.is_authenticated:
         try:
             referred_by_code = request.user.profile.referred_by_code or ''
         except:
             pass
-    
+
+    # Get promotional pricing settings
+    promo = PromoSettings.get_settings()
+
     context = {
-        'price_per_doc': settings.PRICE_PAY_PER_DOC,
-        'price_unlimited': settings.PRICE_UNLIMITED,
+        'promo': promo,
         'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
         'referred_by_code': referred_by_code,
     }
@@ -55,12 +59,11 @@ def validate_discount_code(request):
             })
         
         # Get base price
-        if plan_type == 'pay_per_doc':
-            price = settings.PRICE_PAY_PER_DOC
-            plan_name = 'Pay-Per-Document'
-        elif plan_type == 'unlimited':
-            price = settings.PRICE_UNLIMITED
-            plan_name = 'Unlimited Plan'
+        if plan_type == 'standard':
+            from .models import PromoSettings
+            promo = PromoSettings.get_settings()
+            price = promo.current_price
+            plan_name = 'Standard Plan'
         else:
             return JsonResponse({
                 'valid': False,
@@ -114,25 +117,26 @@ def validate_discount_code(request):
 
 @login_required
 def create_checkout_session(request):
-    """Create Stripe checkout session"""
+    """Create Stripe checkout session - New 2-tier + add-on model"""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=400)
-    
+
     try:
+        from .models import PromoSettings
         data = json.loads(request.body)
-        
+
         plan_type = data.get('plan_type')
         document_id = data.get('document_id')
         discount_code = data.get('discount_code', '').strip()
-        
+
         # Get base price
-        if plan_type == 'pay_per_doc':
-            price = settings.PRICE_PAY_PER_DOC
-        elif plan_type == 'unlimited':
-            price = settings.PRICE_UNLIMITED
+        if plan_type == 'standard':
+            promo = PromoSettings.get_settings()
+            price = promo.current_price
+            product_name = 'Standard Plan - Section 1983 Document'
         else:
             return JsonResponse({'error': 'Invalid plan type'}, status=400)
-        
+
         # Apply discount code
         discount_amount = 0
         if discount_code:
@@ -141,12 +145,12 @@ def create_checkout_session(request):
                 is_valid, message = discount_obj.is_valid()
                 if not is_valid:
                     return JsonResponse({'error': message}, status=400)
-                
+
                 discount_amount = float(discount_obj.calculate_discount(price))
                 price = price - discount_amount
             except DiscountCode.DoesNotExist:
                 return JsonResponse({'error': 'Invalid discount code'}, status=400)
-        
+
         # Create Stripe checkout session
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
@@ -154,7 +158,7 @@ def create_checkout_session(request):
                 'price_data': {
                     'currency': 'usd',
                     'product_data': {
-                        'name': 'Pay Per Document' if plan_type == 'pay_per_doc' else 'Unlimited Plan',
+                        'name': product_name,
                     },
                     'unit_amount': int(price * 100),
                 },
@@ -201,43 +205,40 @@ def payment_success(request):
             # Get or create subscription
             subscription, created = Subscription.objects.get_or_create(
                 user=request.user,
-                defaults={'plan_type': 'free'}
+                defaults={'plan_type': 'basic'}
             )
-            
+
             # Track what was purchased for display
             plan_name = ''
-            credit_added = 0
+            ai_generations = 0
+            video_minutes = 0
             next_url = 'document_list'
-            
+
             # Update subscription based on plan type
-            if plan_type == 'pay_per_doc':
-                subscription.api_credit_balance += Decimal('5.00')
-                subscription.save()
-                credit_added = 5.00
-                plan_name = 'Pay Per Document'
-                
-                # Create PurchasedDocument record
-                if document_id:
-                    from documents.models import LawsuitDocument, PurchasedDocument
-                    document = LawsuitDocument.objects.get(pk=document_id)
-                    PurchasedDocument.objects.get_or_create(
-                        user=request.user,
-                        document=document,
-                        defaults={
-                            'amount_paid': session.amount_total / 100,
-                            'stripe_payment_intent_id': session.payment_intent,
-                            'discount_code_used': discount_code if discount_code else None
-                        }
-                    )
-                    next_url = f'/documents/{document_id}/'
-                
-            elif plan_type == 'unlimited':
-                subscription.plan_type = 'unlimited'
-                subscription.api_credit_balance += Decimal('10.00')
+            if plan_type == 'standard':
+                # Update user's subscription to Standard
+                subscription.plan_type = 'standard'
                 subscription.stripe_customer_id = session.customer
                 subscription.save()
-                credit_added = 10.00
-                plan_name = 'Unlimited Plan'
+
+                plan_name = 'Standard Plan'
+                ai_generations = settings.STANDARD_AI_GENERATIONS
+                video_minutes = settings.STANDARD_EXTRACTION_MINUTES
+
+                # If document_id provided, update that specific document
+                if document_id:
+                    from documents.models import LawsuitDocument
+                    document = LawsuitDocument.objects.get(pk=document_id, user=request.user)
+
+                    # Update document with Standard plan limits
+                    document.ai_generations_purchased = settings.STANDARD_AI_GENERATIONS
+                    document.extraction_minutes_purchased = settings.STANDARD_EXTRACTION_MINUTES
+                    document.stripe_payment_intent_id = session.payment_intent
+                    document.stripe_customer_id = session.customer
+                    document.purchased_at = timezone.now()
+                    document.save()
+
+                    next_url = f'/documents/{document_id}/'
             
             # Calculate payment amount (Stripe gives cents, convert to dollars)
             payment_amount = Decimal(str(session.amount_total)) / Decimal('100')
@@ -301,9 +302,9 @@ def payment_success(request):
             # Render success page with context
             context = {
                 'plan_name': plan_name,
-                'credit_added': credit_added,
-                'total_credit': float(subscription.api_credit_balance),
-                'is_unlimited': subscription.is_unlimited,
+                'ai_generations': ai_generations,
+                'video_minutes': video_minutes,
+                'is_standard': subscription.is_standard,
                 'next_url': next_url,
             }
             return render(request, 'accounts/payment-success.html', context)

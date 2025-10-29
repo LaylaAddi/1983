@@ -154,13 +154,26 @@ STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
 STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
-# Stripe Price IDs
-STRIPE_PRICE_PAY_PER_DOC = 'price_1SHX4aIesUVMoyj1TqKzAnCo'
-STRIPE_PRICE_UNLIMITED = 'price_1SHX7PIesUVMoyj1iUVOKsWN'
+# Stripe Price IDs (to be configured in Stripe Dashboard)
+STRIPE_PRICE_STANDARD = os.getenv('STRIPE_PRICE_STANDARD', 'price_xxxxx')  # Regular $197
+STRIPE_PRICE_STANDARD_PROMO = os.getenv('STRIPE_PRICE_STANDARD_PROMO', 'price_xxxxx')  # Promo $129
+STRIPE_PRICE_ADDON_BUNDLE = os.getenv('STRIPE_PRICE_ADDON_BUNDLE', 'price_xxxxx')  # $29
 
-# Pricing
-PRICE_PAY_PER_DOC = 149.00
-PRICE_UNLIMITED = 499.00
+# Pricing Constants (New 2-Tier + Add-on Model)
+# Basic (Free): 2 AI generations, 5 min video, preview only
+# Standard: $197 (or $129 promo), 10 AI gen, 30 min video, PDF download
+# Add-on Bundle: $29 for +20 AI gen AND +15 min video
+PRICE_STANDARD = 197.00
+PRICE_STANDARD_PROMO = 129.00
+PRICE_ADDON_BUNDLE = 29.00
+
+# Usage Limits
+BASIC_AI_GENERATIONS = 2
+BASIC_EXTRACTION_MINUTES = 5
+STANDARD_AI_GENERATIONS = 10
+STANDARD_EXTRACTION_MINUTES = 30
+ADDON_AI_GENERATIONS = 20
+ADDON_EXTRACTION_MINUTES = 15
 
 
 # Site Configuration
