@@ -128,75 +128,59 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Subscription)
 class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ['user', 'plan_type', 'api_credit_display', 'is_active', 'started_at']
+    list_display = ['user', 'plan_type', 'referral_balance_display', 'is_active', 'started_at']
     list_filter = ['plan_type', 'is_active', 'started_at']
     search_fields = ['user__username', 'user__email']
-    readonly_fields = ['stripe_customer_id', 'stripe_subscription_id', 'created_at', 'updated_at']
-    
+    readonly_fields = ['stripe_customer_id', 'created_at', 'updated_at']
+
     fieldsets = (
         ('User & Plan', {
             'fields': ('user', 'plan_type', 'is_active')
         }),
         ('Stripe Information', {
-            'fields': ('stripe_customer_id', 'stripe_subscription_id'),
+            'fields': ('stripe_customer_id',),
             'classes': ('collapse',)
         }),
-        ('API Credits', {
-            'fields': ('api_credit_balance', 'last_credit_refill')
+        ('Referral Earnings', {
+            'fields': ('referral_cash_balance',)
         }),
         ('Dates', {
-            'fields': ('started_at', 'expires_at', 'created_at', 'updated_at'),
+            'fields': ('started_at', 'created_at', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
-    
-    actions = ['refill_credits', 'upgrade_to_unlimited', 'downgrade_to_free']
-    
-    def api_credit_display(self, obj):
-        """Display credit balance with color coding"""
-        balance = float(obj.api_credit_balance)
-        
+
+    actions = ['upgrade_to_standard', 'downgrade_to_basic']
+
+    def referral_balance_display(self, obj):
+        """Display referral cash balance"""
+        balance = float(obj.referral_cash_balance)
+
         if balance <= 0:
-            color = 'red'
-        elif balance < 1:
+            color = '#999'
+        elif balance < 10:
             color = 'orange'
         else:
             color = 'green'
-        
+
         return format_html(
             '<span style="color: {}; font-weight: bold;">${}</span>',
             color,
             f'{balance:.2f}'
-)
-    api_credit_display.short_description = 'API Credit'
-    
-    def refill_credits(self, request, queryset):
-        """Refill monthly credits for unlimited users"""
-        count = 0
-        for sub in queryset:
-            if sub.plan_type == 'unlimited':
-                sub.refill_monthly_credit()
-                count += 1
-        self.message_user(request, f'Refilled credits for {count} unlimited subscription(s)')
-    refill_credits.short_description = 'Refill monthly credits (Unlimited only)'
-    
-    def upgrade_to_unlimited(self, request, queryset):
-        """Upgrade users to unlimited plan"""
-        from decimal import Decimal
-        count = 0
-        for sub in queryset:
-            sub.plan_type = 'unlimited'
-            sub.api_credit_balance += Decimal('10.00')
-            sub.save()
-            count += 1
-        self.message_user(request, f'Upgraded {count} user(s) to Unlimited')
-    upgrade_to_unlimited.short_description = 'Upgrade to Unlimited plan'
-    
-    def downgrade_to_free(self, request, queryset):
-        """Downgrade users to free plan"""
-        count = queryset.update(plan_type='free')
-        self.message_user(request, f'Downgraded {count} user(s) to Free plan')
-    downgrade_to_free.short_description = 'Downgrade to Free plan'
+        )
+    referral_balance_display.short_description = 'Referral Earnings'
+
+    def upgrade_to_standard(self, request, queryset):
+        """Upgrade users to Standard plan"""
+        count = queryset.update(plan_type='standard')
+        self.message_user(request, f'Upgraded {count} user(s) to Standard plan')
+    upgrade_to_standard.short_description = 'Upgrade to Standard plan'
+
+    def downgrade_to_basic(self, request, queryset):
+        """Downgrade users to Basic plan"""
+        count = queryset.update(plan_type='basic')
+        self.message_user(request, f'Downgraded {count} user(s) to Basic plan')
+    downgrade_to_basic.short_description = 'Downgrade to Basic plan'
 
 
 @admin.register(Payment)

@@ -1,7 +1,7 @@
 # documents/admin.py
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import PurchasedDocument, Person, TranscriptQuote, VideoEvidence
+from .models import PurchasedDocument, Person, TranscriptQuote, VideoEvidence, DocumentAddon
 
 
 @admin.register(PurchasedDocument)
@@ -154,3 +154,41 @@ class VideoEvidenceAdmin(admin.ModelAdmin):
             )
         return '0'
     quotes_count.short_description = 'Quotes'
+
+
+@admin.register(DocumentAddon)
+class DocumentAddonAdmin(admin.ModelAdmin):
+    list_display = ['document', 'addon_type', 'amount_display', 'capacity_added', 'purchased_at']
+    list_filter = ['addon_type', 'purchased_at']
+    search_fields = ['document__title', 'document__user__username', 'stripe_payment_intent_id']
+    readonly_fields = ['purchased_at']
+
+    fieldsets = (
+        ('Add-On Info', {
+            'fields': ('document', 'addon_type', 'amount')
+        }),
+        ('Capacity Added', {
+            'fields': ('ai_generations_added', 'extraction_minutes_added')
+        }),
+        ('Payment', {
+            'fields': ('stripe_payment_intent_id', 'purchased_at')
+        }),
+    )
+
+    def amount_display(self, obj):
+        """Display amount paid"""
+        return format_html(
+            '<strong>${}</strong>',
+            f'{float(obj.amount):.2f}'
+        )
+    amount_display.short_description = 'Price'
+
+    def capacity_added(self, obj):
+        """Display capacity added"""
+        return format_html(
+            '<span style="color: #28a745;">+{} AI generations</span><br>'
+            '<span style="color: #007bff;">+{} minutes video</span>',
+            obj.ai_generations_added,
+            obj.extraction_minutes_added
+        )
+    capacity_added.short_description = 'Capacity Added'
