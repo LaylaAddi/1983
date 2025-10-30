@@ -97,38 +97,36 @@ def extract_evidence_segment(request, pk):
                 'error': 'End time must be after start time.'
             })
         
-        # Get user's subscription and check API credit
-        try:
-            subscription = Subscription.objects.get(user=request.user)
- 
-        except Subscription.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'error': 'No subscription found. Please <a href="/accounts/manage-subscription/"><strong>contact support</strong></a>.',
-                'requires_payment': True
-            })
-        
-        # Estimate cost (roughly $0.006 per minute of audio)
-        estimated_cost = (duration / 60) * 0.006
-        
-        # Check if user has sufficient credit
-        if not subscription.has_sufficient_credit(estimated_cost):
-            if subscription.plan_type == 'free':
-                error_msg = (
-                    f'Insufficient API credit. You need ${estimated_cost:.2f} but have ${subscription.api_credit_balance:.2f}. '
-                    f'<a href="/accounts/pricing/" class="text-warning"><strong>Upgrade your plan</strong></a> to get more credits.'
-                )
-            else:
-                error_msg = (
-                    f'Insufficient API credit. You need ${estimated_cost:.2f} but have ${subscription.api_credit_balance:.2f}. '
-                    f'<a href="/accounts/manage-subscription/" class="text-info"><strong>View your account</strong></a> for details.'
-                )
-            
+        # Calculate duration in minutes
+        duration_minutes = duration / 60.0
+
+        # Check if document has enough extraction minutes remaining
+        if document.extraction_minutes_remaining < duration_minutes:
+            try:
+                subscription = Subscription.objects.get(user=request.user)
+
+                if subscription.is_standard:
+                    error_msg = (
+                        f'Insufficient extraction time. This segment requires {duration_minutes:.1f} minutes, '
+                        f'but you have {document.extraction_minutes_remaining:.1f} minutes remaining. '
+                        f'<a href="/accounts/pricing/" class="text-warning"><strong>Purchase an add-on bundle</strong></a> '
+                        f'to get +15 minutes for $29.'
+                    )
+                else:
+                    error_msg = (
+                        f'Insufficient extraction time. This segment requires {duration_minutes:.1f} minutes, '
+                        f'but you have {document.extraction_minutes_remaining:.1f} minutes remaining. '
+                        f'<a href="/accounts/pricing/" class="text-warning"><strong>Upgrade to Standard plan</strong></a> '
+                        f'or purchase an add-on bundle to get more extraction time.'
+                    )
+            except Subscription.DoesNotExist:
+                error_msg = 'No subscription found. Please contact support.'
+
             return JsonResponse({
                 'success': False,
                 'error': error_msg,
                 'requires_payment': True,
-                'balance': float(subscription.api_credit_balance)
+                'remaining_minutes': float(document.extraction_minutes_remaining)
             })
         
         # Extract transcript using Whisper
@@ -155,26 +153,17 @@ def extract_evidence_segment(request, pk):
             source_type=source_type
         )
         
-        # Deduct actual cost from user's API credit
-        actual_cost = result.get('cost_estimate', estimated_cost)
-        subscription.deduct_api_cost(actual_cost)
-        
-        # Check if balance is low and send warning email
-        LOW_CREDIT_THRESHOLD = Decimal('0.50')
-        if subscription.api_credit_balance <= LOW_CREDIT_THRESHOLD:
-            EmailService.send_low_credit_warning(
-                user=request.user,
-                subscription=subscription,
-                threshold=LOW_CREDIT_THRESHOLD
-            )
+        # Track extraction minutes used
+        from decimal import Decimal
+        document.extraction_minutes_used += Decimal(str(duration_minutes))
+        document.save()
         
         return JsonResponse({
             'success': True,
             'segment_id': evidence.id,
             'text': result['text'],
-            'cost': actual_cost,
-            'duration': result.get('duration_minutes', 0),
-            'remaining_balance': float(subscription.api_credit_balance)
+            'duration_minutes': duration_minutes,
+            'remaining_minutes': float(document.extraction_minutes_remaining)
         })
         
     except Exception as e:
