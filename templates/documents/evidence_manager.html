@@ -106,6 +106,88 @@
         </div>
     </div>
 
+    <!-- Extraction Limits Display (Phase 1.4) -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-{% if extraction_limits.segments_per_document and api_segments_count >= extraction_limits.segments_per_document %}danger{% elif extraction_limits.monthly_extractions and subscription.monthly_extractions_count >= extraction_limits.monthly_extractions %}danger{% else %}success{% endif %}">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <h6 class="mb-2"><i class="fas fa-magic"></i> Smart Auto-Populate Usage (AI Extraction)</h6>
+                            <div class="progress mb-2" style="height: 25px;">
+                                {% if extraction_limits.segments_per_document %}
+                                    {% widthratio api_segments_count extraction_limits.segments_per_document 100 as doc_percentage %}
+                                    <div class="progress-bar {% if doc_percentage >= 100 %}bg-danger{% elif doc_percentage >= 80 %}bg-warning{% else %}bg-success{% endif %}"
+                                         role="progressbar"
+                                         style="width: {% if doc_percentage > 100 %}100{% else %}{{ doc_percentage }}{% endif %}%;"
+                                         aria-valuenow="{{ api_segments_count }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="{{ extraction_limits.segments_per_document }}">
+                                        {{ api_segments_count }} / {{ extraction_limits.segments_per_document }}
+                                    </div>
+                                {% else %}
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 20%;">
+                                        {{ api_segments_count }} / Unlimited
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                <strong>This Document:</strong>
+                                {% if extraction_limits.segments_per_document %}
+                                    {{ api_segments_count }} of {{ extraction_limits.segments_per_document }} AI extractions used
+                                    {% if api_segments_count >= extraction_limits.segments_per_document %}
+                                        <span class="badge bg-danger ms-2">Limit Reached!</span>
+                                    {% endif %}
+                                {% else %}
+                                    {{ api_segments_count }} extractions (unlimited)
+                                {% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="mb-2"><i class="fas fa-calendar-alt"></i> Monthly Extraction Limit</h6>
+                            <div class="progress mb-2" style="height: 25px;">
+                                {% if extraction_limits.monthly_extractions %}
+                                    {% widthratio subscription.monthly_extractions_count extraction_limits.monthly_extractions 100 as monthly_percentage %}
+                                    <div class="progress-bar {% if monthly_percentage >= 100 %}bg-danger{% elif monthly_percentage >= 80 %}bg-warning{% else %}bg-info{% endif %}"
+                                         role="progressbar"
+                                         style="width: {% if monthly_percentage > 100 %}100{% else %}{{ monthly_percentage }}{% endif %}%;"
+                                         aria-valuenow="{{ subscription.monthly_extractions_count }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="{{ extraction_limits.monthly_extractions }}">
+                                        {{ subscription.monthly_extractions_count }} / {{ extraction_limits.monthly_extractions }}
+                                    </div>
+                                {% else %}
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: 20%;">
+                                        {{ subscription.monthly_extractions_count }} / Unlimited
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                <strong>This Month:</strong>
+                                {% if extraction_limits.monthly_extractions %}
+                                    {{ subscription.monthly_extractions_count }} of {{ extraction_limits.monthly_extractions }} extractions used
+                                    {% if subscription.monthly_extractions_count >= extraction_limits.monthly_extractions %}
+                                        <span class="badge bg-danger ms-2">Limit Reached!</span>
+                                    {% endif %}
+                                {% else %}
+                                    {{ subscription.monthly_extractions_count }} extractions (unlimited)
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% if extraction_limits.segments_per_document or extraction_limits.monthly_extractions %}
+                    <div class="mt-2 text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle"></i> Manual transcript entries don't count toward limits.
+                            <a href="{% url 'pricing' %}" class="text-decoration-none">Upgrade your plan</a> for more AI extractions.
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- People Management Panel (NEW - for speaker attribution) -->
     <div class="row mb-4">
         <div class="col-12">
@@ -787,9 +869,34 @@ const data = await response.json();
             
             if (data.success) {
                 // SUCCESS - Exit retry loop
+                let limitsInfo = '';
+                if (data.extraction_limits) {
+                    const limits = data.extraction_limits;
+                    limitsInfo = '<br><small class="text-info">';
+
+                    // Document limits
+                    if (limits.segments_limit) {
+                        limitsInfo += `📄 Document: ${limits.segments_used}/${limits.segments_limit} used`;
+                    } else {
+                        limitsInfo += `📄 Document: ${limits.segments_used}/Unlimited`;
+                    }
+
+                    limitsInfo += ' | ';
+
+                    // Monthly limits
+                    if (limits.monthly_limit) {
+                        limitsInfo += `📅 Month: ${limits.monthly_used}/${limits.monthly_limit} used`;
+                    } else {
+                        limitsInfo += `📅 Month: ${limits.monthly_used}/Unlimited`;
+                    }
+
+                    limitsInfo += '</small>';
+                }
+
                 statusDiv.innerHTML = `<div class="alert alert-success">
                     <strong>✅ Success!</strong> Segment extracted.
                     ${data.cost == 0 ? '<br><small>📝 Used YouTube captions (free)</small>' : `<br><small>🤖 Used AI transcription - Cost: $${data.cost}</small>`}
+                    ${limitsInfo}
                     ${attempt > 1 ? `<br><small>Succeeded on attempt ${attempt}/${MAX_RETRIES}</small>` : ''}
                     <br><small class="text-muted mt-2 d-block">Refreshing in <span id="reload-countdown">3</span> seconds...</small>
                 </div>`;
