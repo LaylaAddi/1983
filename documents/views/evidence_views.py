@@ -100,14 +100,23 @@ def extract_evidence_segment(request, pk):
         # Get user's subscription and check API credit
         try:
             subscription = Subscription.objects.get(user=request.user)
- 
+
         except Subscription.DoesNotExist:
             return JsonResponse({
                 'success': False,
                 'error': 'No subscription found. Please <a href="/accounts/manage-subscription/"><strong>contact support</strong></a>.',
                 'requires_payment': True
             })
-        
+
+        # PHASE 1.4: Check extraction limits before proceeding
+        can_extract, limit_error = subscription.check_extraction_limits(document)
+        if not can_extract:
+            return JsonResponse({
+                'success': False,
+                'error': limit_error,
+                'limit_reached': True
+            })
+
         # Estimate cost (roughly $0.006 per minute of audio)
         estimated_cost = (duration / 60) * 0.006
         
@@ -158,7 +167,10 @@ def extract_evidence_segment(request, pk):
         # Deduct actual cost from user's API credit
         actual_cost = result.get('cost_estimate', estimated_cost)
         subscription.deduct_api_cost(actual_cost)
-        
+
+        # PHASE 1.4: Increment monthly extraction counter
+        subscription.increment_extraction_count()
+
         # Check if balance is low and send warning email
         LOW_CREDIT_THRESHOLD = Decimal('0.50')
         if subscription.api_credit_balance <= LOW_CREDIT_THRESHOLD:
@@ -167,14 +179,28 @@ def extract_evidence_segment(request, pk):
                 subscription=subscription,
                 threshold=LOW_CREDIT_THRESHOLD
             )
-        
+
+        # Get updated limits for response
+        limits = subscription.get_extraction_limits()
+        from documents.models import VideoEvidence
+        current_doc_segments = VideoEvidence.objects.filter(
+            document=document,
+            manually_entered=False
+        ).count()
+
         return JsonResponse({
             'success': True,
             'segment_id': evidence.id,
             'text': result['text'],
             'cost': actual_cost,
             'duration': result.get('duration_minutes', 0),
-            'remaining_balance': float(subscription.api_credit_balance)
+            'remaining_balance': float(subscription.api_credit_balance),
+            'extraction_limits': {
+                'segments_used': current_doc_segments,
+                'segments_limit': limits['segments_per_document'],
+                'monthly_used': subscription.monthly_extractions_count,
+                'monthly_limit': limits['monthly_extractions']
+            }
         })
         
     except Exception as e:

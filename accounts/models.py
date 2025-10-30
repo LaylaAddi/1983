@@ -143,11 +143,23 @@ class Subscription(models.Model):
     api_credit_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.50)
     last_credit_refill = models.DateTimeField(null=True, blank=True)
     referral_cash_balance = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
+        max_digits=10,
+        decimal_places=2,
         default=0.00,
         help_text="Referral earnings available for cash withdrawal"
     )
+
+    # Video extraction limits (Phase 1.4)
+    monthly_extractions_count = models.IntegerField(
+        default=0,
+        help_text="Number of video extractions this month"
+    )
+    extractions_reset_date = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date when monthly extraction counter resets"
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -265,6 +277,109 @@ class Subscription(models.Model):
                 'is_unlimited': False,
                 'message': f'{document_count} documents ({purchased_count} purchased)'
             }
+
+    # ==================== VIDEO EXTRACTION LIMITS (Phase 1.4) ====================
+
+    def get_extraction_limits(self):
+        """
+        Get extraction limits based on subscription tier.
+
+        Returns:
+            dict: {
+                'segments_per_document': int or None,
+                'monthly_extractions': int or None
+            }
+        """
+        if self.plan_type == 'free':
+            return {
+                'segments_per_document': 5,
+                'monthly_extractions': 10
+            }
+        elif self.plan_type == 'pay_per_doc':
+            return {
+                'segments_per_document': 10,
+                'monthly_extractions': 30
+            }
+        elif self.plan_type == 'unlimited':
+            return {
+                'segments_per_document': None,  # No limit
+                'monthly_extractions': None  # No limit
+            }
+
+        # Default fallback
+        return {
+            'segments_per_document': 5,
+            'monthly_extractions': 10
+        }
+
+    def check_extraction_limits(self, document):
+        """
+        Check if user can extract another video segment.
+
+        Args:
+            document: LawsuitDocument instance
+
+        Returns:
+            tuple: (can_extract: bool, error_message: str or None)
+        """
+        from documents.models import VideoEvidence
+
+        limits = self.get_extraction_limits()
+
+        # Check per-document limit
+        if limits['segments_per_document'] is not None:
+            segment_count = VideoEvidence.objects.filter(
+                document=document,
+                manually_entered=False  # Only count API extractions
+            ).count()
+
+            if segment_count >= limits['segments_per_document']:
+                return (False, f"Document limit reached: {segment_count}/{limits['segments_per_document']} segments. "
+                              f"Upgrade to extract more segments.")
+
+        # Check monthly limit
+        if limits['monthly_extractions'] is not None:
+            # Reset counter if needed
+            self.reset_monthly_extractions_if_needed()
+
+            if self.monthly_extractions_count >= limits['monthly_extractions']:
+                return (False, f"Monthly limit reached: {self.monthly_extractions_count}/{limits['monthly_extractions']} extractions. "
+                              f"Upgrade your plan or wait until next month.")
+
+        return (True, None)
+
+    def increment_extraction_count(self):
+        """Increment monthly extraction counter after successful extraction."""
+        self.reset_monthly_extractions_if_needed()
+        self.monthly_extractions_count += 1
+        self.save()
+
+    def reset_monthly_extractions_if_needed(self):
+        """Reset monthly extraction counter if we're in a new month."""
+        from django.utils import timezone
+        from datetime import timedelta
+
+        today = timezone.now().date()
+
+        # Initialize reset date if not set
+        if self.extractions_reset_date is None:
+            self.extractions_reset_date = today
+            self.monthly_extractions_count = 0
+            self.save()
+            return
+
+        # Check if we need to reset (new month)
+        if today >= self.extractions_reset_date:
+            # Calculate next reset date (first day of next month)
+            next_month = today.replace(day=1)
+            if next_month.month == 12:
+                next_month = next_month.replace(year=next_month.year + 1, month=1)
+            else:
+                next_month = next_month.replace(month=next_month.month + 1)
+
+            self.monthly_extractions_count = 0
+            self.extractions_reset_date = next_month
+            self.save()
 
 
 class Payment(models.Model):
