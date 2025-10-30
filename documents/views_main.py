@@ -244,7 +244,18 @@ def document_status_update(request, pk):
 def auto_populate_legal_sections(request, pk):
     """View to automatically populate document with legal templates AND fill in missing sections"""
     document = get_object_or_404(LawsuitDocument, pk=pk, user=request.user)
-    
+
+    # Check AI generation limits
+    if document.ai_generations_remaining <= 0:
+        from accounts.models import Subscription
+        subscription = Subscription.objects.get(user=request.user)
+
+        if subscription.is_standard:
+            messages.error(request, f'You have used all {document.ai_generations_purchased} AI generations for this document. Purchase an add-on bundle ($29) to get +20 more generations.')
+        else:
+            messages.error(request, f'You have used all {document.ai_generations_purchased} AI generations for this document. Upgrade to Standard plan or purchase an add-on bundle.')
+        return redirect('document_detail', pk=pk)
+
     # Validate required fields
     if not document.description:
         messages.error(request, 'Please add a description of the incident before generating legal sections.')
@@ -271,7 +282,11 @@ def auto_populate_legal_sections(request, pk):
     if document.status == 'draft':
         document.status = 'in_progress'
         document.save()
-    
+
+    # Increment AI generation usage counter
+    document.ai_generations_used += 1
+    document.save()
+
     # Enhanced success message
     violation_desc = result.get('violation_description', result['violation_type'].replace("_", " "))
     location_desc = result.get('location_description', result['location_type'].replace("_", " "))
@@ -285,10 +300,11 @@ def auto_populate_legal_sections(request, pk):
         
         action_text = " and ".join(message_parts)
         messages.success(
-            request, 
+            request,
             f'Successfully {action_text} for a complete legal document. '
             f'Specialized sections based on {violation_desc} in a {location_desc}. '
-            f'Found {result["templates_found"]} matching templates.'
+            f'Found {result["templates_found"]} matching templates. '
+            f'({document.ai_generations_remaining} AI generations remaining)'
         )
     else:
         messages.info(
@@ -374,21 +390,16 @@ class DocumentPDFView(WeasyTemplateResponseMixin, DetailView):
             messages.error(request, 'No subscription found. Please upgrade your plan.')
             return redirect('pricing_page')
         
-        # Check if user has unlimited plan
-        if subscription.is_unlimited:
+        # Check if user has Standard plan or if document is purchased
+        if subscription.is_standard:
             return super().dispatch(request, *args, **kwargs)
-        
-        # Check if user purchased this specific document
-        has_purchased = PurchasedDocument.objects.filter(
-            user=request.user,
-            document=document
-        ).exists()
-        
-        if has_purchased:
+
+        # For Basic users, check if this specific document was purchased
+        if document.is_purchased:
             return super().dispatch(request, *args, **kwargs)
-        
+
         # User doesn't have access
-        messages.error(request, 'You need to purchase this document or upgrade to Unlimited plan to download PDFs.')
+        messages.error(request, 'You need to purchase this document or upgrade to Standard plan to download PDFs.')
         return redirect('document_detail', pk=document.pk)    
     
     def get_context_data(self, **kwargs):

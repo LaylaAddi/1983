@@ -477,9 +477,9 @@
                             </ol>
                             <p class="mb-0"><strong>Both options create editable sections</strong> - you can customize every word after generation.</p>
                             <div class="d-grid gap-2 mt-3">
-                                <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-info">
-                                    <i class="fas fa-magic"></i> Smart Auto-Populate
-                                </a>
+                                <button onclick="confirmAIGeneration('{% url 'auto_populate_legal' document.pk %}', {{ document.ai_generations_remaining }})" class="btn btn-info">
+                                    <i class="fas fa-magic"></i> Smart Auto-Populate ({{ document.ai_generations_remaining }} left)
+                                </button>
                                 <a href="{% url 'generate_default_sections' document.pk %}" class="btn btn-secondary">
                                     <i class="fas fa-list"></i> Generate 7 Standard Sections
                                 </a>
@@ -514,9 +514,9 @@
                             </p>
                             
                             <div class="d-grid gap-2">
-                                <a href="{% url 'auto_populate_legal' document.pk %}" class="btn btn-outline-info btn-sm">
-                                    <i class="fas fa-magic"></i> Smart Auto-Populate
-                                </a>
+                                <button onclick="confirmAIGeneration('{% url 'auto_populate_legal' document.pk %}', {{ document.ai_generations_remaining }})" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-magic"></i> Smart Auto-Populate ({{ document.ai_generations_remaining }} left)
+                                </button>
                                 <a href="{% url 'generate_default_sections' document.pk %}" class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-list"></i> Generate 7 Standard Sections
                                 </a>
@@ -669,6 +669,19 @@ function toggleSectionView(sectionId) {
         // Currently showing truncated, switch to full
         truncatedDiv.style.display = 'none';
         fullDiv.style.display = 'block';
+    }
+}
+
+function confirmAIGeneration(url, remaining) {
+    if (remaining <= 0) {
+        alert('You have used all your AI generations for this document. Please upgrade or purchase an add-on bundle.');
+        return;
+    }
+
+    const message = `This will use 1 AI generation.\n\nYou have ${remaining} AI generation${remaining === 1 ? '' : 's'} remaining for this document.\n\nContinue?`;
+
+    if (confirm(message)) {
+        window.location.href = url;
     }
 }
 </script>
