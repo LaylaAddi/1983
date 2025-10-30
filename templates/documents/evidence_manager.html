@@ -747,7 +747,24 @@ async function extractNewSegment() {
     }
 
     const duration = endSeconds - startSeconds;
-    
+    const durationMinutes = (duration / 60).toFixed(2);
+
+    // Get remaining minutes from document
+    const remainingMinutes = {{ document.extraction_minutes_remaining }};
+
+    // Check if enough minutes remaining
+    if (parseFloat(durationMinutes) > remainingMinutes) {
+        statusDiv.innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-triangle"></i> This segment requires ' + durationMinutes + ' minutes, but you only have ' + remainingMinutes.toFixed(1) + ' minutes remaining. <a href="/accounts/pricing/" class="text-warning"><strong>Upgrade or purchase an add-on bundle</strong></a></div>';
+        return;
+    }
+
+    // Confirmation dialog
+    const confirmMsg = `This will extract ${durationMinutes} minutes of video.\n\nYou have ${remainingMinutes.toFixed(1)} minutes remaining for this document.\n\nAfter extraction, you'll have ${(remainingMinutes - parseFloat(durationMinutes)).toFixed(1)} minutes left.\n\nContinue?`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
     // Retry loop
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
         try {
@@ -788,8 +805,8 @@ const data = await response.json();
             if (data.success) {
                 // SUCCESS - Exit retry loop
                 statusDiv.innerHTML = `<div class="alert alert-success">
-                    <strong>✅ Success!</strong> Segment extracted.
-                    ${data.cost == 0 ? '<br><small>📝 Used YouTube captions (free)</small>' : `<br><small>🤖 Used AI transcription - Cost: $${data.cost}</small>`}
+                    <strong>✅ Success!</strong> Segment extracted (${data.duration_minutes.toFixed(2)} minutes).
+                    <br><small>📊 Remaining extraction time: ${data.remaining_minutes.toFixed(1)} minutes</small>
                     ${attempt > 1 ? `<br><small>Succeeded on attempt ${attempt}/${MAX_RETRIES}</small>` : ''}
                     <br><small class="text-muted mt-2 d-block">Refreshing in <span id="reload-countdown">3</span> seconds...</small>
                 </div>`;
