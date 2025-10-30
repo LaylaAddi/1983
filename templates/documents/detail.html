@@ -533,6 +533,56 @@
                         </div>
                     </div>
 
+                    <!-- Extraction Limits Display (Phase 1.4) -->
+                    {% if subscription and extraction_limits %}
+                    <div class="card border-{% if extraction_limits.segments_per_document and api_segments_count >= extraction_limits.segments_per_document %}danger{% elif extraction_limits.monthly_extractions and subscription.monthly_extractions_count >= extraction_limits.monthly_extractions %}danger{% else %}success{% endif %} mb-3">
+                        <div class="card-header bg-{% if extraction_limits.segments_per_document and api_segments_count >= extraction_limits.segments_per_document %}danger{% elif extraction_limits.monthly_extractions and subscription.monthly_extractions_count >= extraction_limits.monthly_extractions %}danger{% else %}success{% endif %} bg-opacity-10">
+                            <h6 class="mb-0"><i class="fas fa-magic"></i> Smart Auto-Populate Usage</h6>
+                        </div>
+                        <div class="card-body p-2">
+                            <div class="mb-2">
+                                <small class="d-block text-muted mb-1"><strong>This Document:</strong></small>
+                                <div class="progress" style="height: 20px;">
+                                    {% if extraction_limits.segments_per_document %}
+                                        {% widthratio api_segments_count extraction_limits.segments_per_document 100 as doc_percentage %}
+                                        <div class="progress-bar {% if doc_percentage >= 100 %}bg-danger{% elif doc_percentage >= 80 %}bg-warning{% else %}bg-success{% endif %}"
+                                             role="progressbar"
+                                             style="width: {% if doc_percentage > 100 %}100{% else %}{{ doc_percentage }}{% endif %}%;">
+                                            <small><strong>{{ api_segments_count }}/{{ extraction_limits.segments_per_document }}</strong></small>
+                                        </div>
+                                    {% else %}
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: 30%;">
+                                            <small><strong>{{ api_segments_count }}/∞</strong></small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-0">
+                                <small class="d-block text-muted mb-1"><strong>This Month:</strong></small>
+                                <div class="progress" style="height: 20px;">
+                                    {% if extraction_limits.monthly_extractions %}
+                                        {% widthratio subscription.monthly_extractions_count extraction_limits.monthly_extractions 100 as monthly_percentage %}
+                                        <div class="progress-bar {% if monthly_percentage >= 100 %}bg-danger{% elif monthly_percentage >= 80 %}bg-warning{% else %}bg-info{% endif %}"
+                                             role="progressbar"
+                                             style="width: {% if monthly_percentage > 100 %}100{% else %}{{ monthly_percentage }}{% endif %}%;">
+                                            <small><strong>{{ subscription.monthly_extractions_count }}/{{ extraction_limits.monthly_extractions }}</strong></small>
+                                        </div>
+                                    {% else %}
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 30%;">
+                                            <small><strong>{{ subscription.monthly_extractions_count }}/∞</strong></small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if extraction_limits.segments_per_document or extraction_limits.monthly_extractions %}
+                            <small class="text-muted d-block mt-2 text-center">
+                                <a href="{% url 'pricing_page' %}" class="text-decoration-none">Upgrade</a> for more extractions
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Other Actions -->
                     <div class="d-grid gap-2">
                         <a href="{% url 'evidence_manager' document.pk %}" class="btn btn-warning btn-lg w-100 mb-3">

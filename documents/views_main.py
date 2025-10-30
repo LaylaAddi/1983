@@ -141,6 +141,17 @@ def document_detail(request, pk):
     reviewed_count = video_evidence.filter(is_reviewed=True).count()
     included_count = video_evidence.filter(include_in_complaint=True).count()
 
+    # Get subscription and extraction limits (Phase 1.4)
+    from accounts.models import Subscription
+    try:
+        subscription = Subscription.objects.get(user=request.user)
+        limits = subscription.get_extraction_limits()
+        api_segments_count = video_evidence.filter(manually_entered=False).count()
+    except Subscription.DoesNotExist:
+        subscription = None
+        limits = {'segments_per_document': None, 'monthly_extractions': None}
+        api_segments_count = 0
+
     context = {
         'document': document,
         'sections': sections,
@@ -148,6 +159,10 @@ def document_detail(request, pk):
         'video_evidence_count': video_evidence.count(),
         'video_evidence_reviewed': reviewed_count,
         'video_evidence_included': included_count,
+        # Phase 1.4: Extraction limits
+        'subscription': subscription,
+        'extraction_limits': limits,
+        'api_segments_count': api_segments_count,
     }
 
     return render(request, 'documents/detail.html', context)
