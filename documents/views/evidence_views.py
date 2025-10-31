@@ -35,6 +35,12 @@ def evidence_manager(request, pk):
     # Load people for speaker attribution
     people = Person.objects.filter(document=document)
 
+    # Get user's subscription for usage limits display
+    try:
+        subscription = Subscription.objects.get(user=request.user)
+    except Subscription.DoesNotExist:
+        subscription = None
+
     context = {
         'document': document,
         'evidence_segments': evidence_segments,
@@ -44,6 +50,7 @@ def evidence_manager(request, pk):
         'included_count': evidence_segments.filter(include_in_complaint=True).count(),
         'people': people,
         'has_people': people.exists(),
+        'subscription': subscription,
     }
 
     return render(request, 'documents/evidence_manager.html', context)

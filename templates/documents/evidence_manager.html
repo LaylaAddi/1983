@@ -106,6 +106,127 @@
         </div>
     </div>
 
+    <!-- Usage Limits Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Document Usage & Limits
+                        {% if subscription %}
+                            {% if subscription.plan_type == 'standard' %}
+                                <span class="badge bg-success float-end">Standard Plan</span>
+                            {% else %}
+                                <span class="badge bg-secondary float-end">Basic Plan (Free)</span>
+                            {% endif %}
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- AI Generations -->
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <h6 class="text-muted mb-2"><i class="fas fa-robot"></i> AI Smart Auto-Populate</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold">{{ document.ai_generations_used }} / {{ document.ai_generations_purchased }} used</span>
+                                <span class="badge {% if document.ai_generations_remaining > 5 %}bg-success{% elif document.ai_generations_remaining > 2 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ document.ai_generations_remaining }} remaining
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 25px;">
+                                {% widthratio document.ai_generations_used document.ai_generations_purchased 100 as ai_percent %}
+                                <div class="progress-bar {% if ai_percent < 50 %}bg-success{% elif ai_percent < 80 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ ai_percent }}%;"
+                                     aria-valuenow="{{ ai_percent }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ ai_percent }}% used
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {% if subscription.plan_type == 'standard' %}
+                                    Standard plan: 10 generations per document
+                                {% else %}
+                                    Basic plan: 2 generations per document
+                                {% endif %}
+                            </small>
+                        </div>
+
+                        <!-- Video Extraction -->
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2"><i class="fas fa-video"></i> Video Extraction Time</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold">{{ document.extraction_minutes_used }} / {{ document.extraction_minutes_purchased }} min used</span>
+                                <span class="badge {% if document.extraction_minutes_remaining > 10 %}bg-success{% elif document.extraction_minutes_remaining > 5 %}bg-warning{% else %}bg-danger{% endif %}">
+                                    {{ document.extraction_minutes_remaining|floatformat:1 }} min remaining
+                                </span>
+                            </div>
+                            <div class="progress mb-2" style="height: 25px;">
+                                {% widthratio document.extraction_minutes_used document.extraction_minutes_purchased 100 as video_percent %}
+                                <div class="progress-bar {% if video_percent < 50 %}bg-success{% elif video_percent < 80 %}bg-warning{% else %}bg-danger{% endif %}"
+                                     role="progressbar"
+                                     style="width: {{ video_percent }}%;"
+                                     aria-valuenow="{{ video_percent }}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+                                    {{ video_percent }}% used
+                                </div>
+                            </div>
+                            <small class="text-muted">
+                                {% if subscription.plan_type == 'standard' %}
+                                    Standard plan: 30 minutes per document
+                                {% else %}
+                                    Basic plan: 5 minutes per document
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            {% if document.ai_generations_remaining < 3 or document.extraction_minutes_remaining < 5 %}
+                                <div class="alert alert-warning mb-2">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <strong>Running Low!</strong>
+                                    {% if subscription.plan_type == 'standard' %}
+                                        You're running low on usage for this document. Purchase an add-on bundle to continue.
+                                    {% else %}
+                                        You're running low on usage. Upgrade to Standard plan or purchase an add-on bundle.
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% if subscription.plan_type == 'standard' %}
+                                    <!-- Add-on bundle button for Standard users -->
+                                    <a href="/accounts/pricing/#addon-bundle" class="btn btn-success">
+                                        <i class="fas fa-plus-circle"></i> Purchase Add-on Bundle ($29)
+                                        <br><small>+20 AI generations + 15 minutes video</small>
+                                    </a>
+                                {% else %}
+                                    <!-- Upgrade button for Basic users -->
+                                    <a href="/accounts/pricing/" class="btn btn-primary">
+                                        <i class="fas fa-arrow-up"></i> Upgrade to Standard Plan
+                                        <br><small>10 AI generations + 30 minutes video + PDF download</small>
+                                    </a>
+                                    <a href="/accounts/pricing/#addon-bundle" class="btn btn-outline-success">
+                                        <i class="fas fa-plus-circle"></i> Or Purchase Add-on Bundle ($29)
+                                        <br><small>+20 AI generations + 15 minutes video</small>
+                                    </a>
+                                {% endif %}
+                                <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-file-alt"></i> Back to Document
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- People Management Panel (NEW - for speaker attribution) -->
     <div class="row mb-4">
         <div class="col-12">
