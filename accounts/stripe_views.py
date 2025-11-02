@@ -180,7 +180,49 @@ def create_checkout_session(request):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
-    
+
+
+@login_required
+def create_addon_checkout_session(request, document_id):
+    """
+    Create Stripe checkout session for add-on bundle purchase.
+    Adds +20 AI generations AND +15 minutes video extraction to a specific document.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from documents.models import LawsuitDocument
+
+        # Verify document belongs to user
+        document = LawsuitDocument.objects.get(pk=document_id, user=request.user)
+
+        # Create Stripe checkout session
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price': settings.STRIPE_PRICE_ADDON_BUNDLE,
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.build_absolute_uri('/accounts/payment-success/') + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.build_absolute_uri(f'/documents/{document_id}/evidence/'),
+            client_reference_id=str(request.user.id),
+            metadata={
+                'type': 'addon_bundle',
+                'document_id': str(document_id),
+                'user_id': str(request.user.id),
+            }
+        )
+
+        return JsonResponse({'sessionId': session.id})
+
+    except LawsuitDocument.DoesNotExist:
+        return JsonResponse({'error': 'Document not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
+
 @login_required
 def payment_success(request):
     """Handle successful payment"""
@@ -239,6 +281,35 @@ def payment_success(request):
                     document.save()
 
                     next_url = f'/documents/{document_id}/'
+
+            elif session.metadata.get('type') == 'addon_bundle':
+                # Handle add-on bundle purchase
+                from documents.models import LawsuitDocument, DocumentAddon
+
+                if not document_id:
+                    raise ValueError("Document ID required for add-on bundle purchase")
+
+                document = LawsuitDocument.objects.get(pk=document_id, user=request.user)
+
+                # Create DocumentAddon record
+                DocumentAddon.objects.create(
+                    document=document,
+                    addon_type='bundle',
+                    ai_generations_added=settings.ADDON_AI_GENERATIONS,
+                    extraction_minutes_added=settings.ADDON_EXTRACTION_MINUTES,
+                    amount=Decimal('29.00'),
+                    stripe_payment_intent_id=session.payment_intent
+                )
+
+                # Increment document limits
+                document.ai_generations_purchased += settings.ADDON_AI_GENERATIONS
+                document.extraction_minutes_purchased += settings.ADDON_EXTRACTION_MINUTES
+                document.save()
+
+                plan_name = 'Add-on Bundle'
+                ai_generations = settings.ADDON_AI_GENERATIONS
+                video_minutes = settings.ADDON_EXTRACTION_MINUTES
+                next_url = f'/documents/{document_id}/evidence/'
             
             # Calculate payment amount (Stripe gives cents, convert to dollars)
             payment_amount = Decimal(str(session.amount_total)) / Decimal('100')

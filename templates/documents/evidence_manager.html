@@ -201,20 +201,20 @@
                             <div class="d-flex gap-2 flex-wrap">
                                 {% if subscription.plan_type == 'standard' %}
                                     <!-- Add-on bundle button for Standard users -->
-                                    <a href="/accounts/pricing/#addon-bundle" class="btn btn-success">
+                                    <button onclick="purchaseAddonBundle()" class="btn btn-success">
                                         <i class="fas fa-plus-circle"></i> Purchase Add-on Bundle ($29)
                                         <br><small>+20 AI generations + 15 minutes video</small>
-                                    </a>
+                                    </button>
                                 {% else %}
                                     <!-- Upgrade button for Basic users -->
                                     <a href="/accounts/pricing/" class="btn btn-primary">
                                         <i class="fas fa-arrow-up"></i> Upgrade to Standard Plan
                                         <br><small>10 AI generations + 30 minutes video + PDF download</small>
                                     </a>
-                                    <a href="/accounts/pricing/#addon-bundle" class="btn btn-outline-success">
+                                    <button onclick="purchaseAddonBundle()" class="btn btn-outline-success">
                                         <i class="fas fa-plus-circle"></i> Or Purchase Add-on Bundle ($29)
                                         <br><small>+20 AI generations + 15 minutes video</small>
-                                    </a>
+                                    </button>
                                 {% endif %}
                                 <a href="{% url 'document_detail' document.pk %}" class="btn btn-outline-secondary">
                                     <i class="fas fa-file-alt"></i> Back to Document
@@ -1591,7 +1591,54 @@ async function deleteQuote(segmentId, quoteId) {
     }
 }
 
+// ============================================================================
+// STRIPE CHECKOUT - Add-On Bundle Purchase
+// ============================================================================
+
+async function purchaseAddonBundle() {
+    if (!confirm('Purchase Add-on Bundle for $29?\n\n✓ +20 AI generations\n✓ +15 minutes video extraction\n\nThis will be added to document ID {{ document.pk }}')) {
+        return;
+    }
+
+    try {
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // Call backend to create checkout session
+        const response = await fetch('/accounts/create-addon-checkout/{{ document.pk }}/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+            alert('Error: ' + data.error);
+            return;
+        }
+
+        // Redirect to Stripe Checkout
+        const stripe = Stripe('{{ stripe_public_key }}');
+        const result = await stripe.redirectToCheckout({
+            sessionId: data.sessionId
+        });
+
+        if (result.error) {
+            alert('Error: ' + result.error.message);
+        }
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert('Error creating checkout session: ' + error);
+    }
+}
+
 </script>
+
+<!-- Stripe.js Library -->
+<script src="https://js.stripe.com/v3/"></script>
 
 <!-- Add/Edit Person Modal -->
 <div class="modal fade" id="personModal" tabindex="-1">

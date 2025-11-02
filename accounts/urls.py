@@ -50,6 +50,7 @@ urlpatterns = [
     # Stripe Payment URLs
     path('pricing/', stripe_views.pricing_page, name='pricing_page'),
     path('create-checkout-session/', stripe_views.create_checkout_session, name='create_checkout_session'),
+    path('create-addon-checkout/<int:document_id>/', stripe_views.create_addon_checkout_session, name='create_addon_checkout'),
     path('payment-success/', stripe_views.payment_success, name='payment_success'),
     path('stripe-webhook/', stripe_views.stripe_webhook, name='stripe_webhook'),
 

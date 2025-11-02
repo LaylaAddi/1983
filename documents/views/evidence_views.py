@@ -41,6 +41,8 @@ def evidence_manager(request, pk):
     except Subscription.DoesNotExist:
         subscription = None
 
+    from django.conf import settings
+
     context = {
         'document': document,
         'evidence_segments': evidence_segments,
@@ -51,6 +53,7 @@ def evidence_manager(request, pk):
         'people': people,
         'has_people': people.exists(),
         'subscription': subscription,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
     }
 
     return render(request, 'documents/evidence_manager.html', context)
