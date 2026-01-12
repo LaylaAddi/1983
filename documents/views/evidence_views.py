@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import models
+from django.conf import settings
 import json
 from accounts.models import Subscription
 from ..models import LawsuitDocument, VideoEvidence, Person, TranscriptQuote
@@ -44,6 +45,7 @@ def evidence_manager(request, pk):
         'included_count': evidence_segments.filter(include_in_complaint=True).count(),
         'people': people,
         'has_people': people.exists(),
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
     }
 
     return render(request, 'documents/evidence_manager.html', context)

@@ -151,6 +151,7 @@ def document_detail(request, pk):
         'video_evidence_count': video_evidence.count(),
         'video_evidence_reviewed': reviewed_count,
         'video_evidence_included': included_count,
+        'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
     }
 
     return render(request, 'documents/detail.html', context)

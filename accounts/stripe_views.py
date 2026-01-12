@@ -214,8 +214,41 @@ def payment_success(request):
             video_minutes = 0
             next_url = 'document_list'
 
-            # Update subscription based on plan type
-            if plan_type == 'standard':
+            # Get purchase type (standard plan or addon bundle)
+            purchase_type = session.metadata.get('type', plan_type)
+
+            # Update subscription based on purchase type
+            if purchase_type == 'addon_bundle':
+                # Handle add-on bundle purchase
+                from documents.models import LawsuitDocument, DocumentAddon
+
+                if not document_id:
+                    messages.error(request, 'Document ID missing for add-on purchase')
+                    return redirect('pricing_page')
+
+                document = LawsuitDocument.objects.get(pk=document_id, user=request.user)
+
+                # Create DocumentAddon record
+                addon = DocumentAddon.objects.create(
+                    document=document,
+                    addon_type='bundle',
+                    ai_generations_added=settings.ADDON_AI_GENERATIONS,
+                    extraction_minutes_added=settings.ADDON_EXTRACTION_MINUTES,
+                    amount=settings.PRICE_ADDON_BUNDLE,
+                    stripe_payment_intent_id=session.payment_intent
+                )
+
+                # Update document limits
+                document.ai_generations_purchased += settings.ADDON_AI_GENERATIONS
+                document.extraction_minutes_purchased += settings.ADDON_EXTRACTION_MINUTES
+                document.save()
+
+                plan_name = 'Add-on Bundle'
+                ai_generations = settings.ADDON_AI_GENERATIONS
+                video_minutes = settings.ADDON_EXTRACTION_MINUTES
+                next_url = f'/documents/{document_id}/'
+
+            elif plan_type == 'standard':
                 # Update user's subscription to Standard
                 subscription.plan_type = 'standard'
                 subscription.stripe_customer_id = session.customer
@@ -315,6 +348,51 @@ def payment_success(request):
     except Exception as e:
         messages.error(request, f'Error processing payment: {str(e)}')
         return redirect('pricing_page')
+
+@login_required
+def create_addon_checkout_session(request, document_id):
+    """Create Stripe checkout session for add-on bundle ($29)"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=400)
+
+    try:
+        from documents.models import LawsuitDocument
+
+        # Verify document belongs to user
+        document = LawsuitDocument.objects.get(pk=document_id, user=request.user)
+
+        # Create Stripe checkout session for bundle
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': 'Add-on Bundle - AI + Video',
+                        'description': f'+{settings.ADDON_AI_GENERATIONS} AI generations, +{settings.ADDON_EXTRACTION_MINUTES} min video extraction',
+                    },
+                    'unit_amount': int(settings.PRICE_ADDON_BUNDLE * 100),
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=request.build_absolute_uri('/accounts/payment-success/') + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=request.build_absolute_uri(f'/documents/{document_id}/'),
+            client_reference_id=str(request.user.id),
+            metadata={
+                'type': 'addon_bundle',
+                'document_id': str(document_id),
+                'user_id': str(request.user.id),
+            }
+        )
+
+        return JsonResponse({'sessionId': session.id})
+
+    except LawsuitDocument.DoesNotExist:
+        return JsonResponse({'error': 'Document not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
+
 
 @csrf_exempt
 def stripe_webhook(request):

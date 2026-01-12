@@ -106,6 +106,63 @@
         </div>
     </div>
 
+    <!-- Usage & Bundle Purchase -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-tachometer-alt"></i> Video Extraction Usage</h5>
+                    <button onclick="purchaseAddonBundle({{ document.pk }})" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus-circle"></i> Purchase Add-on Bundle ($29)
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-video text-danger me-2 fa-lg"></i>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="fw-bold">Video Extraction Minutes</small>
+                                        <span class="badge {% if document.extraction_minutes_remaining > 5 %}bg-success{% elif document.extraction_minutes_remaining > 0 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ document.extraction_minutes_remaining|floatformat:1 }} / {{ document.extraction_minutes_purchased }} min remaining
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        {% widthratio document.extraction_minutes_used document.extraction_minutes_purchased 100 as video_percent %}
+                                        <div class="progress-bar {% if document.extraction_minutes_remaining > 5 %}bg-success{% elif document.extraction_minutes_remaining > 0 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             role="progressbar" style="width: {{ video_percent }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-magic text-primary me-2 fa-lg"></i>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <small class="fw-bold">AI Generations</small>
+                                        <span class="badge {% if document.ai_generations_remaining > 2 %}bg-success{% elif document.ai_generations_remaining > 0 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ document.ai_generations_remaining }} / {{ document.ai_generations_purchased }} remaining
+                                        </span>
+                                    </div>
+                                    <div class="progress" style="height: 10px;">
+                                        {% widthratio document.ai_generations_used document.ai_generations_purchased 100 as ai_percent %}
+                                        <div class="progress-bar {% if document.ai_generations_remaining > 2 %}bg-success{% elif document.ai_generations_remaining > 0 %}bg-warning{% else %}bg-danger{% endif %}"
+                                             role="progressbar" style="width: {{ ai_percent }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2">
+                        <i class="fas fa-info-circle"></i> Add-on Bundle ($29): +20 AI generations, +15 min video extraction
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- People Management Panel (NEW - for speaker attribution) -->
     <div class="row mb-4">
         <div class="col-12">
@@ -572,9 +629,42 @@
     </div>
 </div>
 
+<script src="https://js.stripe.com/v3/"></script>
 <script>
 const DOCUMENT_ID = {{ document.pk }};
 const CSRF_TOKEN = '{{ csrf_token }}';
+const STRIPE_PUBLIC_KEY = '{{ stripe_public_key }}';
+
+// Purchase Add-on Bundle
+async function purchaseAddonBundle(documentId) {
+    const confirmMsg = `Purchase Add-on Bundle for $29?\n\nThis bundle includes:\n• +20 AI generations\n• +15 minutes video extraction\n\nYou will be redirected to Stripe for secure payment.`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/accounts/create-addon-checkout/${documentId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.sessionId) {
+            // Redirect to Stripe checkout
+            const stripe = Stripe(STRIPE_PUBLIC_KEY);
+            stripe.redirectToCheckout({ sessionId: data.sessionId });
+        } else {
+            alert('Error: ' + (data.error || 'Failed to create checkout session'));
+        }
+    } catch (error) {
+        alert('Error creating checkout session: ' + error.message);
+    }
+}
 
 // Time parsing utilities
 function parseTimeToSeconds(timeStr) {
