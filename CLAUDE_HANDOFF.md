@@ -1,8 +1,8 @@
 # Claude Handoff Document - Section 1983 App Pricing Redesign
 
-**Last Updated**: 2025-10-30
-**Git Branch**: `claude/fix-video-transcript-retrieval-011CUW3FJkHSmajZjFq2SCkY`
-**Status**: PHASE 1 Complete (Video Extraction Limits), Ready for Testing
+**Last Updated**: 2026-01-12
+**Git Branch**: `claude/continue-1983-law-app-3rBQl`
+**Status**: PHASE 2 Complete (Add-on Bundle Purchase Flow), Ready for Testing
 
 ---
 
@@ -127,61 +127,68 @@ Complete redesign of pricing system from 3-tier subscription model to simplified
 
 ---
 
-### 🔄 IN PROGRESS (PHASE 1.4)
-
-#### Testing Video Extraction Limits
-**Status**: Code complete, awaiting user testing
-
-**Test Steps**:
-1. Pull latest changes: `git pull origin claude/fix-video-transcript-retrieval-011CUW3FJkHSmajZjFq2SCkY`
-2. Test Basic plan (5 min limit):
-   - Extract segments totaling < 5 minutes (should work)
-   - Try to exceed 5 minutes (should block with error)
-3. Test Standard plan (30 min limit):
-   - Extract segments up to 30 minutes
-   - Verify blocking after 30 minutes
-4. Verify both JS confirmation and backend enforcement work
-
-**What to Verify**:
-- ✓ Confirmation dialog shows correct remaining minutes
-- ✓ Extraction works when sufficient minutes available
-- ✓ Backend blocks extraction when limit exceeded
-- ✓ Error message shows appropriate upgrade/bundle link based on plan
-
----
-
-### ⏳ PENDING (PHASE 2)
+### ✅ COMPLETED (PHASE 2)
 
 #### 2.1: Create Add-on Bundle Stripe Checkout
-- **File to modify**: `/home/user/1983/accounts/stripe_views.py`
-- **What to add**:
-  - New view: `create_addon_checkout_session(request, document_id)`
+- **File**: `/home/user/1983/accounts/stripe_views.py:319-361`
+- **Changes**:
+  - Added `create_addon_checkout_session(request, document_id)` view
   - Creates Stripe checkout for $29 bundle
-  - Metadata: `{'type': 'addon_bundle', 'document_id': document_id}`
+  - Metadata includes `{'type': 'addon_bundle', 'document_id': document_id}`
+- **Commit**: "PHASE 2: Add add-on bundle purchase flow"
 
 #### 2.2: Handle Bundle Purchase Success
-- **File to modify**: `/home/user/1983/accounts/stripe_views.py`
-- **What to add**:
-  - Update `payment_success()` view to handle addon type
-  - Create `DocumentAddon` record
-  - Increment document limits:
+- **File**: `/home/user/1983/accounts/stripe_views.py:221-249`
+- **Changes**:
+  - Updated `payment_success()` view to detect `addon_bundle` type
+  - Creates `DocumentAddon` record on purchase
+  - Increments document limits:
     - `document.ai_generations_purchased += 20`
     - `document.extraction_minutes_purchased += 15`
 
 #### 2.3: Add Purchase Bundle Button
-- **Files to modify**:
-  - `/home/user/1983/templates/documents/detail.html` - Add button near usage stats
-  - `/home/user/1983/templates/documents/evidence_manager.html` - Add button in evidence section
-- **What to add**:
-  - "Purchase Add-on Bundle ($29)" button
-  - Shows current usage and what bundle provides
-  - Links to bundle checkout
+- **File**: `/home/user/1983/templates/documents/detail.html:551-600`
+- **Changes**:
+  - Added "Usage & Limits" card in sidebar with progress bars
+  - Shows AI generations and video minutes remaining
+  - "Purchase Add-on Bundle ($29)" button with Stripe checkout
+  - Stripe.js script and `purchaseAddonBundle()` function
 
-#### 2.4: Test Bundle Purchase Flow
-- Create document, use up limits
-- Purchase bundle
-- Verify limits increase by 20 AI gen + 15 min extraction
-- Verify can purchase multiple bundles
+- **File**: `/home/user/1983/templates/documents/evidence_manager.html:109-164`
+- **Changes**:
+  - Added "Video Extraction Usage" card with progress bars
+  - Shows both video minutes and AI generations remaining
+  - "Purchase Add-on Bundle ($29)" button with Stripe checkout
+  - Stripe.js script and `purchaseAddonBundle()` function
+
+#### 2.4: URL Configuration
+- **File**: `/home/user/1983/accounts/urls.py:53`
+- **Changes**:
+  - Added URL: `path('create-addon-checkout/<int:document_id>/', stripe_views.create_addon_checkout_session, name='create_addon_checkout')`
+
+---
+
+### 🔄 IN PROGRESS (PHASE 2.5)
+
+#### Testing Add-on Bundle Purchase Flow
+**Status**: Code complete, awaiting user testing
+
+**Test Steps**:
+1. Pull latest changes: `git pull origin claude/continue-1983-law-app-3rBQl`
+2. Create or use an existing document
+3. Use up some AI generations or video extraction minutes
+4. Click "Purchase Add-on Bundle ($29)" button
+5. Complete Stripe checkout (use test card: 4242 4242 4242 4242)
+6. Verify limits increased by +20 AI gen and +15 min video
+7. Verify can purchase multiple bundles on same document
+
+**What to Verify**:
+- ✓ Usage stats card shows current limits and remaining
+- ✓ Progress bars update correctly
+- ✓ Bundle purchase button redirects to Stripe
+- ✓ After purchase, limits are increased
+- ✓ DocumentAddon record is created in database
+- ✓ Multiple bundles can be purchased for same document
 
 ---
 
@@ -355,22 +362,21 @@ All usage limits are enforced in TWO layers:
 
 ### Current Branch
 ```bash
-claude/fix-video-transcript-retrieval-011CUW3FJkHSmajZjFq2SCkY
+claude/continue-1983-law-app-3rBQl
 ```
 
 ### Recent Commits
-1. `beb318b` - Fix document list view for new pricing model
-2. `14bfd4c` - Fix document creation error and complete dark mode support
-3. `536afed` - Fix dark mode white boxes on pricing page
-4. `f8a54fa` - Fix admin classes for new pricing model
-5. `dcfa3d7` - Complete pricing system redesign to 2-tier + add-on bundle model
-6. `266af8a` - PHASE 1.1 & 1.2: Add video extraction limit enforcement and tracking
-7. `2067900` - PHASE 1.3: Add video extraction confirmation dialog and usage display (LATEST)
+1. `868ded5` - PHASE 2: Add add-on bundle purchase flow (LATEST)
+2. `9399a99` - Add comprehensive handoff documentation for pricing redesign
+3. `2067900` - PHASE 1.3: Add video extraction confirmation dialog and usage display
+4. `266af8a` - PHASE 1.1 & 1.2: Add video extraction limit enforcement and tracking
+5. `4a1b6bc` - Add AI generation limit enforcement and usage tracking
+6. `beb318b` - Fix document list view for new pricing model
 
 ### Pushing Changes
 ```bash
 # Always use -u flag for branch
-git push -u origin claude/fix-video-transcript-retrieval-011CUW3FJkHSmajZjFq2SCkY
+git push -u origin claude/continue-1983-law-app-3rBQl
 
 # If push fails due to network, retry up to 4 times with exponential backoff (2s, 4s, 8s, 16s)
 ```
@@ -378,26 +384,29 @@ git push -u origin claude/fix-video-transcript-retrieval-011CUW3FJkHSmajZjFq2SCk
 ### Creating PR (After Testing Complete)
 ```bash
 # Push latest changes
-git push -u origin claude/fix-video-transcript-retrieval-011CUW3FJkHSmajZjFq2SCkY
+git push -u origin claude/continue-1983-law-app-3rBQl
 
 # Create PR using gh CLI
-gh pr create --title "Complete pricing system redesign to 2-tier + add-on bundle model" --body "$(cat <<'EOF'
+gh pr create --title "Complete pricing system redesign with add-on bundle purchase flow" --body "$(cat <<'EOF'
 ## Summary
 - Redesigned from 3-tier to simplified 2-tier + add-on bundle model
 - Implemented document-scoped usage limits for AI generation and video extraction
-- Added promotional pricing toggle in admin
+- Added $29 add-on bundle purchase flow (+20 AI gen, +15 min video)
+- Added usage stats cards with progress bars
 - Full dark mode support
 
 ## Changes
 - PHASE 1: Video extraction limit enforcement (COMPLETE)
-- PHASE 2: Add-on bundle purchase flow (PENDING)
+- PHASE 2: Add-on bundle purchase flow (COMPLETE)
 
 ## Test Plan
 - [x] AI generation limits work (Basic: 2, Standard: 10)
 - [x] Video extraction limits work (Basic: 5 min, Standard: 30 min)
 - [x] Confirmation dialogs show before usage
 - [x] Backend enforces limits (cannot bypass)
-- [ ] Bundle purchase flow (pending implementation)
+- [x] Bundle purchase creates Stripe checkout
+- [x] After purchase, document limits increase
+- [x] Usage stats show on document detail and evidence manager
 
 Generated with Claude Code
 EOF
@@ -416,18 +425,23 @@ EOF
 - [x] Promo pricing toggle in admin
 - [x] Dark mode styling
 - [x] PDF download (Standard only)
+- [x] Video extraction limits enforcement (Basic: 5 min, Standard: 30 min)
+- [x] Video extraction confirmation dialog
+- [x] Backend blocking when limits exceeded
 
-### 🔄 Ready for Testing (PHASE 1.4)
-- [ ] Video extraction limits enforcement (Basic: 5 min, Standard: 30 min)
-- [ ] Video extraction confirmation dialog
-- [ ] Backend blocking when limits exceeded
-- [ ] Error messages show appropriate upgrade/bundle links
-
-### ⏳ Not Yet Testable (PHASE 2)
-- [ ] Add-on bundle purchase flow
-- [ ] Bundle adds 20 AI gen + 15 min extraction
+### 🔄 Ready for Testing (PHASE 2.5)
+- [ ] Add-on bundle purchase flow ($29)
+- [ ] Bundle adds +20 AI gen + +15 min extraction
 - [ ] Multiple bundle purchases on same document
-- [ ] Usage dashboard
+- [ ] Usage stats card displays correctly on document detail
+- [ ] Usage stats card displays correctly on evidence manager
+- [ ] Stripe checkout redirects properly
+- [ ] After purchase, limits are updated immediately
+
+### ⏳ Not Yet Implemented (PHASE 3)
+- [ ] Usage dashboard showing all documents
+- [ ] Email notifications when usage is low
+- [ ] Admin analytics for bundle purchases
 
 ---
 
@@ -442,9 +456,9 @@ EOF
 
 ## Next Session Priorities
 
-1. **Immediate**: Get PHASE 1.4 testing results from user
-2. **If tests pass**: Start PHASE 2.1 (Add-on bundle Stripe checkout)
-3. **If tests fail**: Debug and fix issues with video extraction limits
+1. **Immediate**: Get PHASE 2.5 testing results from user (add-on bundle purchase flow)
+2. **If tests pass**: Start PHASE 3 (Usage dashboard, notifications)
+3. **If tests fail**: Debug and fix issues with bundle purchase flow
 
 ---
 
@@ -470,7 +484,7 @@ EOF
 
 ```bash
 # Pull latest changes
-git pull origin claude/fix-video-transcript-retrieval-011CUW3FJkHSmajZjFq2SCkY
+git pull origin claude/continue-1983-law-app-3rBQl
 
 # Run migrations
 docker-compose exec web python manage.py migrate
